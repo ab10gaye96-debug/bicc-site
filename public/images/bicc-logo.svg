@@ -1,0 +1,29 @@
+<svg width="420" height="320" viewBox="0 0 420 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="320" rx="18" fill="white"/>
+  <circle cx="210" cy="78" r="74" fill="#1F85A8"/>
+  <g fill="#F7F7F5" stroke="#1F85A8" stroke-width="3">
+    <path d="M136 132H284V156H136V132Z"/>
+    <path d="M150 94C170 92 181 74 189 47H201C197 82 185 105 165 124H150V94Z"/>
+    <path d="M178 94C193 88 205 66 211 36H221C220 71 214 97 201 124H178V94Z"/>
+    <path d="M206 95C219 86 229 68 236 47H248C247 85 241 105 228 124H206V95Z"/>
+    <path d="M122 156H298V168H122V156Z"/>
+    <rect x="124" y="168" width="14" height="44" fill="#F7F7F5"/>
+    <rect x="150" y="168" width="14" height="44" fill="#F7F7F5"/>
+    <rect x="176" y="168" width="14" height="44" fill="#F7F7F5"/>
+    <rect x="202" y="168" width="14" height="44" fill="#F7F7F5"/>
+    <rect x="228" y="168" width="14" height="44" fill="#F7F7F5"/>
+    <rect x="254" y="168" width="14" height="44" fill="#F7F7F5"/>
+    <rect x="280" y="168" width="14" height="44" fill="#F7F7F5"/>
+    <path d="M114 212H306V226H114V212Z"/>
+  </g>
+  <g fill="#1A1A1A">
+    <circle cx="178" cy="23" r="3.5"/>
+    <circle cx="194" cy="16" r="3.5"/>
+    <circle cx="210" cy="13" r="3.5"/>
+    <circle cx="226" cy="16" r="3.5"/>
+    <circle cx="242" cy="23" r="3.5"/>
+  </g>
+  <text x="210" y="272" text-anchor="middle" fill="#161616" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="800" letter-spacing="2">BICC</text>
+  <text x="210" y="298" text-anchor="middle" fill="#161616" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" letter-spacing="1">BANJUL INTERNATIONAL</text>
+  <text x="210" y="316" text-anchor="middle" fill="#161616" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" letter-spacing="1">CONVENTION CENTRE LTD</text>
+</svg>
