@@ -1,9 +1,10 @@
 {
   "name": "bicc-site",
   "version": "1.0.0",
+  "type": "module",
   "main": "server/index.js",
   "scripts": {
-    "start": "node server/index.js"
+    "start": "node server/start.js"
   },
   "engines": {
     "node": "18.x"
