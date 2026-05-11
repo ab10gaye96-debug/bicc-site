@@ -247,10 +247,17 @@ app.get('/api/dashboard', authMiddleware, (req, res) => {
   res.json({ events, news, contacts, unreadContacts, gallery, venues });
 });
 
-// ─── SPA FALLBACK (Fixed for Express 4 / Render) ────────────────
-app.get('/*', (req, res) => {
-  const indexPath = path.join(distDir, 'index.html');
+// SPA Fallback for React Router
+import { fileURLToPath } from 'url';
+import path from 'path';
+import fs from 'fs';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distDir = path.join(__dirname, '..', 'dist');
+
+app.use((req, res, next) => {
+  const indexPath = path.join(distDir, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
