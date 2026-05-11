@@ -247,9 +247,10 @@ app.get('/api/dashboard', authMiddleware, (req, res) => {
   res.json({ events, news, contacts, unreadContacts, gallery, venues });
 });
 
-// SPA FALLBACK (Express 4 compatible)
+// ─── SPA FALLBACK (SAFE FOR RENDER / EXPRESS 4+) ───────────────
 app.get('*', (req, res) => {
   const indexPath = path.join(distDir, 'index.html');
+
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
