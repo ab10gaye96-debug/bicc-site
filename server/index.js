@@ -246,23 +246,36 @@ app.get('/api/dashboard', authMiddleware, (req, res) => {
   const venues = db.prepare('SELECT COUNT(*) as count FROM venues').get().count;
   res.json({ events, news, contacts, unreadContacts, gallery, venues });
 });
-
-// SPA Fallback for React Router
-import { fileURLToPath } from 'url';
+import express from 'express';
 import path from 'path';
-import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const distDir = path.join(__dirname, '..', 'dist');
 
-app.use((req, res, next) => {
-  const indexPath = path.join(distDir, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('Frontend not built yet. Run: npm run build');
-  }
+const app = express();
+
+// Example API route
+app.get('/api/test', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+// Serve React static files
+const buildPath = path.join(__dirname, '../build');
+app.use(express.static(buildPath));
+
+// SPA fallback — must be LAST
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(buildPath, 'index.html'), err => {
+    if (err) {
+      res.status(500).send(err);
+    }
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 // ─── START ──────────────────────────────────────────────────────
