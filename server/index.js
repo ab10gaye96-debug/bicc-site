@@ -19,18 +19,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'bicc-secret-key-change-in-producti
 app.use(cors());
 app.use(express.json());
 
-// Serve uploaded files
+// ─── UPLOADS ────────────────────────────────────────────────
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 app.use('/uploads', express.static(uploadsDir));
 
-// Serve React build + public images
-const distDir = path.join(__dirname, '..', 'dist'); // your SPA build
-const publicDir = path.join(__dirname, '..', 'public');
-app.use(express.static(distDir));
-app.use('/images', express.static(path.join(publicDir, 'images')));
-
-// File upload config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => {
@@ -49,32 +42,150 @@ const upload = multer({
   },
 });
 
-// ─── API ROUTES ──────────────────────────────────────────────
-// (Keep all your /api/* routes here, as you already have them)
+// ─── STATIC FILES ────────────────────────────────────────────
+const distDir = path.join(__dirname, '..', 'build'); // React build folder
+const publicDir = path.join(__dirname, '..', 'public');
+app.use(express.static(distDir));
+app.use('/images', express.static(path.join(publicDir, 'images')));
 
-// ─── SPA FALLBACK ────────────────────────────────────────────
-const buildPath = path.join(__dirname, '..', 'build'); // adjust if your React build is somewhere else
-app.use(express.static(buildPath)); // serve static files
-app.get('/*', (req, res) => {
-  res.sendFile(path.join(buildPath, 'index.html'), err => {
-    if (err) res.status(500).send(err);
-  });
+// ─── AUTH MIDDLEWARE ─────────────────────────────────────────
+function authMiddleware(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token provided' });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+// ─── AUTH ROUTES ─────────────────────────────────────────────
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body;
+  const user = db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
+  if (!user || !bcrypt.compareSync(password, user.password)) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
+  res.json({ token, username: user.username });
 });
 
-// ─── START SERVER ────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log('');
-  console.log('═══════════════════════════════════════════════════════');
-  console.log('  🏛️  BICC - Banjul International Convention Centre');
-  console.log('═══════════════════════════════════════════════════════');
-  console.log(`  🌐  Website:  http://localhost:${PORT}`);
-  console.log(`  🔧  API:      http://localhost:${PORT}/api`);
-  console.log(`  🔐  Admin:    http://localhost:${PORT}/admin`);
-  console.log(`  📁  Database: data/bicc.db`);
-  console.log('═══════════════════════════════════════════════════════');
-  console.log('  Default login: admin / bicc2025');
-  console.log('═══════════════════════════════════════════════════════');
-  console.log('');
+app.get('/api/auth/verify', authMiddleware, (req, res) => {
+  res.json({ valid: true, username: req.user.username });
 });
 
-export default app;
+app.post('/api/auth/change-password', authMiddleware, (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const user = db.prepare('SELECT * FROM admin_users WHERE id = ?').get(req.user.id);
+  if (!bcrypt.compareSync(currentPassword, user.password)) {
+    return res.status(400).json({ error: 'Current password is incorrect' });
+  }
+  const hash = bcrypt.hashSync(newPassword, 10);
+  db.prepare('UPDATE admin_users SET password = ? WHERE id = ?').run(hash, req.user.id);
+  res.json({ success: true });
+});
+
+// ─── EVENTS ──────────────────────────────────────────────────
+app.get('/api/events', (req, res) => {
+  const events = db.prepare('SELECT * FROM events ORDER BY date ASC').all();
+  res.json(events);
+});
+
+app.get('/api/events/:id', (req, res) => {
+  const event = db.prepare('SELECT * FROM events WHERE id = ?').get(req.params.id);
+  if (!event) return res.status(404).json({ error: 'Event not found' });
+  res.json(event);
+});
+
+app.post('/api/events', authMiddleware, (req, res) => {
+  const { title, date, time, location, description, image, category } = req.body;
+  const result = db.prepare(
+    'INSERT INTO events (title, date, time, location, description, image, category) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).run(title, date, time, location, description, image, category);
+  res.json({ id: result.lastInsertRowid, ...req.body });
+});
+
+app.put('/api/events/:id', authMiddleware, (req, res) => {
+  const { title, date, time, location, description, image, category } = req.body;
+  db.prepare(
+    'UPDATE events SET title=?, date=?, time=?, location=?, description=?, image=?, category=?, updated_at=datetime("now") WHERE id=?'
+  ).run(title, date, time, location, description, image, category, req.params.id);
+  res.json({ success: true });
+});
+
+app.delete('/api/events/:id', authMiddleware, (req, res) => {
+  db.prepare('DELETE FROM events WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+// ─── VENUES ──────────────────────────────────────────────────
+app.get('/api/venues', (req, res) => {
+  const venues = db.prepare('SELECT * FROM venues ORDER BY sort_order ASC').all();
+  res.json(venues.map(v => ({ ...v, features: JSON.parse(v.features) })));
+});
+
+app.post('/api/venues', authMiddleware, (req, res) => {
+  const { name, capacity, description, image, features, sort_order } = req.body;
+  const result = db.prepare(
+    'INSERT INTO venues (name, capacity, description, image, features, sort_order) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(name, capacity, description, image, JSON.stringify(features), sort_order || 0);
+  res.json({ id: result.lastInsertRowid });
+});
+
+app.put('/api/venues/:id', authMiddleware, (req, res) => {
+  const { name, capacity, description, image, features, sort_order } = req.body;
+  db.prepare(
+    'UPDATE venues SET name=?, capacity=?, description=?, image=?, features=?, sort_order=? WHERE id=?'
+  ).run(name, capacity, description, image, JSON.stringify(features), sort_order || 0, req.params.id);
+  res.json({ success: true });
+});
+
+app.delete('/api/venues/:id', authMiddleware, (req, res) => {
+  db.prepare('DELETE FROM venues WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+// ─── GALLERY ────────────────────────────────────────────────
+app.get('/api/gallery', (req, res) => {
+  const images = db.prepare('SELECT * FROM gallery ORDER BY created_at DESC').all();
+  res.json(images);
+});
+
+app.post('/api/gallery', authMiddleware, (req, res) => {
+  const { url, caption, category } = req.body;
+  const result = db.prepare('INSERT INTO gallery (url, caption, category) VALUES (?, ?, ?)').run(url, caption, category);
+  res.json({ id: result.lastInsertRowid });
+});
+
+app.delete('/api/gallery/:id', authMiddleware, (req, res) => {
+  db.prepare('DELETE FROM gallery WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+// ─── NEWS ───────────────────────────────────────────────────
+app.get('/api/news', (req, res) => {
+  const news = db.prepare('SELECT * FROM news ORDER BY date DESC').all();
+  res.json(news);
+});
+
+app.get('/api/news/:id', (req, res) => {
+  const item = db.prepare('SELECT * FROM news WHERE id = ?').get(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Article not found' });
+  res.json(item);
+});
+
+app.post('/api/news', authMiddleware, (req, res) => {
+  const { title, excerpt, content, date, author, image } = req.body;
+  const result = db.prepare(
+    'INSERT INTO news (title, excerpt, content, date, author, image) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(title, excerpt, content, date, author, image);
+  res.json({ id: result.lastInsertRowid });
+});
+
+app.put('/api/news/:id', authMiddleware, (req, res) => {
+  const { title, excerpt, content, date, author, image } = req.body;
+  db.prepare(
+    'UPDATE news SET title=?, excerpt=?, content=?, date=?, author=?, image=?, updated_at=datetime("now") WHERE id=?'
+  ).run(title, excerpt, content, date, author, image, req.params.id);
