@@ -191,3 +191,24 @@ app.put('/api/news/:id', authMiddleware, (req, res) => {
   ).run(title, excerpt, content, date, author, image, req.params.id);
   res.json({ success: true });
 });
+
+// ─── SPA FALLBACK ─────────────────────────────────────────────
+app.get('/*', (req, res) => {
+  const indexPath = path.join(distDir, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Frontend not built yet. Run: npm run build');
+  }
+});
+
+// ─── START SERVER ─────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log('');
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('  🏛️  BICC - Banjul International Convention Centre');
+  console.log('═══════════════════════════════════════════════════════');
+  console.log(`  🌐  Website:  http://localhost:${PORT}`);
+  console.log(`  🔧  API:      http://localhost:${PORT}/api`);
+  console.log('═══════════════════════════════════════════════════════');
+});
