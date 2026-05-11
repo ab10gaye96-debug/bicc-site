@@ -189,3 +189,5 @@ app.put('/api/news/:id', authMiddleware, (req, res) => {
   db.prepare(
     'UPDATE news SET title=?, excerpt=?, content=?, date=?, author=?, image=?, updated_at=datetime("now") WHERE id=?'
   ).run(title, excerpt, content, date, author, image, req.params.id);
+  res.json({ success: true });
+});
