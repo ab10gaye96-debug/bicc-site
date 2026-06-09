@@ -1,21 +1,28 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Briefcase, Upload, Send, CheckCircle, ArrowLeft } from 'lucide-react';
 import SEO from '../components/SEO';
+import { createApplication, fetchVacancies } from '../api';
+import { storage } from '../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-// This would fetch from Firestore in production
-const MOCK_JOB = {
-  id: '1',
-  title: 'Event Coordinator',
-  department: 'Operations',
-  type: 'Full-time',
-};
+const FALLBACK_JOB = { id: '', title: 'this position', department: 'BICC', type: '' };
 
 export default function CareerApply() {
   const { jobId } = useParams();
-  const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
+  const [job, setJob] = useState<{ id: string; title: string; department: string; type: string }>(FALLBACK_JOB);
+
+  useEffect(() => {
+    if (!jobId) return;
+    fetchVacancies()
+      .then(vacancies => {
+        const match = vacancies.find((v: any) => String(v.id) === String(jobId));
+        if (match) setJob({ id: String(match.id), title: match.title, department: match.department || 'BICC', type: match.type || '' });
+      })
+      .catch(() => { /* keep fallback */ });
+  }, [jobId]);
 
   const [form, setForm] = useState({
     firstName: '',
@@ -46,12 +53,33 @@ export default function CareerApply() {
     setSending(true);
 
     try {
-      // In production:
-      // 1. Upload resume to Firebase Storage
-      // 2. Save application to Firestore
-      // 3. Send email notification
-      
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate upload
+      let resumeUrl = '';
+      let resumeName = '';
+      if (form.resumeFile) {
+        resumeName = form.resumeFile.name;
+        const path = `resumes/${Date.now()}_${form.resumeFile.name}`;
+        const storageRef = ref(storage, path);
+        await uploadBytes(storageRef, form.resumeFile);
+        resumeUrl = await getDownloadURL(storageRef);
+      }
+
+      await createApplication({
+        jobId: job.id || jobId || '',
+        jobTitle: job.title,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        city: form.city,
+        education: form.education,
+        institution: form.institution,
+        graduationYear: form.graduationYear,
+        experience: form.experience,
+        coverLetter: form.coverLetter,
+        resumeUrl,
+        resumeName,
+      });
 
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -78,7 +106,7 @@ export default function CareerApply() {
               </div>
               <h1 className="text-3xl font-bold text-[#1F85A8] mb-4">Application Submitted!</h1>
               <p className="text-gray-600 mb-8">
-                Thank you for applying to {MOCK_JOB.title} at BICC. 
+                Thank you for applying to {job.title} at BICC. 
                 Our HR team will review your application and contact you within 2 weeks if your qualifications match our requirements.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -104,7 +132,7 @@ export default function CareerApply() {
 
   return (
     <div className="pt-20 min-h-screen bg-gray-50">
-      <SEO title={`Apply for ${MOCK_JOB.title} — BICC Careers`} />
+      <SEO title={`Apply for ${job.title} — BICC Careers`} />
 
       {/* Header */}
       <section className="py-12 bg-white border-b">
@@ -122,9 +150,9 @@ export default function CareerApply() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-[#1F85A8] mb-2">
-                Apply for {MOCK_JOB.title}
+                Apply for {job.title}
               </h1>
-              <p className="text-gray-600">{MOCK_JOB.department} • {MOCK_JOB.type}</p>
+              <p className="text-gray-600">{job.department}{job.type ? ` • ${job.type}` : ''}</p>
             </div>
           </div>
         </div>

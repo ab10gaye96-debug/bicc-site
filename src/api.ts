@@ -322,9 +322,20 @@ export function hasPermission(action: string): boolean {
 export function canAccessTab(tab: string): boolean {
   const role = getCurrentUserRole();
   const tabAccess: Record<string, string[]> = {
-    'Super Admin': ['dashboard', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues', 'users'],
-    'Manager':     ['dashboard', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues'],
-    'Staff':       ['dashboard', 'events', 'news', 'contacts', 'bookings', 'gallery'],
+    'Super Admin': [
+      'dashboard', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues', 'users',
+      'testimonials', 'partners', 'downloads', 'careers', 'tenders', 'subscribers',
+      'pricing', 'quotations',
+    ],
+    'Manager': [
+      'dashboard', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues',
+      'testimonials', 'partners', 'downloads', 'careers', 'tenders', 'subscribers',
+      'pricing', 'quotations',
+    ],
+    'Staff': [
+      'dashboard', 'events', 'news', 'contacts', 'bookings', 'gallery',
+      'downloads', 'careers',
+    ],
   };
   return tabAccess[role]?.includes(tab) || false;
 }
@@ -492,4 +503,116 @@ export async function fetchSubscribers(): Promise<any[]> {
 
 export async function deleteSubscriber(id: string | number): Promise<void> {
   await deleteDoc(doc(db, 'subscribers', id.toString()));
+}
+
+// ── Applications (job) ────────────────────────────────────────────────────────
+
+export async function createApplication(data: any): Promise<any> {
+  const applicationData = {
+    ...data,
+    created_at: new Date().toISOString(),
+    status: 'New',
+  };
+  const docRef = await addDoc(collection(db, 'applications'), applicationData);
+  return { id: docRef.id, ...applicationData };
+}
+
+export async function updateApplication(id: string | number, data: any): Promise<void> {
+  await updateDoc(doc(db, 'applications', id.toString()), data);
+}
+
+// ── Booking workflow ──────────────────────────────────────────────────────────
+
+/** Ordered booking lifecycle used across admin + emails. */
+export const BOOKING_STATUSES = [
+  'Pending',
+  'Under Review',
+  'Approved',
+  'Rejected',
+  'Confirmed',
+  'Completed',
+] as const;
+
+/** Statuses that hold a venue (i.e. count towards a date being unavailable). */
+const BLOCKING_STATUSES = ['Under Review', 'Approved', 'Confirmed', 'Completed'];
+
+function datesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
+  if (!aStart || !bStart) return false;
+  const aS = new Date(aStart).getTime();
+  const aE = new Date(aEnd || aStart).getTime();
+  const bS = new Date(bStart).getTime();
+  const bE = new Date(bEnd || bStart).getTime();
+  return aS <= bE && bS <= aE;
+}
+
+/**
+ * Returns the existing confirmed/approved bookings that conflict with the given
+ * date range and (optionally) any of the requested venues. Used to prevent
+ * double-booking on the public booking form.
+ */
+export async function checkAvailability(
+  startDate: string,
+  endDate: string,
+  venues: string[] = [],
+  excludeId?: string
+): Promise<any[]> {
+  if (!startDate) return [];
+  const bookings = await fetchBookings();
+  return bookings.filter((b) => {
+    if (excludeId && b.id === excludeId) return false;
+    if (!BLOCKING_STATUSES.includes(b.status)) return false;
+    if (!datesOverlap(startDate, endDate, b.startDate, b.endDate)) return false;
+    // If no specific venues requested on either side, a date overlap is a conflict.
+    if (!venues.length || !Array.isArray(b.venues) || !b.venues.length) return true;
+    return b.venues.some((v: string) => venues.includes(v));
+  });
+}
+
+/** Persist an admin reply + status + internal notes on a booking. */
+export async function updateBooking(id: string | number, data: any): Promise<void> {
+  await updateDoc(doc(db, 'bookings', id.toString()), {
+    ...data,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+// ── Pricing ───────────────────────────────────────────────────────────────────
+
+export async function fetchPricing(): Promise<any[]> {
+  const snap = await getDocs(collection(db, 'pricing'));
+  return snap.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
+}
+
+export async function createPricing(data: any): Promise<any> {
+  const docRef = await addDoc(collection(db, 'pricing'), data);
+  return { id: docRef.id, ...data };
+}
+
+export async function updatePricing(id: string | number, data: any): Promise<void> {
+  await updateDoc(doc(db, 'pricing', id.toString()), data);
+}
+
+export async function deletePricing(id: string | number): Promise<void> {
+  await deleteDoc(doc(db, 'pricing', id.toString()));
+}
+
+// ── Quotations ────────────────────────────────────────────────────────────────
+
+export async function fetchQuotations(): Promise<any[]> {
+  const snap = await getDocs(collection(db, 'quotations'));
+  return snap.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
+}
+
+export async function createQuotation(data: any): Promise<any> {
+  const quotationData = { ...data, created_at: new Date().toISOString() };
+  const docRef = await addDoc(collection(db, 'quotations'), quotationData);
+  return { id: docRef.id, ...quotationData };
+}
+
+export async function updateQuotation(id: string | number, data: any): Promise<void> {
+  await updateDoc(doc(db, 'quotations', id.toString()), data);
+}
+
+export async function deleteQuotation(id: string | number): Promise<void> {
+  await deleteDoc(doc(db, 'quotations', id.toString()));
 }

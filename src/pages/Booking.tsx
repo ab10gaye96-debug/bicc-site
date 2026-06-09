@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { submitBooking } from '../api';
+import { submitBooking, checkAvailability } from '../api';
 import { sendBookingNotificationEmail, sendBookingConfirmationEmail } from '../emailService';
-import { Building2, Calendar, Users, CheckCircle, Send, ChevronDown, Hash, Printer } from 'lucide-react';
+import { Building2, Calendar, Users, CheckCircle, Send, ChevronDown, Hash, Printer, AlertTriangle, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 const EVENT_TYPES = [
@@ -82,6 +82,20 @@ export default function Booking() {
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [refNumber, setRefNumber] = useState('');
+  const [availability, setAvailability] = useState<{ checking: boolean; conflicts: any[] | null }>({ checking: false, conflicts: null });
+
+  // Check availability whenever dates or selected venues change.
+  useEffect(() => {
+    if (!form.startDate) { setAvailability({ checking: false, conflicts: null }); return; }
+    let cancelled = false;
+    setAvailability(prev => ({ ...prev, checking: true }));
+    const handle = setTimeout(() => {
+      checkAvailability(form.startDate, form.endDate || form.startDate, form.venues)
+        .then(conflicts => { if (!cancelled) setAvailability({ checking: false, conflicts }); })
+        .catch(() => { if (!cancelled) setAvailability({ checking: false, conflicts: null }); });
+    }, 400);
+    return () => { cancelled = true; clearTimeout(handle); };
+  }, [form.startDate, form.endDate, form.venues]);
 
   // If date param changes after mount, update form
   useEffect(() => {
@@ -113,6 +127,13 @@ export default function Booking() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (availability.conflicts && availability.conflicts.length > 0) {
+      const proceed = confirm(
+        `The selected dates overlap with ${availability.conflicts.length} existing booking(s). ` +
+        `You can still submit your request and our team will confirm availability. Continue?`
+      );
+      if (!proceed) return;
+    }
     setSending(true);
     try {
       const ref = generateRef();
@@ -335,6 +356,30 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
                       onChange={e => set('endTime', e.target.value)} className={inputClass} />
                   </div>
                 </div>
+
+                {/* Live availability feedback */}
+                {form.startDate && (
+                  <div className="mt-5">
+                    {availability.checking ? (
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Loader2 size={16} className="animate-spin" /> Checking availability…
+                      </div>
+                    ) : availability.conflicts && availability.conflicts.length > 0 ? (
+                      <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
+                        <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+                        <span>
+                          These dates overlap with {availability.conflicts.length} existing booking(s).
+                          You can still submit — our team will confirm final availability
+                          {form.venues.length === 0 ? '. Tip: select specific venues above for a more precise check.' : '.'}
+                        </span>
+                      </div>
+                    ) : availability.conflicts && availability.conflicts.length === 0 ? (
+                      <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700">
+                        <CheckCircle size={18} className="shrink-0" /> These dates appear to be available.
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
 
               {/* Event Details */}
