@@ -1,15 +1,21 @@
 import { Award, Globe2, Heart, Lightbulb, Shield, Target, Users, Building2 } from 'lucide-react';
 import { IMAGES } from '../images';
+import SEO from '../components/SEO';
 
 export default function About() {
   return (
     <div className="pt-20">
+      <SEO
+        title="About Us"
+        description="Learn about the Banjul International Convention Centre — established by the Government of The Gambia to advance the country's MICE industry and host world-class events."
+      />
       {/* Hero */}
       <section className="relative py-24 bg-[#1F85A8]">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: `url(${IMAGES.heroBg})` }} />
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${IMAGES.heroBg})` }} />
+        <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-4xl mx-auto px-4 text-center">
           <span className="text-blue-400 font-semibold text-sm tracking-widest uppercase">About Us</span>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mt-4 mb-6">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mt-4 mb-6">
             Positioning The Gambia as Africa's Leading MICE Destination
           </h1>
           <p className="text-gray-300 text-lg max-w-3xl mx-auto">
@@ -52,22 +58,22 @@ export default function About() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12">
-            <div className="bg-white rounded-2xl p-10 shadow-sm">
-              <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
+            <div className="bg-white rounded-2xl p-6 sm:p-10 shadow-sm">
+              <div className="w-12 sm:w-14 h-12 sm:h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
                 <Target className="text-blue-700" size={28} />
               </div>
-              <h3 className="text-2xl font-bold text-[#1F85A8] mb-4">Our Mission</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-[#1F85A8] mb-4">Our Mission</h3>
               <p className="text-gray-600 leading-relaxed">
                 To provide comprehensive event management services that ensure every conference, meeting, and ceremony reflects 
                 our core values of Excellence, Innovation, Sustainability, Service, and Integrity. We are committed to delivering 
                 tailored event solutions for summits, conferences, and special events that connect people, ideas, and opportunities.
               </p>
             </div>
-            <div className="bg-white rounded-2xl p-10 shadow-sm">
-              <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
+            <div className="bg-white rounded-2xl p-6 sm:p-10 shadow-sm">
+              <div className="w-12 sm:w-14 h-12 sm:h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
                 <Globe2 className="text-blue-700" size={28} />
               </div>
-              <h3 className="text-2xl font-bold text-[#1F85A8] mb-4">Our Vision</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-[#1F85A8] mb-4">Our Vision</h3>
               <p className="text-gray-600 leading-relaxed">
                 To position The Gambia as a leading Meetings, Incentives, Conferences, and Exhibitions (MICE) destination in Africa 
                 and beyond. As a national asset, BICC plays a central role in promoting The Gambia's diplomacy, culture, and economic 

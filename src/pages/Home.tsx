@@ -1,8 +1,237 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Users, Building2, Globe2, Star, Calendar, MapPin, Award, Shield } from 'lucide-react';
-import { fetchEvents, fetchNews } from '../api';
+import { ArrowRight, Users, Building2, Globe2, Star, Calendar, MapPin, Award, Shield, Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { fetchEvents, fetchNews, fetchGallery } from '../api';
 import { useApi } from '../hooks/useApi';
 import { IMAGES } from '../images';
+import SEO from '../components/SEO';
+import TestimonialsSection from '../components/TestimonialsSection';
+import PartnersSection from '../components/PartnersSection';
+import NewsletterForm from '../components/NewsletterForm';
+import { useEffect, useRef, useState } from 'react';
+
+// ── Animated counter hook ─────────────────────────────────────────────────────
+function useCounter(target: number, duration = 1800, start = false) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!start) return;
+    let startTime: number | null = null;
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      // ease-out
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(eased * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [start, target, duration]);
+  return count;
+}
+
+// ── Stats bar with intersection observer ─────────────────────────────────────
+function StatsBar() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.4 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const stats = [
+    { icon: Users,    target: 4000, suffix: '+', label: 'Guest Capacity' },
+    { icon: Building2, target: 30,  suffix: '+', label: 'Event Spaces' },
+    { icon: Globe2,   target: 50,  suffix: '+', label: 'International Events' },
+    { icon: Award,    target: 5,   suffix: '-Star', label: 'Facility Rating' },
+  ];
+
+  return (
+    <section ref={ref} className="bg-[#1F85A8] border-y border-white/10">
+      <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+        {stats.map((stat, i) => (
+          <StatItem key={i} {...stat} animate={visible} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function StatItem({ icon: Icon, target, suffix, label, animate }: {
+  icon: any; target: number; suffix: string; label: string; animate: boolean;
+}) {
+  const count = useCounter(target, 1800, animate);
+  return (
+    <div className="text-center">
+      <Icon className="mx-auto text-white mb-2" size={28} />
+      <div className="text-2xl sm:text-3xl font-bold text-white">
+        {animate ? count.toLocaleString() : '0'}{suffix}
+      </div>
+      <div className="text-sm text-gray-400 mt-1">{label}</div>
+    </div>
+  );
+}
+
+// ── Virtual Tour section — pulls from Gallery (Firestore), falls back to IMAGES ──
+const FALLBACK_ROOMS = [
+  { caption: 'Plenary Hall', category: 'Plenary Hall', url: IMAGES.conferenceHall },
+  { caption: 'Banquet Hall', category: 'Banquet', url: IMAGES.banquetHall },
+  { caption: 'Conference Exterior', category: 'Exterior', url: IMAGES.conferenceExterior },
+  { caption: 'VVIP Lounge', category: 'VVIP Lounge', url: IMAGES.vvipLounge },
+  { caption: 'Hospitality Area', category: 'Hospitality', url: IMAGES.hospitalityAlt },
+  { caption: 'Control Room', category: 'Control Room', url: IMAGES.controlRoom },
+];
+
+// Categories that qualify as "tour" images — admin just tags gallery images with these
+const TOUR_CATEGORIES = [
+  'Plenary Hall', 'Banquet', 'Exterior', 'VVIP Lounge',
+  'Hospitality', 'Control Room', 'Venue', 'Facility', 'Tour',
+];
+
+function VirtualTour() {
+  const { data: galleryData } = useApi(() => fetchGallery(), []);
+  const [active, setActive] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
+
+  // Use gallery images that match tour categories, fallback to hardcoded if none
+  const tourImages = (() => {
+    if (!galleryData || galleryData.length === 0) return FALLBACK_ROOMS;
+    const filtered = galleryData.filter((img: any) =>
+      img.category && TOUR_CATEGORIES.some(cat =>
+        img.category.toLowerCase().includes(cat.toLowerCase())
+      )
+    );
+    if (filtered.length === 0) return FALLBACK_ROOMS;
+    return filtered.map((img: any) => ({
+      url: img.url,
+      caption: img.caption || img.category || 'BICC Facility',
+      category: img.category || '',
+    }));
+  })();
+
+  const total = tourImages.length;
+  const prev = () => setActive(i => (i - 1 + total) % total);
+  const next = () => setActive(i => (i + 1) % total);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (!lightbox) return;
+      if (e.key === 'ArrowLeft') prev();
+      if (e.key === 'ArrowRight') next();
+      if (e.key === 'Escape') setLightbox(false);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightbox, total]);
+
+  // Reset active index if images change and index is out of range
+  useEffect(() => {
+    if (active >= total) setActive(0);
+  }, [total]);
+
+  const room = tourImages[active];
+  if (!room) return null;
+
+  return (
+    <section className="py-20 bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <span className="text-blue-400 font-semibold text-sm tracking-widest uppercase">Explore the Facility</span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mt-3">Virtual Tour</h2>
+          <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
+            Browse through the spaces of the Sir Dawda Kairaba Jawara International Conference Centre.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-[1fr_340px] gap-6 lg:gap-8 items-start">
+          {/* Main image */}
+          <div className="relative rounded-2xl overflow-hidden group cursor-pointer" onClick={() => setLightbox(true)}>
+            <img
+              src={room.url}
+              alt={room.caption}
+              className="w-full aspect-[16/9] object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/40">
+                <Play size={24} className="text-white ml-1" />
+              </div>
+            </div>
+            <button onClick={e => { e.stopPropagation(); prev(); }}
+              className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all">
+              <ChevronLeft size={18} />
+            </button>
+            <button onClick={e => { e.stopPropagation(); next(); }}
+              className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all">
+              <ChevronRight size={18} />
+            </button>
+            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
+              <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-1">
+                {active + 1} / {total}
+              </p>
+              <h3 className="text-white text-base sm:text-xl font-bold">{room.caption}</h3>
+              {room.category && room.category !== room.caption && (
+                <p className="text-gray-300 text-sm mt-1">{room.category}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Thumbnail strip — horizontal scroll on mobile, grid on desktop */}
+          <div className="flex gap-3 overflow-x-auto pb-2 lg:pb-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:max-h-[480px] lg:overflow-y-auto lg:overflow-x-visible pr-0 lg:pr-1">
+            {tourImages.map((r, i) => (
+              <button
+                key={i}
+                onClick={() => setActive(i)}
+                className={`relative rounded-xl overflow-hidden transition-all shrink-0 w-28 sm:w-32 lg:w-auto ${
+                  i === active ? 'ring-2 ring-blue-400 scale-105' : 'opacity-60 hover:opacity-100'
+                }`}
+              >
+                <img src={r.url} alt={r.caption} className="w-full aspect-[4/3] object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <p className="absolute bottom-1 sm:bottom-2 left-1 sm:left-2 right-1 sm:right-2 text-white text-xs font-semibold line-clamp-1">{r.caption}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="text-center mt-10 flex flex-col sm:flex-row gap-3 justify-center">
+          <Link to="/gallery"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-semibold hover:bg-white/20 transition-all">
+            View Full Photo Gallery <ArrowRight size={16} />
+          </Link>
+          <p className="text-gray-500 text-xs self-center">
+            Tour images are managed from the Admin → Gallery panel
+          </p>
+        </div>
+      </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center" onClick={() => setLightbox(false)}>
+          <button onClick={() => setLightbox(false)} className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center">
+            ✕
+          </button>
+          <button onClick={e => { e.stopPropagation(); prev(); }} className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center">
+            <ChevronLeft size={24} />
+          </button>
+          <div className="max-w-5xl w-full px-4 sm:px-16" onClick={e => e.stopPropagation()}>
+            <img src={room.url} alt={room.caption} className="w-full max-h-[80vh] object-contain rounded-xl" />
+            <p className="text-white text-center font-bold mt-4 text-lg">{room.caption}</p>
+            {room.category && room.category !== room.caption && (
+              <p className="text-gray-400 text-center text-sm mt-1">{room.category}</p>
+            )}
+          </div>
+          <button onClick={e => { e.stopPropagation(); next(); }} className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center">
+            <ChevronRight size={24} />
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
 
 export default function Home() {
   const { data: events } = useApi(() => fetchEvents(), []);
@@ -12,10 +241,14 @@ export default function Home() {
 
   return (
     <div>
+      <SEO
+        title="BICC — Banjul International Convention Centre"
+        description="The Gambia's premier MICE destination. World-class venues for conferences, summits, banquets, and events at the Sir Dawda Kairaba Jawara International Conference Centre."
+      />
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${IMAGES.heroBg})` }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1F85A8]/70 via-[#1F85A8]/50 to-[#1F85A8]/90" />
+        <div className="absolute inset-0 bg-black/30" />
         <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-400/30 rounded-full text-blue-200 text-sm font-medium mb-8 backdrop-blur-sm">
             <Star size={14} />
@@ -33,7 +266,7 @@ export default function Home() {
             <Link to="/venues" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-400 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/30">
               Explore Our Venues <ArrowRight size={20} />
             </Link>
-            <Link to="/contact" className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-xl font-bold text-lg hover:bg-white/10 transition-all backdrop-blur-sm">
+            <Link to="/booking" className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-xl font-bold text-lg hover:bg-white/10 transition-all backdrop-blur-sm">
               Book an Event
             </Link>
           </div>
@@ -44,23 +277,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Bar */}
-      <section className="bg-[#1F85A8] border-y border-white/10">
-        <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-2 md:grid-cols-4 gap-8">
-          {[
-            { icon: Users, value: '4,000+', label: 'Guest Capacity' },
-            { icon: Building2, value: '30+', label: 'Event Spaces' },
-            { icon: Globe2, value: '50+', label: 'International Events' },
-            { icon: Award, value: '5-Star', label: 'Facility Rating' },
-          ].map((stat, i) => (
-            <div key={i} className="text-center">
-              <stat.icon className="mx-auto text-white mb-2" size={28} />
-              <div className="text-2xl sm:text-3xl font-bold text-white">{stat.value}</div>
-              <div className="text-sm text-gray-400 mt-1">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Stats Bar — animated counters */}
+      <StatsBar />
 
       {/* About Preview */}
       <section className="py-20 bg-white">
@@ -86,11 +304,11 @@ export default function Home() {
               </div>
               <Link to="/about" className="inline-flex items-center gap-2 text-blue-700 font-semibold hover:text-blue-800 transition-colors">Learn More About Us <ArrowRight size={18} /></Link>
             </div>
-            <div className="relative">
+            <div className="relative mt-8 lg:mt-0">
               <img src={IMAGES.conferenceHall} alt="Conference Centre" className="rounded-2xl shadow-2xl w-full aspect-[4/3] object-cover" />
-              <div className="absolute -bottom-6 -left-6 bg-blue-600 text-white rounded-xl p-6 shadow-xl">
-                <div className="text-3xl font-bold">14,000</div>
-                <div className="text-sm font-medium">m² of Event Space</div>
+              <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-blue-600 text-white rounded-xl p-4 sm:p-6 shadow-xl">
+                <div className="text-2xl sm:text-3xl font-bold">14,000</div>
+                <div className="text-xs sm:text-sm font-medium">m² of Event Space</div>
               </div>
             </div>
           </div>
@@ -128,6 +346,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Virtual Tour */}
+      <VirtualTour />
 
       {/* Upcoming Events */}
       <section className="py-20 bg-white">
@@ -185,6 +406,15 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <TestimonialsSection />
+
+      {/* Partners */}
+      <PartnersSection />
+
+      {/* Newsletter */}
+      <NewsletterForm />
+
       {/* CTA */}
       <section className="relative py-24 overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${IMAGES.banquetHall})` }} />
@@ -192,7 +422,7 @@ export default function Home() {
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">Ready to Host Your Next Event?</h2>
           <p className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto">Let BICC deliver a world-class experience. From conferences to galas, we provide comprehensive event management that reflects excellence, innovation, and The Gambia's legendary hospitality.</p>
-          <Link to="/contact" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-400 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/30">Contact Us Today <ArrowRight size={20} /></Link>
+          <Link to="/booking" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-400 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/30">Book an Event <ArrowRight size={20} /></Link>
         </div>
       </section>
     </div>

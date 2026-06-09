@@ -49,10 +49,30 @@ export default function Footer() {
               {[
                 { name: 'About Us', path: '/about' },
                 { name: 'Our Venues', path: '/venues' },
+                { name: 'Services & Packages', path: '/services' },
                 { name: 'Upcoming Events', path: '/events' },
                 { name: 'Photo Gallery', path: '/gallery' },
                 { name: 'Latest News', path: '/news' },
                 { name: 'Contact Us', path: '/contact' },
+              ].map((link) => (
+                <li key={link.path}>
+                  <Link to={link.path} className="text-sm hover:text-white transition-colors">{link.name}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <h4 className="text-white font-semibold text-lg mb-5">Resources</h4>
+            <ul className="space-y-3">
+              {[
+                { name: 'Destination Gambia', path: '/destination' },
+                { name: 'Plan Your Event', path: '/plan-your-event' },
+                { name: 'Downloads Centre', path: '/downloads' },
+                { name: 'Careers', path: '/careers' },
+                { name: 'Procurement & Tenders', path: '/procurement' },
+                { name: 'Book an Event', path: '/booking' },
               ].map((link) => (
                 <li key={link.path}>
                   <Link to={link.path} className="text-sm hover:text-white transition-colors">{link.name}</Link>
