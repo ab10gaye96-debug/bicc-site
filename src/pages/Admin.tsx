@@ -12,9 +12,22 @@ import {
   Image, Building2, Plus, Trash2, Mail, Phone, Clock, Users,
   AlertCircle, Check, Send, X, Edit, BookOpen, ChevronDown,
   TrendingUp, DollarSign, GripVertical, Download,
+  Star, Handshake, Briefcase, FileSpreadsheet, Receipt,
+  ChevronLeft, ChevronRight, StickyNote, List,
 } from 'lucide-react';
+import TestimonialsTab from '../components/admin/TestimonialsTab';
+import PartnersTab from '../components/admin/PartnersTab';
+import DownloadsTab from '../components/admin/DownloadsTab';
+import CareersTab from '../components/admin/CareersTab';
+import TendersTab from '../components/admin/TendersTab';
+import SubscribersTab from '../components/admin/SubscribersTab';
+import PricingTab from '../components/admin/PricingTab';
+import QuotationsTab from '../components/admin/QuotationsTab';
 
-type Tab = 'dashboard' | 'events' | 'news' | 'contacts' | 'bookings' | 'gallery' | 'venues' | 'users';
+type Tab =
+  | 'dashboard' | 'events' | 'news' | 'contacts' | 'bookings' | 'gallery' | 'venues' | 'users'
+  | 'testimonials' | 'partners' | 'downloads' | 'careers' | 'tenders' | 'subscribers'
+  | 'pricing' | 'quotations';
 
 // Image compression utility
 const compressImage = async (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<Blob> => {
@@ -119,6 +132,14 @@ export default function Admin() {
     { key: 'bookings', label: 'Bookings', icon: BookOpen },
     { key: 'gallery', label: 'Gallery', icon: Image },
     { key: 'venues', label: 'Venues', icon: Building2 },
+    { key: 'quotations', label: 'Quotations', icon: Receipt },
+    { key: 'pricing', label: 'Pricing', icon: DollarSign },
+    { key: 'downloads', label: 'Downloads', icon: Download },
+    { key: 'careers', label: 'Careers', icon: Briefcase },
+    { key: 'tenders', label: 'Tenders', icon: FileSpreadsheet },
+    { key: 'testimonials', label: 'Testimonials', icon: Star },
+    { key: 'partners', label: 'Partners', icon: Handshake },
+    { key: 'subscribers', label: 'Subscribers', icon: Mail },
     { key: 'users', label: 'Users', icon: Users },
   ];
 
@@ -183,6 +204,14 @@ export default function Admin() {
               {activeTab === 'gallery' && <GalleryTab />}
               {activeTab === 'venues' && <VenuesTab />}
               {activeTab === 'users' && <UsersTab />}
+              {activeTab === 'testimonials' && <TestimonialsTab />}
+              {activeTab === 'partners' && <PartnersTab />}
+              {activeTab === 'downloads' && <DownloadsTab />}
+              {activeTab === 'careers' && <CareersTab />}
+              {activeTab === 'tenders' && <TendersTab />}
+              {activeTab === 'subscribers' && <SubscribersTab />}
+              {activeTab === 'pricing' && <PricingTab />}
+              {activeTab === 'quotations' && <QuotationsTab />}
           </div>
           </div>
         </div>
@@ -904,14 +933,100 @@ function GalleryTab() {
 }
 
 
+function BookingCalendar({ bookings, statusColor, onSelect }: { bookings: any[]; statusColor: Record<string, string>; onSelect: (b: any) => void }) {
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth());
+
+  // Map each date (YYYY-MM-DD) to the bookings active that day.
+  const bookingMap: Record<string, any[]> = {};
+  bookings.forEach(b => {
+    if (!b.startDate) return;
+    const start = new Date(b.startDate);
+    const end = new Date(b.endDate || b.startDate);
+    const cur = new Date(start);
+    while (cur <= end) {
+      const key = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
+      (bookingMap[key] ||= []).push(b);
+      cur.setDate(cur.getDate() + 1);
+    }
+  });
+
+  const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y - 1); } else setMonth(m => m - 1); };
+  const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y + 1); } else setMonth(m => m + 1); };
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells: (number | null)[] = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  return (
+    <div className="bg-gray-50 rounded-2xl p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <button onClick={prevMonth} className="p-2 hover:bg-gray-200 rounded-lg"><ChevronLeft size={18} /></button>
+        <h3 className="font-bold text-[#1F85A8]">{MONTHS[month]} {year}</h3>
+        <button onClick={nextMonth} className="p-2 hover:bg-gray-200 rounded-lg"><ChevronRight size={18} /></button>
+      </div>
+      <div className="grid grid-cols-7 gap-1 sm:gap-2">
+        {DAYS.map(d => <div key={d} className="text-center text-xs font-semibold text-gray-400 py-1">{d}</div>)}
+        {cells.map((day, i) => {
+          if (day === null) return <div key={i} />;
+          const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const dayBookings = bookingMap[key] || [];
+          const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+          return (
+            <div key={i} className={`min-h-[64px] sm:min-h-[84px] rounded-lg border p-1 ${isToday ? 'border-blue-400 bg-blue-50' : 'border-gray-100 bg-white'}`}>
+              <div className="text-xs text-gray-500 mb-1">{day}</div>
+              <div className="space-y-0.5">
+                {dayBookings.slice(0, 3).map((b, idx) => (
+                  <button key={idx} onClick={() => onSelect(b)} title={`${b.institutionName} — ${b.status}`}
+                    className={`w-full text-left truncate px-1 py-0.5 rounded text-[10px] font-medium ${statusColor[b.status] || 'bg-gray-100 text-gray-700'}`}>
+                    {b.institutionName}
+                  </button>
+                ))}
+                {dayBookings.length > 3 && <p className="text-[10px] text-gray-400 px-1">+{dayBookings.length - 3} more</p>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function BookingsTab() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replySubject, setReplySubject] = useState('');
   const [replyMessage, setReplyMessage] = useState('');
+  const [view, setView] = useState<'list' | 'calendar'>('list');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [notesDraft, setNotesDraft] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
 
   useEffect(() => { api.fetchBookings().then(setBookings).catch(() => { }); }, []);
+
+  useEffect(() => { setNotesDraft(selected?.internalNotes || ''); }, [selected]);
+
+  const saveNotes = async () => {
+    if (!selected) return;
+    setSavingNotes(true);
+    try {
+      await api.updateBooking(selected.id, { internalNotes: notesDraft });
+      const updated = await api.fetchBookings();
+      setBookings(updated);
+      setSelected(updated.find((b: any) => b.id === selected.id) || null);
+    } finally {
+      setSavingNotes(false);
+    }
+  };
+
+  const filteredBookings = statusFilter === 'All'
+    ? bookings
+    : bookings.filter(b => b.status === statusFilter);
 
   const handleStatusChange = async (id: string, status: string) => {
     await api.updateBookingStatus(id, status);
@@ -965,6 +1080,17 @@ function BookingsTab() {
       selected.refNumber || selected.id
     );
     if (ok) {
+      // Persist the reply on the booking so it's visible on reload.
+      try {
+        await api.updateBooking(selected.id, {
+          lastReply: replyMessage,
+          lastReplySubject: replySubject,
+          repliedAt: new Date().toISOString(),
+        });
+        const updated = await api.fetchBookings();
+        setBookings(updated);
+        setSelected(updated.find((b: any) => b.id === selected.id) || null);
+      } catch { /* email already sent; persistence is best-effort */ }
       alert('✅ Reply sent successfully!');
       setShowReplyForm(false);
       setReplyMessage('');
@@ -974,25 +1100,47 @@ function BookingsTab() {
   };
 
   const statusColor: Record<string, string> = {
-    Pending:   'bg-yellow-100 text-yellow-800',
-    Approved:  'bg-green-100 text-green-800',
-    Rejected:  'bg-red-100 text-red-800',
-    Completed: 'bg-blue-100 text-blue-800',
+    Pending:       'bg-yellow-100 text-yellow-800',
+    'Under Review': 'bg-orange-100 text-orange-800',
+    Approved:      'bg-green-100 text-green-800',
+    Rejected:      'bg-red-100 text-red-800',
+    Confirmed:     'bg-teal-100 text-teal-800',
+    Completed:     'bg-blue-100 text-blue-800',
   };
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-[#1F85A8] mb-6">Booking Requests</h2>
+      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+        <h2 className="text-xl font-bold text-[#1F85A8]">Booking Requests</h2>
+        <div className="flex items-center gap-3 flex-wrap">
+          {view === 'list' && (
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+              className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600">
+              <option value="All">All statuses</option>
+              {api.BOOKING_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          )}
+          <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+            <button onClick={() => setView('list')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${view === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}><List size={14} /> List</button>
+            <button onClick={() => setView('calendar')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${view === 'calendar' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}><Calendar size={14} /> Calendar</button>
+          </div>
+        </div>
+      </div>
       {bookings.length === 0 ? (
         <div className="text-center py-20">
           <BookOpen className="mx-auto text-gray-300 mb-4" size={48} />
           <p className="text-gray-400">No booking requests yet.</p>
         </div>
+      ) : view === 'calendar' ? (
+        <BookingCalendar bookings={bookings} statusColor={statusColor} onSelect={(b) => { setSelected(b); setView('list'); }} />
       ) : (
         <div className="grid lg:grid-cols-3 gap-6">
           {/* List */}
           <div className="lg:col-span-1 space-y-2 max-h-[600px] overflow-y-auto">
-            {bookings.map(b => (
+            {filteredBookings.length === 0 && (
+              <p className="text-sm text-gray-400 text-center py-6">No bookings with status "{statusFilter}".</p>
+            )}
+            {filteredBookings.map(b => (
               <div key={b.id} onClick={() => { setSelected(b); setShowReplyForm(false); }}
                 className={`p-3 sm:p-4 rounded-xl cursor-pointer transition-all ${
                   selected?.id === b.id ? 'bg-blue-50 border-2 border-blue-300'
@@ -1038,9 +1186,31 @@ function BookingsTab() {
                 <div className="relative">
                   <select value={selected.status} onChange={e => handleStatusChange(selected.id, e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600 appearance-none pr-8">
-                    <option>Pending</option><option>Approved</option><option>Rejected</option><option>Completed</option>
+                    {api.BOOKING_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                   <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Last reply sent */}
+              {selected.lastReply && (
+                <div className="mb-5 bg-blue-50 border border-blue-100 rounded-lg p-3">
+                  <p className="text-xs text-blue-700 font-medium mb-1 flex items-center gap-1.5"><Send size={12} /> Last reply sent{selected.repliedAt ? ` · ${new Date(selected.repliedAt).toLocaleDateString()}` : ''}</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-line">{selected.lastReply}</p>
+                </div>
+              )}
+
+              {/* Internal notes (admin only) */}
+              <div className="mb-5">
+                <label className="flex items-center gap-1.5 text-sm font-medium text-[#1F85A8] mb-1.5"><StickyNote size={14} /> Internal Notes <span className="text-xs font-normal text-gray-400">(staff only)</span></label>
+                <textarea value={notesDraft} onChange={e => setNotesDraft(e.target.value)} rows={3}
+                  placeholder="Add internal notes about this booking…"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600 resize-none" />
+                <div className="flex justify-end mt-2">
+                  <button onClick={saveNotes} disabled={savingNotes || notesDraft === (selected.internalNotes || '')}
+                    className="px-3 py-1.5 bg-gray-700 text-white rounded-lg text-xs font-medium hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                    {savingNotes ? 'Saving…' : 'Save Notes'}
+                  </button>
                 </div>
               </div>
 
