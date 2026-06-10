@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "bicc-gambia"
+  },
+  "targets": {
+    "bicc-gambia": {
+      "hosting": {
+        "public": ["bicc-public"]
+      }
+    }
+  }
+}
