@@ -72,7 +72,7 @@ export async function fetchPartners(): Promise<any[]> {
   return snap.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
 }
 
-// ── Bookings (Public Submission) ──────────────────────────────────────────────
+// ── Bookings (Public Submission & Availability Check) ────────────────────────
 
 export async function submitBooking(data: any): Promise<any> {
   const bookingData = {
@@ -83,6 +83,11 @@ export async function submitBooking(data: any): Promise<any> {
   };
   const docRef = await addDoc(collection(db, 'bookings'), bookingData);
   return { id: docRef.id, ...bookingData };
+}
+
+export async function fetchBookings(): Promise<any[]> {
+  const snap = await getDocs(collection(db, 'bookings'));
+  return snap.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
 }
 
 /** Ordered booking lifecycle statuses */
