@@ -147,6 +147,15 @@ export default function Admin() {
 
   const tabs = allTabs.filter(tab => api.canAccessTab(tab.key));
 
+  // Debug logging - remove after testing
+  console.log('=== RBAC DEBUG ===');
+  console.log('Current user role:', api.getCurrentUserRole());
+  console.log('Is Super Admin:', api.isSuperAdmin());
+  console.log('All tabs:', allTabs.map(t => t.key));
+  console.log('Filtered tabs:', tabs.map(t => t.key));
+  console.log('Can access users tab:', api.canAccessTab('users'));
+  console.log('==================');
+
   return (
     <AdminLayout
       activeTab={activeTab}
