@@ -1,22 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Briefcase, Clock, MapPin, DollarSign, Users, ArrowRight, Search, Filter } from 'lucide-react';
-import { useApi } from '../hooks/useApi';
+import { where } from 'firebase/firestore';
+import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 import SEO from '../components/SEO';
 import { IMAGES } from '../images';
-
-// Fetch vacancies from Firestore
-async function fetchVacancies() {
-  try {
-    const { getDocs, collection, query, where } = await import('firebase/firestore');
-    const { db } = await import('../firebase');
-    const q = query(collection(db, 'vacancies'), where('status', '==', 'Open'));
-    const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch {
-    return [];
-  }
-}
 
 // Fallback data
 const FALLBACK_VACANCIES = [
@@ -97,7 +85,8 @@ const FALLBACK_VACANCIES = [
 const JOB_TYPES = ['All', 'Full-time', 'Internship', 'Graduate Programme', 'Contract'];
 
 export default function Careers() {
-  const { data: dbVacancies } = useApi(fetchVacancies, []);
+  const vacancyFilters = useMemo(() => [where('status', '==', 'Open')], []);
+  const { data: dbVacancies } = useRealtimeCollection<any>('vacancies', [], vacancyFilters);
   const vacancies = (dbVacancies && dbVacancies.length > 0) ? dbVacancies : FALLBACK_VACANCIES;
 
   const [searchQuery, setSearchQuery] = useState('');

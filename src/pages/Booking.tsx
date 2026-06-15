@@ -83,6 +83,7 @@ export default function Booking() {
   const [sending, setSending] = useState(false);
   const [refNumber, setRefNumber] = useState('');
   const [availability, setAvailability] = useState<{ checking: boolean; conflicts: any[] | null }>({ checking: false, conflicts: null });
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Check availability whenever dates or selected venues change.
   useEffect(() => {
@@ -127,6 +128,7 @@ export default function Booking() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
     if (availability.conflicts && availability.conflicts.length > 0) {
       const proceed = confirm(
         `The selected dates overlap with ${availability.conflicts.length} existing booking(s). ` +
@@ -157,17 +159,16 @@ export default function Booking() {
         sendBookingConfirmationEmail(emailData),
       ]);
 
-     setRefNumber(ref);
-setSubmitted(true);
-setForm(initialForm);
-window.scrollTo({ top: 0, behavior: 'smooth' });
-
-} catch (error) {
-  console.error('Booking Error:', error);
-  alert(String(error));
-} finally {
-  setSending(false);
-}
+      setRefNumber(ref);
+      setSubmitted(true);
+      setForm(initialForm);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+      console.error('Booking Error:', error);
+      setErrorMessage('Failed to submit your booking request. Please try again.');
+    } finally {
+      setSending(false);
+    }
   };
   const inputClass =
     'w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all text-sm';
@@ -231,6 +232,11 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-10">
+              {errorMessage && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <p className="text-red-700 text-sm font-medium">{errorMessage}</p>
+                </div>
+              )}
 
               {/* Organisation Information */}
               <div className="bg-white rounded-2xl p-4 sm:p-8 shadow-sm">

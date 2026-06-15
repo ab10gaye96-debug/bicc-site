@@ -2,12 +2,14 @@ import { db, auth } from './firebase';
 import {
   collection,
   getDocs,
+  getDoc,
   addDoc,
   deleteDoc,
   updateDoc,
   doc,
   query,
   where,
+  setDoc,
 } from 'firebase/firestore';
 import {
   signInWithEmailAndPassword,
@@ -113,17 +115,17 @@ export function canAccessTab(tab: string): boolean {
   const role = getCurrentUserRole();
   const tabAccess: Record<string, string[]> = {
     'Super Admin': [
-      'dashboard', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues', 'users',
+      'dashboard', 'settings', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues', 'users',
       'testimonials', 'partners', 'downloads', 'careers', 'tenders', 'subscribers',
-      'pricing', 'quotations', 'booking_workflow', 'customers',
+      'pricing', 'quotations',
     ],
     'Manager': [
-      'dashboard', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues',
+      'dashboard', 'settings', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues',
       'testimonials', 'partners', 'downloads', 'careers', 'tenders', 'subscribers',
-      'pricing', 'quotations', 'booking_workflow', 'customers',
+      'pricing', 'quotations',
     ],
     'Staff': [
-      'dashboard', 'events', 'news', 'contacts', 'bookings', 'gallery',
+      'dashboard', 'settings', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery',
       'downloads', 'careers',
     ],
   };
@@ -553,3 +555,42 @@ export const BOOKING_STATUSES = [
   'Confirmed',
   'Completed',
 ] as const;
+
+// ── Content Management ────────────────────────────────────────────────────────
+
+/**
+ * Fetch content for a specific section (home, footer, navbar, contact)
+ */
+export async function fetchContentSection(section: string): Promise<any> {
+  try {
+    const docRef = doc(db, 'pageContent', section);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching content section:', error);
+    return null;
+  }
+}
+
+/**
+ * Update content for a specific section
+ */
+export async function updateContentSection(section: string, content: any): Promise<void> {
+  try {
+    const docRef = doc(db, 'pageContent', section);
+    await setDoc(docRef, {
+      ...content,
+      section,
+      updatedAt: new Date().toISOString(),
+      updatedBy: localStorage.getItem('bicc_username') || 'admin',
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error updating content section:', error);
+    throw error;
+  }
+}

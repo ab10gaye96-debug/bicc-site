@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { fetchVenues } from '../api';
-import { useApi } from '../hooks/useApi';
+import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 import { Users, Check, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { IMAGES } from '../images';
@@ -80,7 +79,7 @@ function VenueCard({ venue, index }: { venue: any; index: number }) {
 }
 
 export default function Venues() {
-  const { data: venues, loading } = useApi(() => fetchVenues(), []);
+  const { data: venues, loading } = useRealtimeCollection<any>('venues', []);
 
   return (
     <div className="pt-20">
@@ -99,7 +98,7 @@ export default function Venues() {
           <h1 className="text-3xl sm:text-5xl font-bold text-white mt-4 mb-6">World-Class Venues</h1>
           <p className="text-gray-300 text-base sm:text-lg max-w-3xl mx-auto">
             With the capacity to accommodate over 4,000 guests, the Sir Dawda Kairaba Jawara International
-            Conference Center can host events of any size or shape.
+            Conference Centre can host events of every scale.
           </p>
         </div>
       </section>
@@ -111,11 +110,11 @@ export default function Venues() {
             <div className="space-y-16">
               {[0, 1, 2].map(i => <SkeletonVenue key={i} />)}
             </div>
-          ) : (venues || []).length === 0 ? (
+          ) : venues.length === 0 ? (
             <div className="text-center py-20 text-gray-400">No venues found.</div>
           ) : (
             <div className="space-y-16 sm:space-y-24">
-              {(venues || []).map((venue, index) => (
+              {venues.map((venue, index) => (
                 <VenueCard key={venue.id} venue={venue} index={index} />
               ))}
             </div>

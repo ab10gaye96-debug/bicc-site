@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { fetchEvents } from '../api';
-import { useApi } from '../hooks/useApi';
+import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 import { Calendar, MapPin, Clock, Filter, X, Users, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { IMAGES } from '../images';
@@ -58,12 +57,12 @@ function EventModal({ event, onClose }: { event: any; onClose: () => void }) {
 }
 
 export default function Events() {
-  const { data: events, loading } = useApi(() => fetchEvents(), []);
+  const { data: events, loading } = useRealtimeCollection<any>('events', []);
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [timeFilter, setTimeFilter] = useState<'upcoming' | 'past' | 'all'>('all');
   const [selected, setSelected] = useState<any | null>(null);
 
-  const allEvents = events || [];
+  const allEvents = events;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 

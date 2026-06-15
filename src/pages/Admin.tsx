@@ -13,7 +13,7 @@ import {
   AlertCircle, Check, Send, X, Edit, BookOpen, ChevronDown,
   TrendingUp, DollarSign, GripVertical, Download,
   Star, Handshake, Briefcase, FileSpreadsheet, Receipt,
-  ChevronLeft, ChevronRight, StickyNote, List,
+  ChevronLeft, ChevronRight, StickyNote, List, Settings,
 } from 'lucide-react';
 import TestimonialsTab from '../components/admin/TestimonialsTab';
 import PartnersTab from '../components/admin/PartnersTab';
@@ -23,11 +23,13 @@ import TendersTab from '../components/admin/TendersTab';
 import SubscribersTab from '../components/admin/SubscribersTab';
 import PricingTab from '../components/admin/PricingTab';
 import QuotationsTab from '../components/admin/QuotationsTab';
+import SiteSettingsTab from '../components/admin/SiteSettingsTab';
+import MediaLibraryTab from '../components/admin/MediaLibraryTab';
 
 type Tab =
   | 'dashboard' | 'events' | 'news' | 'contacts' | 'bookings' | 'gallery' | 'venues' | 'users'
   | 'testimonials' | 'partners' | 'downloads' | 'careers' | 'tenders' | 'subscribers'
-  | 'pricing' | 'quotations';
+  | 'pricing' | 'quotations' | 'settings' | 'media';
 
 // Image compression utility
 const compressImage = async (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<Blob> => {
@@ -126,6 +128,8 @@ export default function Admin() {
 
   const allTabs: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { key: 'settings', label: 'Site Settings', icon: Settings },
+    { key: 'media', label: 'Media Library', icon: Image },
     { key: 'events', label: 'Events', icon: Calendar },
     { key: 'news', label: 'News', icon: Newspaper },
     { key: 'contacts', label: 'Messages', icon: MessageSquare },
@@ -197,6 +201,8 @@ export default function Admin() {
             </div>
             <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 min-h-[600px]">
               {activeTab === 'dashboard' && <DashboardTab />}
+              {activeTab === 'settings' && <SiteSettingsTab />}
+              {activeTab === 'media' && <MediaLibraryTab />}
               {activeTab === 'events' && <EventsTab />}
               {activeTab === 'news' && <NewsTab />}
               {activeTab === 'contacts' && <ContactsTab />}

@@ -1,18 +1,7 @@
 import { Quote, Star } from 'lucide-react';
-import { useApi } from '../hooks/useApi';
-
-// Fetch testimonials from Firestore
-async function fetchTestimonials() {
-  try {
-    const { getDocs, collection, query, where } = await import('firebase/firestore');
-    const { db } = await import('../firebase');
-    const q = query(collection(db, 'testimonials'), where('published', '==', true));
-    const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch {
-    return [];
-  }
-}
+import { useMemo } from 'react';
+import { where } from 'firebase/firestore';
+import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 
 // Fallback testimonials
 const FALLBACK_TESTIMONIALS = [
@@ -55,7 +44,8 @@ const FALLBACK_TESTIMONIALS = [
 ];
 
 export default function TestimonialsSection() {
-  const { data: dbTestimonials } = useApi(fetchTestimonials, []);
+  const testimonialFilters = useMemo(() => [where('published', '==', true)], []);
+  const { data: dbTestimonials } = useRealtimeCollection<any>('testimonials', [], testimonialFilters);
   const testimonials = (dbTestimonials && dbTestimonials.length > 0) ? dbTestimonials : FALLBACK_TESTIMONIALS;
 
   if (testimonials.length === 0) return null;

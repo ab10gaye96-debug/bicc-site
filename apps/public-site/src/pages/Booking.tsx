@@ -83,19 +83,20 @@ export default function Booking() {
   const [sending, setSending] = useState(false);
   const [refNumber, setRefNumber] = useState('');
   const [availability, setAvailability] = useState<{ checking: boolean; conflicts: any[] | null }>({ checking: false, conflicts: null });
+  const hasBlockingConflicts = (availability.conflicts?.length || 0) > 0;
 
   // Check availability whenever dates or selected venues change.
   useEffect(() => {
-    if (!form.startDate) { setAvailability({ checking: false, conflicts: null }); return; }
+    if (!form.startDate || !form.venues.length) { setAvailability({ checking: false, conflicts: null }); return; }
     let cancelled = false;
     setAvailability(prev => ({ ...prev, checking: true }));
     const handle = setTimeout(() => {
-      checkAvailability(form.startDate, form.endDate || form.startDate, form.venues)
+      checkAvailability(form.startDate, form.endDate || form.startDate, form.venues, form.startTime, form.endTime)
         .then(conflicts => { if (!cancelled) setAvailability({ checking: false, conflicts }); })
         .catch(() => { if (!cancelled) setAvailability({ checking: false, conflicts: null }); });
     }, 400);
     return () => { cancelled = true; clearTimeout(handle); };
-  }, [form.startDate, form.endDate, form.venues]);
+  }, [form.startDate, form.endDate, form.startTime, form.endTime, form.venues]);
 
   // If date param changes after mount, update form
   useEffect(() => {
@@ -127,13 +128,22 @@ export default function Booking() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (availability.conflicts && availability.conflicts.length > 0) {
-      const proceed = confirm(
-        `The selected dates overlap with ${availability.conflicts.length} existing booking(s). ` +
-        `You can still submit your request and our team will confirm availability. Continue?`
-      );
-      if (!proceed) return;
+
+    if (!form.venues.length) {
+      alert('Please select at least one venue before submitting your booking request.');
+      return;
     }
+
+    if (new Date(`${form.startDate}T${form.startTime || '00:00'}:00`).getTime() >= new Date(`${form.endDate}T${form.endTime || '23:59'}:00`).getTime()) {
+      alert('The end date and time must be later than the start date and time.');
+      return;
+    }
+
+    if (hasBlockingConflicts) {
+      alert('That venue is already reserved for the selected date and time. Please choose a different slot.');
+      return;
+    }
+
     setSending(true);
     try {
       const ref = generateRef();
@@ -306,7 +316,7 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
                   </div>
                   <h2 className="text-lg sm:text-xl font-bold text-[#1F85A8]">Venue Selection</h2>
                 </div>
-                <p className="text-gray-500 text-sm mb-6 pl-0 sm:pl-13">Select the venue(s) you need for your event.</p>
+                <p className="text-gray-500 text-sm mb-6 pl-0 sm:pl-13">Select the venue(s) you need for your event. At least one venue is required.</p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {VENUES.map(venue => (
                     <label key={venue.id}
@@ -358,20 +368,31 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
                 </div>
 
                 {/* Live availability feedback */}
-                {form.startDate && (
+                {form.startDate && form.venues.length > 0 && (
                   <div className="mt-5">
                     {availability.checking ? (
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <Loader2 size={16} className="animate-spin" /> Checking availability…
                       </div>
                     ) : availability.conflicts && availability.conflicts.length > 0 ? (
-                      <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
-                        <AlertTriangle size={18} className="shrink-0 mt-0.5" />
-                        <span>
-                          These dates overlap with {availability.conflicts.length} existing booking(s).
-                          You can still submit — our team will confirm final availability
-                          {form.venues.length === 0 ? '. Tip: select specific venues above for a more precise check.' : '.'}
-                        </span>
+                      <div className="space-y-3 bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+                          <span>
+                            This venue and time slot already conflict with {availability.conflicts.length} existing booking(s).
+                            Please choose a different venue, date, or time before submitting.
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          {availability.conflicts.slice(0, 3).map((conflict, index) => (
+                            <div key={index} className="rounded-lg bg-white/70 border border-red-100 px-3 py-2">
+                              <p className="font-semibold text-red-900 text-xs sm:text-sm">{conflict.institutionName || 'Existing booking'}</p>
+                              <p className="text-xs text-red-700">
+                                {conflict.startDate} {conflict.startTime || '00:00'} → {conflict.endDate} {conflict.endTime || '23:59'}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ) : availability.conflicts && availability.conflicts.length === 0 ? (
                       <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700">
@@ -478,7 +499,7 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
 
               {/* Submit */}
               <div className="flex flex-col gap-4">
-                <button type="submit" disabled={sending}
+                <button type="submit" disabled={sending || hasBlockingConflicts}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold hover:from-blue-500 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 text-base">
                   <Send size={18} />
                   {sending ? 'Submitting...' : 'Submit Booking Request'}

@@ -1,5 +1,19 @@
 {
   "projects": {
-    "default": "bicc-gambia"
-  }
+    "default": "bicc-gambia",
+    "admin": "bicc-gambia-admin"
+  },
+  "targets": {
+    "bicc-gambia-admin": {
+      "hosting": {
+        "main": [
+          "bicc-gambia"
+        ],
+        "admin": [
+          "bicc-gambia-admin"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

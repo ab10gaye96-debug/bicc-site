@@ -13,7 +13,7 @@ import {
   AlertCircle, Check, Send, X, Edit, BookOpen, ChevronDown,
   TrendingUp, DollarSign, GripVertical, Download,
   Star, Handshake, Briefcase, FileSpreadsheet, Receipt,
-  ChevronLeft, ChevronRight, StickyNote, List,
+  ChevronLeft, ChevronRight, StickyNote, List, Settings,
 } from 'lucide-react';
 import TestimonialsTab from '../components/admin/TestimonialsTab';
 import PartnersTab from '../components/admin/PartnersTab';
@@ -23,13 +23,13 @@ import TendersTab from '../components/admin/TendersTab';
 import SubscribersTab from '../components/admin/SubscribersTab';
 import PricingTab from '../components/admin/PricingTab';
 import QuotationsTab from '../components/admin/QuotationsTab';
-import { AdminLayout } from '../components/admin/layout';
-import { EnhancedDashboard } from '../components/admin/dashboard';
+import ContentManagementTab from '../components/admin/ContentManagementTab';
+import MediaLibraryTab from '../components/admin/MediaLibraryTab';
 
 type Tab =
   | 'dashboard' | 'events' | 'news' | 'contacts' | 'bookings' | 'gallery' | 'venues' | 'users'
   | 'testimonials' | 'partners' | 'downloads' | 'careers' | 'tenders' | 'subscribers'
-  | 'pricing' | 'quotations';
+  | 'pricing' | 'quotations' | 'settings' | 'media';
 
 // Image compression utility
 const compressImage = async (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<Blob> => {
@@ -128,6 +128,8 @@ export default function Admin() {
 
   const allTabs: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { key: 'settings', label: 'Content', icon: Settings },
+    { key: 'media', label: 'Media Library', icon: Image },
     { key: 'events', label: 'Events', icon: Calendar },
     { key: 'news', label: 'News', icon: Newspaper },
     { key: 'contacts', label: 'Messages', icon: MessageSquare },
@@ -147,45 +149,80 @@ export default function Admin() {
 
   const tabs = allTabs.filter(tab => api.canAccessTab(tab.key));
 
-  // Debug logging - remove after testing
-  console.log('=== RBAC DEBUG ===');
-  console.log('Current user role:', api.getCurrentUserRole());
-  console.log('Is Super Admin:', api.isSuperAdmin());
-  console.log('All tabs:', allTabs.map(t => t.key));
-  console.log('Filtered tabs:', tabs.map(t => t.key));
-  console.log('Can access users tab:', api.canAccessTab('users'));
-  console.log('==================');
-
   return (
-    <AdminLayout
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      onLogout={handleLogout}
-      userName={username || 'Admin'}
-      userRole={api.getCurrentUserRole()}
-      unreadCount={unreadCount}
-      pendingBookings={pendingBookings}
-      tabs={tabs}
-    >
-      <div className="bg-white rounded-xl shadow-sm p-6 min-h-[600px]">
-        {activeTab === 'dashboard' && <EnhancedDashboard onTabChange={setActiveTab} />}
-        {activeTab === 'events' && <EventsTab />}
-        {activeTab === 'news' && <NewsTab />}
-        {activeTab === 'contacts' && <ContactsTab />}
-        {activeTab === 'bookings' && <BookingsTab />}
-        {activeTab === 'gallery' && <GalleryTab />}
-        {activeTab === 'venues' && <VenuesTab />}
-        {activeTab === 'users' && <UsersTab />}
-        {activeTab === 'testimonials' && <TestimonialsTab />}
-        {activeTab === 'partners' && <PartnersTab />}
-        {activeTab === 'downloads' && <DownloadsTab />}
-        {activeTab === 'careers' && <CareersTab />}
-        {activeTab === 'tenders' && <TendersTab />}
-        {activeTab === 'subscribers' && <SubscribersTab />}
-        {activeTab === 'pricing' && <PricingTab />}
-        {activeTab === 'quotations' && <QuotationsTab />}
+    <div className="pt-20 min-h-screen bg-gray-100">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-6 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#1F85A8] truncate">Admin Panel</h1>
+            <p className="text-gray-500 text-xs sm:text-sm mt-1 flex flex-wrap items-center gap-2">
+              Manage your BICC website content
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${isSuperAdmin ? 'bg-purple-100 text-purple-700' :
+                api.getCurrentUserRole() === 'Manager' ? 'bg-blue-100 text-blue-700' :
+                  'bg-gray-100 text-gray-700'
+                }`}>
+                {api.getCurrentUserRole()}
+              </span>
+            </p>
+          </div>
+          <button onClick={handleLogout} className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors whitespace-nowrap"><LogOut size={16} /> Logout</button>
+        </div>
+        <div className="grid lg:grid-cols-[220px_1fr] gap-6 lg:gap-8">
+          <div className="hidden lg:block bg-white rounded-2xl p-3 lg:p-4 h-fit shadow-sm sticky top-24">
+            <nav className="space-y-1">
+              {tabs.map(tab => (
+                <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-xl text-xs lg:text-sm font-medium transition-all ${activeTab === tab.key ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
+                  <tab.icon size={16} className="shrink-0" /><span className="hidden lg:inline">{tab.label}</span>
+                  {tab.key === 'contacts' && unreadCount > 0 && <span className="ml-auto bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">{unreadCount}</span>}
+                  {tab.key === 'bookings' && pendingBookings > 0 && <span className="ml-auto bg-yellow-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">{pendingBookings}</span>}
+                </button>
+              ))}
+            </nav>
+          </div>
+          <div>
+            {/* Mobile tab switcher */}
+            <div className="lg:hidden mb-4 -mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto">
+              <div className="flex gap-2 pb-2">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                      activeTab === tab.key
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <tab.icon size={14} />
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 min-h-[600px]">
+              {activeTab === 'dashboard' && <DashboardTab />}
+              {activeTab === 'settings' && <ContentManagementTab />}
+              {activeTab === 'media' && <MediaLibraryTab />}
+              {activeTab === 'events' && <EventsTab />}
+              {activeTab === 'news' && <NewsTab />}
+              {activeTab === 'contacts' && <ContactsTab />}
+              {activeTab === 'bookings' && <BookingsTab />}
+              {activeTab === 'gallery' && <GalleryTab />}
+              {activeTab === 'venues' && <VenuesTab />}
+              {activeTab === 'users' && <UsersTab />}
+              {activeTab === 'testimonials' && <TestimonialsTab />}
+              {activeTab === 'partners' && <PartnersTab />}
+              {activeTab === 'downloads' && <DownloadsTab />}
+              {activeTab === 'careers' && <CareersTab />}
+              {activeTab === 'tenders' && <TendersTab />}
+              {activeTab === 'subscribers' && <SubscribersTab />}
+              {activeTab === 'pricing' && <PricingTab />}
+              {activeTab === 'quotations' && <QuotationsTab />}
+          </div>
+          </div>
+        </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }
 
@@ -996,6 +1033,9 @@ function BookingsTab() {
   const filteredBookings = statusFilter === 'All'
     ? bookings
     : bookings.filter(b => b.status === statusFilter);
+  const reservedCalendarBookings = bookings.filter((b) =>
+    ['Pending', 'Under Review', 'Approved', 'Confirmed', 'Completed'].includes(b.status)
+  );
 
   const handleStatusChange = async (id: string, status: string) => {
     await api.updateBookingStatus(id, status);
@@ -1101,7 +1141,7 @@ function BookingsTab() {
           <p className="text-gray-400">No booking requests yet.</p>
         </div>
       ) : view === 'calendar' ? (
-        <BookingCalendar bookings={bookings} statusColor={statusColor} onSelect={(b) => { setSelected(b); setView('list'); }} />
+        <BookingCalendar bookings={reservedCalendarBookings} statusColor={statusColor} onSelect={(b) => { setSelected(b); setView('list'); }} />
       ) : (
         <div className="grid lg:grid-cols-3 gap-6">
           {/* List */}

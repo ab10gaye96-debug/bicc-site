@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { fetchBookings } from '../api';
-import { useApi } from '../hooks/useApi';
+import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 import { ChevronLeft, ChevronRight, Calendar, Info, Send, X, CheckCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
@@ -15,7 +14,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function Availability() {
-  const { data: bookings } = useApi(() => fetchBookings(), []);
+  const { data: bookings } = useRealtimeCollection<any>('bookings', []);
   const navigate = useNavigate();
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
@@ -24,7 +23,7 @@ export default function Availability() {
   const [selectedDate, setSelectedDate] = useState('');
   const [showQuickBook, setShowQuickBook] = useState(false);
 
-  const approvedBookings = (bookings || []).filter(b =>
+  const approvedBookings = bookings.filter(b =>
     b.status === 'Approved' || b.status === 'Pending' || b.status === 'Completed'
   );
 

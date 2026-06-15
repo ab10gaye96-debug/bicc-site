@@ -9,17 +9,12 @@ A full-stack website with admin panel for the Banjul International Convention Ce
 npm install
 ```
 
-### 2. Build the Frontend
+### 2. Run Development Server
 ```bash
-npm run build
+npm run dev
 ```
 
-### 3. Start the Production Server
-```bash
-npm run serve
-```
-
-The site will be available at **http://localhost:3001**
+The site will be available at **http://localhost:5173**
 
 ---
 
@@ -28,10 +23,20 @@ The site will be available at **http://localhost:3001**
 | Command | Description |
 |---------|-------------|
 | `npm install` | Install all dependencies |
-| `npm run dev` | Start Vite dev server (frontend only, port 5173) |
-| `npm run build` | Build frontend for production |
-| `npm run serve` | Start production server (API + frontend, port 3001) |
-| `npm run preview` | Preview the Vite build |
+| `npm run dev` | Start Vite dev server (http://localhost:5173) |
+| `npm run build` | Build for production (outputs to dist/) |
+| `npm run preview` | Preview production build locally |
+
+---
+
+## 🔧 Tech Stack
+
+- **Frontend:** React 18 + TypeScript + Vite
+- **Styling:** Tailwind CSS 4
+- **Routing:** React Router DOM
+- **Backend:** Firebase (Firestore + Authentication + Storage)
+- **Deployment:** Firebase Hosting
+- **Email:** EmailJS for notifications
 
 ---
 

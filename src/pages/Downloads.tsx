@@ -1,20 +1,8 @@
 import { useState } from 'react';
 import { Download, FileText, FolderOpen, Search } from 'lucide-react';
-import { useApi } from '../hooks/useApi';
+import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 import SEO from '../components/SEO';
 import { IMAGES } from '../images';
-
-// Fetch downloads from Firestore
-async function fetchDownloads() {
-  try {
-    const { getDocs, collection } = await import('firebase/firestore');
-    const { db } = await import('../firebase');
-    const snap = await getDocs(collection(db, 'downloads'));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch {
-    return [];
-  }
-}
 
 // Fallback data if Firestore is empty
 const FALLBACK_DOWNLOADS = [
@@ -94,7 +82,7 @@ const CATEGORIES = [
 ];
 
 export default function Downloads() {
-  const { data: dbDownloads } = useApi(fetchDownloads, []);
+  const { data: dbDownloads } = useRealtimeCollection<any>('downloads', []);
   const downloads = (dbDownloads && dbDownloads.length > 0) ? dbDownloads : FALLBACK_DOWNLOADS;
 
   const [category, setCategory] = useState('All');
@@ -107,13 +95,7 @@ export default function Downloads() {
     return matchesCategory && matchesSearch;
   });
 
-  const handleDownload = (doc: any) => {
-    if (doc.fileUrl && doc.fileUrl !== '#') {
-      window.open(doc.fileUrl, '_blank');
-    } else {
-      alert('This is a demo file. In production, this would download the actual file.');
-    }
-  };
+  const isDownloadAvailable = (fileUrl?: string) => Boolean(fileUrl && fileUrl !== '#');
 
   return (
     <div className="pt-20">
@@ -202,13 +184,22 @@ export default function Downloads() {
                     <p className="text-sm text-gray-600 mb-4 line-clamp-2">{doc.description}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-gray-500">{doc.fileSize}</span>
-                      <button
-                        onClick={() => handleDownload(doc)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#1F85A8] text-white rounded-lg font-semibold hover:bg-[#1a6d8a] transition-all text-sm"
-                      >
-                        <Download size={16} />
-                        Download
-                      </button>
+                      {isDownloadAvailable(doc.fileUrl) ? (
+                        <a
+                          href={doc.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-[#1F85A8] text-white rounded-lg font-semibold hover:bg-[#1a6d8a] transition-all text-sm"
+                        >
+                          <Download size={16} />
+                          Download
+                        </a>
+                      ) : (
+                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-500 rounded-lg font-semibold text-sm cursor-not-allowed">
+                          <Download size={16} />
+                          Unavailable
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

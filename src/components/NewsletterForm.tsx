@@ -48,7 +48,11 @@ export default function NewsletterForm() {
       setTimeout(() => setStatus('idle'), 5000);
     } else {
       setStatus('error');
-      setMessage(result.message || 'Failed to subscribe. Please try again.');
+      setMessage(
+        result.message === 'Already subscribed'
+          ? 'This email is already subscribed to our newsletter.'
+          : 'Failed to subscribe. Please try again.'
+      );
       setTimeout(() => setStatus('idle'), 3000);
     }
   };

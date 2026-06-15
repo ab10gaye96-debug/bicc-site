@@ -10,7 +10,9 @@ const DEFAULT_DESC =
   'The Gambia\'s premier MICE destination — world-class venues for conferences, summits, banquets, and events at the Sir Dawda Kairaba Jawara International Conference Centre.';
 
 export default function SEO({ title, description }: SEOProps) {
-  const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME;
+  const fullTitle = title
+    ? (title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`)
+    : SITE_NAME;
   const metaDesc = description || DEFAULT_DESC;
 
   useEffect(() => {

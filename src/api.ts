@@ -323,17 +323,17 @@ export function canAccessTab(tab: string): boolean {
   const role = getCurrentUserRole();
   const tabAccess: Record<string, string[]> = {
     'Super Admin': [
-      'dashboard', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues', 'users',
+      'dashboard', 'settings', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues', 'users',
       'testimonials', 'partners', 'downloads', 'careers', 'tenders', 'subscribers',
       'pricing', 'quotations',
     ],
     'Manager': [
-      'dashboard', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues',
+      'dashboard', 'settings', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues',
       'testimonials', 'partners', 'downloads', 'careers', 'tenders', 'subscribers',
       'pricing', 'quotations',
     ],
     'Staff': [
-      'dashboard', 'events', 'news', 'contacts', 'bookings', 'gallery',
+      'dashboard', 'settings', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery',
       'downloads', 'careers',
     ],
   };

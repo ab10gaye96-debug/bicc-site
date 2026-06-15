@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Users, Building2, Globe2, Star, Calendar, MapPin, Award, Shield, Play, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fetchEvents, fetchNews, fetchGallery } from '../api';
-import { useApi } from '../hooks/useApi';
+import { useSiteSettings } from '../hooks/useSiteSettings';
+import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 import { IMAGES } from '../images';
 import SEO from '../components/SEO';
 import TestimonialsSection from '../components/TestimonialsSection';
@@ -29,7 +29,7 @@ function useCounter(target: number, duration = 1800, start = false) {
 }
 
 // ── Stats bar with intersection observer ─────────────────────────────────────
-function StatsBar() {
+function StatsBar({ settings }: { settings: any }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -43,10 +43,10 @@ function StatsBar() {
   }, []);
 
   const stats = [
-    { icon: Users,    target: 4000, suffix: '+', label: 'Guest Capacity' },
-    { icon: Building2, target: 30,  suffix: '+', label: 'Event Spaces' },
-    { icon: Globe2,   target: 50,  suffix: '+', label: 'International Events' },
-    { icon: Award,    target: 5,   suffix: '-Star', label: 'Facility Rating' },
+    { icon: Users,    target: settings.statCapacity || 4000, suffix: '+', label: 'Guest Capacity' },
+    { icon: Building2, target: settings.statEventSpaces || 30,  suffix: '+', label: 'Event Spaces' },
+    { icon: Globe2,   target: settings.statInternationalEvents || 50,  suffix: '+', label: 'International Events' },
+    { icon: Award,    target: settings.statRating || 5,   suffix: '-Star', label: 'Facility Rating' },
   ];
 
   return (
@@ -92,7 +92,7 @@ const TOUR_CATEGORIES = [
 ];
 
 function VirtualTour() {
-  const { data: galleryData } = useApi(() => fetchGallery(), []);
+  const { data: galleryData } = useRealtimeCollection<any>('gallery', []);
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
 
@@ -197,14 +197,11 @@ function VirtualTour() {
           </div>
         </div>
 
-        <div className="text-center mt-10 flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="text-center mt-10 flex justify-center">
           <Link to="/gallery"
             className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-semibold hover:bg-white/20 transition-all">
             View Full Photo Gallery <ArrowRight size={16} />
           </Link>
-          <p className="text-gray-500 text-xs self-center">
-            Tour images are managed from the Admin → Gallery panel
-          </p>
         </div>
       </div>
 
@@ -234,16 +231,17 @@ function VirtualTour() {
 }
 
 export default function Home() {
-  const { data: events } = useApi(() => fetchEvents(), []);
-  const { data: news } = useApi(() => fetchNews(), []);
-  const displayEvents = (events || []).slice(0, 3);
-  const displayNews = (news || []).slice(0, 3);
+  const { settings } = useSiteSettings();
+  const { data: events } = useRealtimeCollection<any>('events', []);
+  const { data: news } = useRealtimeCollection<any>('news', []);
+  const displayEvents = events.slice(0, 3);
+  const displayNews = news.slice(0, 3);
 
   return (
     <div>
       <SEO
-        title="BICC — Banjul International Convention Centre"
-        description="The Gambia's premier MICE destination. World-class venues for conferences, summits, banquets, and events at the Sir Dawda Kairaba Jawara International Conference Centre."
+        title={settings.seoTitle}
+        description={settings.seoDescription}
       />
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
@@ -252,22 +250,20 @@ export default function Home() {
         <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-400/30 rounded-full text-blue-200 text-sm font-medium mb-8 backdrop-blur-sm">
             <Star size={14} />
-            The Gambia's Premier MICE Destination
+            {settings.siteTagline}
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            Banjul International
-            <span className="block text-blue-400">Convention Centre</span>
+            {settings.heroTitle}
           </h1>
           <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed">
-            Managing the Sir Dawda Kairaba Jawara International Conference Centre — 
-            a world-class facility where diplomacy, innovation, and culture converge on the shores of the Atlantic.
+            {settings.heroSubtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/venues" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-400 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/30">
-              Explore Our Venues <ArrowRight size={20} />
+              {settings.heroCTAText} <ArrowRight size={20} />
             </Link>
             <Link to="/booking" className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-xl font-bold text-lg hover:bg-white/10 transition-all backdrop-blur-sm">
-              Book an Event
+              {settings.heroSecondaryCTAText}
             </Link>
           </div>
         </div>
@@ -278,7 +274,7 @@ export default function Home() {
       </section>
 
       {/* Stats Bar — animated counters */}
-      <StatsBar />
+      <StatsBar settings={settings} />
 
       {/* About Preview */}
       <section className="py-20 bg-white">
@@ -286,9 +282,11 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
               <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">About BICC</span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3 mb-6">Where Excellence Meets <span className="text-blue-700">African Hospitality</span></h2>
-              <p className="text-gray-600 leading-relaxed mb-6">The Banjul International Convention Centre (BICC) is The Gambia's national premier event management institution, established by the Government of The Gambia to advance the country's Meetings, Incentives, Conferences and Exhibitions (MICE) industry.</p>
-              <p className="text-gray-600 leading-relaxed mb-8">BICC manages the Sir Dawda Kairaba Jawara International Conference Center and the VVIP Lounge at the Banjul International Airport, delivering tailored event solutions for summits, conferences, and special events.</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3 mb-6">
+                {settings.aboutTitle} <span className="text-blue-700">{settings.aboutSubtitle}</span>
+              </h2>
+              <p className="text-gray-600 leading-relaxed mb-6">{settings.aboutText}</p>
+              <p className="text-gray-600 leading-relaxed mb-8">{settings.aboutMission}</p>
               <div className="grid grid-cols-2 gap-4 mb-8">
                 {[
                   { icon: Star, text: 'Excellence' },
@@ -305,7 +303,7 @@ export default function Home() {
               <Link to="/about" className="inline-flex items-center gap-2 text-blue-700 font-semibold hover:text-blue-800 transition-colors">Learn More About Us <ArrowRight size={18} /></Link>
             </div>
             <div className="relative mt-8 lg:mt-0">
-              <img src={IMAGES.conferenceHall} alt="Conference Centre" className="rounded-2xl shadow-2xl w-full aspect-[4/3] object-cover" />
+              <img src={IMAGES.conferenceHall} alt="Sir Dawda Kairaba Jawara International Conference Centre" className="rounded-2xl shadow-2xl w-full aspect-[4/3] object-cover" />
               <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-blue-600 text-white rounded-xl p-4 sm:p-6 shadow-xl">
                 <div className="text-2xl sm:text-3xl font-bold">14,000</div>
                 <div className="text-xs sm:text-sm font-medium">m² of Event Space</div>
@@ -428,4 +426,3 @@ export default function Home() {
     </div>
   );
 }
-

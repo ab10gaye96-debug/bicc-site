@@ -1,70 +1,141 @@
-import { useApi } from '../hooks/useApi';
-import { IMAGES } from '../images';
+import { useState, useEffect } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 
-// Fetch partners from Firestore
-async function fetchPartners() {
-  try {
-    const { getDocs, collection, query, where } = await import('firebase/firestore');
-    const { db } = await import('../firebase');
-    const q = query(collection(db, 'partners'), where('active', '==', true));
-    const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch {
-    return [];
-  }
+interface Partner {
+  id: string;
+  name: string;
+  logo: string;
+  website?: string;
+  category?: string;
 }
 
-// Fallback partners - using placeholder for demo
-const FALLBACK_PARTNERS = [
-  { id: '1', name: 'African Union', logo: IMAGES.logo, category: 'International Organizations' },
-  { id: '2', name: 'ECOWAS', logo: IMAGES.logo, category: 'International Organizations' },
-  { id: '3', name: 'United Nations', logo: IMAGES.logo, category: 'International Organizations' },
-  { id: '4', name: 'Commonwealth', logo: IMAGES.logo, category: 'International Organizations' },
-  { id: '5', name: 'Gambia Tourism Board', logo: IMAGES.logo, category: 'Government' },
-  { id: '6', name: 'Coco Ocean Resort', logo: IMAGES.logo, category: 'Hospitality Partners' },
-  { id: '7', name: 'Kairaba Beach Hotel', logo: IMAGES.logo, category: 'Hospitality Partners' },
-  { id: '8', name: 'Trust Bank', logo: IMAGES.logo, category: 'Corporate Partners' },
+const FALLBACK_PARTNERS: Partner[] = [
+  {
+    id: '1',
+    name: 'Ministry of Tourism',
+    logo: '/images/logo.png',
+    category: 'Government',
+  },
+  {
+    id: '2',
+    name: 'Gambia Tourism Board',
+    logo: '/images/logo.png',
+    category: 'Tourism',
+  },
+  {
+    id: '3',
+    name: 'West African Development Bank',
+    logo: '/images/logo.png',
+    category: 'Financial',
+  },
+  {
+    id: '4',
+    name: 'ECOWAS',
+    logo: '/images/logo.png',
+    category: 'Regional',
+  },
+  {
+    id: '5',
+    name: 'African Union',
+    logo: '/images/logo.png',
+    category: 'International',
+  },
+  {
+    id: '6',
+    name: 'United Nations',
+    logo: '/images/logo.png',
+    category: 'International',
+  },
 ];
 
 export default function PartnersSection() {
-  const { data: dbPartners } = useApi(fetchPartners, []);
-  const partners = (dbPartners && dbPartners.length > 0) ? dbPartners : FALLBACK_PARTNERS;
+  const [partners, setPartners] = useState<Partner[]>(FALLBACK_PARTNERS);
+  const [loading, setLoading] = useState(true);
 
-  if (partners.length === 0) return null;
+  useEffect(() => {
+    const fetchPartners = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'partners'));
+        const data = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Partner[];
+        
+        if (data.length > 0) {
+          setPartners(data);
+        }
+      } catch (error) {
+        console.error('Error fetching partners:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPartners();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-32 mx-auto mb-4"></div>
+              <div className="h-8 bg-gray-200 rounded w-64 mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section className="py-20 bg-white border-y">
+    <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
-          <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">Our Partners</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">Strategic Partnerships</h2>
+          <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">Our Network</span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">Strategic Partners</h2>
           <p className="text-gray-500 mt-4 max-w-2xl mx-auto">
-            Working with leading organizations to deliver world-class events
+            Trusted by leading organizations, governments, and international institutions.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-8 items-center">
-          {partners.map((partner: any) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+          {partners.map((partner) => (
             <div
               key={partner.id}
-              className="flex items-center justify-center grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100"
-              title={partner.name}
+              className="bg-white rounded-xl p-6 flex items-center justify-center hover:shadow-lg transition-all group"
             >
-              <img
-                src={partner.logo}
-                alt={partner.name}
-                className="w-full h-auto max-h-16 object-contain"
-              />
+              {partner.website ? (
+                <a
+                  href={partner.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full h-full"
+                >
+                  <img
+                    src={partner.logo}
+                    alt={partner.name}
+                    className="max-w-full max-h-16 object-contain grayscale group-hover:grayscale-0 transition-all mx-auto"
+                    title={partner.name}
+                  />
+                </a>
+              ) : (
+                <img
+                  src={partner.logo}
+                  alt={partner.name}
+                  className="max-w-full max-h-16 object-contain grayscale group-hover:grayscale-0 transition-all mx-auto"
+                  title={partner.name}
+                />
+              )}
             </div>
           ))}
         </div>
 
-        <div className="text-center mt-12">
-          <p className="text-sm text-gray-500">
-            Interested in becoming a partner?{' '}
-            <a href="mailto:partnerships@bicc.gm" className="text-blue-600 font-semibold hover:text-blue-700">
-              Contact us
-            </a>
+        <div className="text-center mt-10">
+          <p className="text-gray-500 text-sm">
+            Interested in partnering with BICC? <a href="/contact" className="text-blue-700 font-semibold hover:underline">Get in touch</a>
           </p>
         </div>
       </div>

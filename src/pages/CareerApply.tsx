@@ -12,6 +12,7 @@ export default function CareerApply() {
   const { jobId } = useParams();
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [job, setJob] = useState<{ id: string; title: string; department: string; type: string }>(FALLBACK_JOB);
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export default function CareerApply() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
+    setErrorMessage('');
 
     try {
       let resumeUrl = '';
@@ -85,7 +87,7 @@ export default function CareerApply() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Application Error:', error);
-      alert('Failed to submit application. Please try again.');
+      setErrorMessage('Failed to submit your application. Please try again.');
     } finally {
       setSending(false);
     }
@@ -161,6 +163,11 @@ export default function CareerApply() {
       {/* Application Form */}
       <section className="py-12">
         <div className="max-w-4xl mx-auto px-4">
+          {errorMessage && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+              <p className="text-red-700 text-sm font-medium">{errorMessage}</p>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-8">
 
             {/* Personal Information */}

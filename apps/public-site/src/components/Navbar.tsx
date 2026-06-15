@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, ChevronDown, Building2, Package, Calendar, Globe2, Download, Briefcase, FileText, ClipboardCheck } from 'lucide-react';
 import { IMAGES } from '../images';
+import { fetchNavbarContent } from '../api';
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -32,10 +33,25 @@ export default function Navbar() {
   const [showVenuesMenu, setShowVenuesMenu] = useState(false);
   const [showMobileVenues, setShowMobileVenues] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [cmsContent, setCmsContent] = useState<any>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const isHome = location.pathname === '/';
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch CMS content
+  useEffect(() => {
+    fetchNavbarContent().then(data => {
+      if (data) setCmsContent(data);
+    });
+  }, []);
+
+  const brandShortName = cmsContent?.brand?.shortName || 'BICC';
+  const brandFullName = cmsContent?.brand?.fullName || 'Banjul International Convention Centre';
+  const venuesMenuLabel = cmsContent?.labels?.venues || 'Venues';
+  const resourcesMenuLabel = cmsContent?.labels?.resources || 'Resources';
+  const bookButtonText = cmsContent?.bookButton?.text || 'Book an Event';
+  const searchPlaceholder = cmsContent?.search?.placeholder || 'Search...';
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -89,8 +105,8 @@ export default function Navbar() {
           <Link to="/" className="flex items-center gap-3">
             <img src={IMAGES.logo} alt="BICC Logo" className="h-12 w-auto rounded-md bg-white p-1 object-contain" />
             <div>
-              <span className="text-white font-bold text-lg tracking-wide">BICC</span>
-              <span className="hidden sm:block text-white/80 text-xs tracking-wider">Banjul International Convention Centre</span>
+              <span className="text-white font-bold text-lg tracking-wide">{brandShortName}</span>
+              <span className="hidden sm:block text-white/80 text-xs tracking-wider">{brandFullName}</span>
             </div>
           </Link>
 
@@ -121,7 +137,7 @@ export default function Navbar() {
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                Venues
+                {venuesMenuLabel}
                 <ChevronDown size={14} className={`transition-transform duration-200 ${showVenuesMenu ? 'rotate-180' : ''}`} />
               </button>
 
@@ -173,7 +189,7 @@ export default function Navbar() {
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                Resources
+                {resourcesMenuLabel}
                 <ChevronDown size={14} className={`transition-transform duration-200 ${showResourcesMenu ? 'rotate-180' : ''}`} />
               </button>
 
@@ -225,7 +241,7 @@ export default function Navbar() {
               to="/booking"
               className="ml-2 px-5 py-2.5 bg-white text-[#1F85A8] rounded-lg text-sm font-bold hover:bg-gray-100 transition-all shadow-lg"
             >
-              Book an Event
+              {bookButtonText}
             </Link>
           </div>
 
@@ -253,7 +269,7 @@ export default function Navbar() {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search events, news..."
+                placeholder={searchPlaceholder}
                 autoFocus
                 className="w-full pl-9 pr-24 py-2.5 rounded-xl bg-white text-gray-800 text-sm outline-none focus:ring-2 focus:ring-blue-400"
               />
@@ -293,7 +309,7 @@ export default function Navbar() {
                   isVenuesActive ? 'text-white bg-white/20' : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                Venues
+                {venuesMenuLabel}
                 <ChevronDown size={14} className={`transition-transform duration-200 ${showMobileVenues ? 'rotate-180' : ''}`} />
               </button>
               {showMobileVenues && (
@@ -340,7 +356,7 @@ export default function Navbar() {
                   isResourcesActive ? 'text-white bg-white/20' : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                Resources
+                {resourcesMenuLabel}
                 <ChevronDown size={14} className={`transition-transform duration-200 ${showMobileResources ? 'rotate-180' : ''}`} />
               </button>
               {showMobileResources && (
@@ -384,7 +400,7 @@ export default function Navbar() {
               onClick={() => setIsOpen(false)}
               className="block px-4 py-3 bg-white text-[#1F85A8] rounded-lg text-sm font-bold text-center mt-3"
             >
-              Book an Event
+              {bookButtonText}
             </Link>
           </div>
         </div>

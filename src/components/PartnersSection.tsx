@@ -1,18 +1,7 @@
-import { useApi } from '../hooks/useApi';
+import { useMemo } from 'react';
+import { where } from 'firebase/firestore';
+import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 import { IMAGES } from '../images';
-
-// Fetch partners from Firestore
-async function fetchPartners() {
-  try {
-    const { getDocs, collection, query, where } = await import('firebase/firestore');
-    const { db } = await import('../firebase');
-    const q = query(collection(db, 'partners'), where('active', '==', true));
-    const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch {
-    return [];
-  }
-}
 
 // Fallback partners - using placeholder for demo
 const FALLBACK_PARTNERS = [
@@ -27,7 +16,8 @@ const FALLBACK_PARTNERS = [
 ];
 
 export default function PartnersSection() {
-  const { data: dbPartners } = useApi(fetchPartners, []);
+  const partnerFilters = useMemo(() => [where('active', '==', true)], []);
+  const { data: dbPartners } = useRealtimeCollection<any>('partners', [], partnerFilters);
   const partners = (dbPartners && dbPartners.length > 0) ? dbPartners : FALLBACK_PARTNERS;
 
   if (partners.length === 0) return null;

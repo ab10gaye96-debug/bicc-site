@@ -2,7 +2,11 @@ import { db } from './firebase';
 import {
   collection,
   getDocs,
+  getDoc,
   addDoc,
+  doc,
+  query,
+  where,
 } from 'firebase/firestore';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -75,6 +79,22 @@ export async function fetchPartners(): Promise<any[]> {
 // ── Bookings (Public Submission & Availability Check) ────────────────────────
 
 export async function submitBooking(data: any): Promise<any> {
+  if (!Array.isArray(data?.venues) || data.venues.length === 0) {
+    throw new Error('Please select at least one venue before submitting your booking request.');
+  }
+
+  const conflicts = await checkAvailability(
+    data.startDate,
+    data.endDate || data.startDate,
+    data.venues || [],
+    data.startTime || '',
+    data.endTime || ''
+  );
+
+  if (conflicts.length > 0) {
+    throw new Error('That venue is already reserved for the selected date and time. Please choose a different slot.');
+  }
+
   const bookingData = {
     ...data,
     created_at: new Date().toISOString(),
@@ -101,15 +121,37 @@ export const BOOKING_STATUSES = [
 ] as const;
 
 /** Statuses that block a venue from being available */
-const BLOCKING_STATUSES = ['Under Review', 'Approved', 'Confirmed', 'Completed'];
+export const RESERVED_BOOKING_STATUSES = ['Pending', 'Under Review', 'Approved', 'Confirmed', 'Completed'];
 
-function datesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
-  if (!aStart || !bStart) return false;
-  const aS = new Date(aStart).getTime();
-  const aE = new Date(aEnd || aStart).getTime();
-  const bS = new Date(bStart).getTime();
-  const bE = new Date(bEnd || bStart).getTime();
-  return aS <= bE && bS <= aE;
+function normaliseDateTime(date: string, time: string | undefined, fallback: 'start' | 'end'): number {
+  if (!date) return Number.NaN;
+  const safeTime = time || (fallback === 'end' ? '23:59' : '00:00');
+  return new Date(`${date}T${safeTime}:00`).getTime();
+}
+
+function dateTimeRangesOverlap(
+  aStartDate: string,
+  aEndDate: string,
+  aStartTime: string | undefined,
+  aEndTime: string | undefined,
+  bStartDate: string,
+  bEndDate: string,
+  bStartTime: string | undefined,
+  bEndTime: string | undefined
+): boolean {
+  if (!aStartDate || !bStartDate) return false;
+
+  const aStart = normaliseDateTime(aStartDate, aStartTime, 'start');
+  const aEnd = normaliseDateTime(aEndDate || aStartDate, aEndTime, 'end');
+  const bStart = normaliseDateTime(bStartDate, bStartTime, 'start');
+  const bEnd = normaliseDateTime(bEndDate || bStartDate, bEndTime, 'end');
+
+  return aStart <= bEnd && bStart <= aEnd;
+}
+
+function venuesOverlap(requestedVenues: string[] = [], existingVenues: string[] = []): boolean {
+  if (!requestedVenues.length || !existingVenues.length) return false;
+  return existingVenues.some((venue) => requestedVenues.includes(venue));
 }
 
 /**
@@ -120,19 +162,29 @@ export async function checkAvailability(
   startDate: string,
   endDate: string,
   venues: string[] = [],
+  startTime?: string,
+  endTime?: string,
   excludeId?: string
 ): Promise<any[]> {
-  if (!startDate) return [];
+  if (!startDate || !venues.length) return [];
   const snap = await getDocs(collection(db, 'bookings'));
   const bookings = snap.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
   
   return bookings.filter((b) => {
     if (excludeId && b.id === excludeId) return false;
-    if (!BLOCKING_STATUSES.includes(b.status)) return false;
-    if (!datesOverlap(startDate, endDate, b.startDate, b.endDate)) return false;
-    // If no specific venues requested on either side, a date overlap is a conflict.
-    if (!venues.length || !Array.isArray(b.venues) || !b.venues.length) return true;
-    return b.venues.some((v: string) => venues.includes(v));
+    if (!RESERVED_BOOKING_STATUSES.includes(b.status)) return false;
+    if (!Array.isArray(b.venues) || !b.venues.length) return false;
+    if (!venuesOverlap(venues, b.venues)) return false;
+    return dateTimeRangesOverlap(
+      startDate,
+      endDate || startDate,
+      startTime,
+      endTime,
+      b.startDate,
+      b.endDate || b.startDate,
+      b.startTime,
+      b.endTime
+    );
   });
 }
 
@@ -199,3 +251,34 @@ export async function searchContent(query: string): Promise<{
     ),
   };
 }
+
+
+// ── Content Management (Read Only) ───────────────────────────────────────────
+
+/**
+ * Fetch page content from Firestore CMS
+ * Falls back to null if not found - components handle defaults
+ */
+export async function fetchPageContent(section: string): Promise<any> {
+  try {
+    const docRef = doc(db, 'pageContent', section);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`Error fetching ${section} content:`, error);
+    return null;
+  }
+}
+
+/**
+ * Convenience functions for specific sections
+ */
+export const fetchHomeContent = () => fetchPageContent('home');
+export const fetchFooterContent = () => fetchPageContent('footer');
+export const fetchNavbarContent = () => fetchPageContent('navbar');
+export const fetchContactContent = () => fetchPageContent('contact');

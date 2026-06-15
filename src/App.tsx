@@ -36,12 +36,48 @@ import { initializeData } from './store';
 // Initialize data on app load
 initializeData();
 
+const adminPortalUrl = import.meta.env.VITE_ADMIN_PORTAL_URL?.trim();
+const embeddedAdminEnabled =
+  import.meta.env.DEV || import.meta.env.VITE_ENABLE_EMBEDDED_ADMIN === 'true';
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
   return null;
+}
+
+function AdminRedirect() {
+  useEffect(() => {
+    if (adminPortalUrl) {
+      window.location.replace(adminPortalUrl);
+    }
+  }, []);
+
+  return (
+    <div className="pt-28 min-h-[60vh] px-4 flex items-center justify-center">
+      <div className="max-w-lg text-center">
+        <h1 className="text-2xl font-bold text-[#1F85A8]">Redirecting to the admin portal</h1>
+        <p className="mt-3 text-gray-600">
+          For security, administration is handled on a separate portal.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AdminUnavailable() {
+  return (
+    <div className="pt-28 min-h-[60vh] px-4 flex items-center justify-center">
+      <div className="max-w-lg text-center">
+        <h1 className="text-2xl font-bold text-[#1F85A8]">Admin access is not available here</h1>
+        <p className="mt-3 text-gray-600">
+          For security, the public site does not expose the embedded admin in this environment.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export default function App() {
@@ -81,7 +117,16 @@ export default function App() {
             <Route path="/plan-your-event" element={<PlanYourEvent />} />
             
             {/* Admin */}
-            <Route path="/admin" element={<Admin />} />
+            <Route
+              path="/admin"
+              element={
+                adminPortalUrl
+                  ? <AdminRedirect />
+                  : embeddedAdminEnabled
+                    ? <Admin />
+                    : <AdminUnavailable />
+              }
+            />
             
             {/* 404 */}
             <Route path="*" element={<NotFound />} />

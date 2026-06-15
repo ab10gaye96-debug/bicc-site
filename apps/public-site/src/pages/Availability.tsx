@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fetchBookings } from '../api';
+import { RESERVED_BOOKING_STATUSES, fetchBookings } from '../api';
 import { useApi } from '../hooks/useApi';
 import { ChevronLeft, ChevronRight, Calendar, Info, Send, X, CheckCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -11,6 +11,8 @@ const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const STATUS_COLORS: Record<string, string> = {
   Approved:  'bg-red-500',
   Pending:   'bg-yellow-400',
+  'Under Review': 'bg-orange-500',
+  Confirmed: 'bg-teal-500',
   Completed: 'bg-gray-400',
 };
 
@@ -24,13 +26,11 @@ export default function Availability() {
   const [selectedDate, setSelectedDate] = useState('');
   const [showQuickBook, setShowQuickBook] = useState(false);
 
-  const approvedBookings = (bookings || []).filter(b =>
-    b.status === 'Approved' || b.status === 'Pending' || b.status === 'Completed'
-  );
+  const reservedBookings = (bookings || []).filter(b => RESERVED_BOOKING_STATUSES.includes(b.status));
 
   // Build a map of date → bookings
   const bookingMap: Record<string, any[]> = {};
-  approvedBookings.forEach(b => {
+  reservedBookings.forEach(b => {
     if (!b.startDate || !b.endDate) return;
     const start = new Date(b.startDate);
     const end = new Date(b.endDate);
@@ -117,7 +117,9 @@ export default function Availability() {
             <span className="text-sm font-semibold text-gray-600">Legend:</span>
             <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-sm text-gray-600">Available</span></div>
             <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-yellow-400" /><span className="text-sm text-gray-600">Pending</span></div>
-            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500" /><span className="text-sm text-gray-600">Booked</span></div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-orange-500" /><span className="text-sm text-gray-600">Under Review</span></div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500" /><span className="text-sm text-gray-600">Approved</span></div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-teal-500" /><span className="text-sm text-gray-600">Confirmed</span></div>
             <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-gray-400" /><span className="text-sm text-gray-600">Completed</span></div>
           </div>
 
@@ -224,7 +226,7 @@ export default function Availability() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-2">
                         <X size={16} className="text-red-500 shrink-0" />
-                        <p className="text-sm font-semibold text-red-700">Date has existing bookings</p>
+                        <p className="text-sm font-semibold text-red-700">Date has reserved bookings</p>
                       </div>
                       {selected.map((b, i) => (
                         <div key={i} className={`rounded-xl p-4 border-l-4 ${
@@ -241,11 +243,11 @@ export default function Availability() {
                             }`}>{b.status}</span>
                           </div>
                           <p className="text-xs text-gray-500">{b.eventType}</p>
-                          <p className="text-xs text-gray-400 mt-1">{b.startDate} → {b.endDate}</p>
+                          <p className="text-xs text-gray-400 mt-1">{b.startDate} {b.startTime || '00:00'} → {b.endDate} {b.endTime || '23:59'}</p>
                         </div>
                       ))}
                       <p className="text-xs text-gray-400 text-center pt-1">
-                        You can still submit a request — our team will check for partial availability.
+                        Use the booking form to check exact venue and time availability for this date.
                       </p>
                       <Link to="/booking"
                         className="block text-center px-5 py-2.5 border-2 border-[#1F85A8] text-[#1F85A8] rounded-xl text-sm font-bold hover:bg-[#1F85A8] hover:text-white transition-all">

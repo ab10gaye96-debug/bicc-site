@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Users, Building2, Globe2, Star, Calendar, MapPin, Award, Shield, Play, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fetchEvents, fetchNews, fetchGallery } from '../api';
+import { fetchEvents, fetchNews, fetchGallery, fetchHomeContent } from '../api';
 import { useApi } from '../hooks/useApi';
 import { IMAGES } from '../images';
 import SEO from '../components/SEO';
@@ -29,7 +29,7 @@ function useCounter(target: number, duration = 1800, start = false) {
 }
 
 // ── Stats bar with intersection observer ─────────────────────────────────────
-function StatsBar() {
+function StatsBar({ cmsStats }: { cmsStats?: any }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -43,10 +43,30 @@ function StatsBar() {
   }, []);
 
   const stats = [
-    { icon: Users,    target: 4000, suffix: '+', label: 'Guest Capacity' },
-    { icon: Building2, target: 30,  suffix: '+', label: 'Event Spaces' },
-    { icon: Globe2,   target: 50,  suffix: '+', label: 'International Events' },
-    { icon: Award,    target: 5,   suffix: '-Star', label: 'Facility Rating' },
+    { 
+      icon: Users, 
+      target: parseInt(cmsStats?.capacity?.value?.replace(/\D/g, '') || '4000'), 
+      suffix: cmsStats?.capacity?.value?.replace(/\d/g, '') || '+', 
+      label: cmsStats?.capacity?.label || 'Guest Capacity' 
+    },
+    { 
+      icon: Building2, 
+      target: parseInt(cmsStats?.spaces?.value?.replace(/\D/g, '') || '30'), 
+      suffix: cmsStats?.spaces?.value?.replace(/\d/g, '') || '+', 
+      label: cmsStats?.spaces?.label || 'Event Spaces' 
+    },
+    { 
+      icon: Globe2, 
+      target: parseInt(cmsStats?.events?.value?.replace(/\D/g, '') || '50'), 
+      suffix: cmsStats?.events?.value?.replace(/\d/g, '') || '+', 
+      label: cmsStats?.events?.label || 'International Events' 
+    },
+    { 
+      icon: Award, 
+      target: parseInt(cmsStats?.rating?.value?.replace(/\D/g, '') || '5'), 
+      suffix: cmsStats?.rating?.value?.replace(/\d/g, '') || '-Star', 
+      label: cmsStats?.rating?.label || 'Facility Rating' 
+    },
   ];
 
   return (
@@ -236,8 +256,69 @@ function VirtualTour() {
 export default function Home() {
   const { data: events } = useApi(() => fetchEvents(), []);
   const { data: news } = useApi(() => fetchNews(), []);
+  const [cmsContent, setCmsContent] = useState<any>(null);
+  
   const displayEvents = (events || []).slice(0, 3);
   const displayNews = (news || []).slice(0, 3);
+
+  // Fetch CMS content for home page
+  useEffect(() => {
+    fetchHomeContent().then(data => {
+      if (data) setCmsContent(data);
+    });
+  }, []);
+
+  // Default content values (fallbacks)
+  const heroTitle = cmsContent?.hero?.title || 'Banjul International';
+  const heroSubtitle = cmsContent?.hero?.subtitle || 'Convention Centre';
+  const heroDescription = cmsContent?.hero?.description || 'Managing the Sir Dawda Kairaba Jawara International Conference Centre — a world-class facility where diplomacy, innovation, and culture converge on the shores of the Atlantic.';
+  const heroPrimaryButton = cmsContent?.hero?.primaryButton || 'Explore Our Venues';
+  const heroSecondaryButton = cmsContent?.hero?.secondaryButton || 'Book an Event';
+  const heroBadge = cmsContent?.hero?.badge || "The Gambia's Premier MICE Destination";
+  const heroMediaType = cmsContent?.hero?.mediaType || 'image';
+  const heroBackgroundImage = cmsContent?.hero?.backgroundImage || IMAGES.heroBg;
+  const heroBackgroundVideo = cmsContent?.hero?.backgroundVideo || '';
+  const heroVideoPoster = cmsContent?.hero?.videoPoster || heroBackgroundImage;
+  const useHeroVideo = heroMediaType === 'video' && Boolean(heroBackgroundVideo);
+
+  const rawAboutTitle = cmsContent?.about?.title || 'Where Excellence Meets';
+  const aboutHighlightText = cmsContent?.about?.highlightText || (!cmsContent?.about?.title ? 'African Hospitality' : '');
+  const aboutTitlePrefix = aboutHighlightText && rawAboutTitle.endsWith(aboutHighlightText)
+    ? rawAboutTitle.slice(0, rawAboutTitle.lastIndexOf(aboutHighlightText)).trim()
+    : rawAboutTitle;
+  const aboutEyebrow = cmsContent?.about?.eyebrow || 'About BICC';
+  const aboutParagraphs = [
+    cmsContent?.about?.paragraph1 || "The Banjul International Convention Centre (BICC) is The Gambia's national premier event management institution, established by the Government of The Gambia to advance the country's Meetings, Incentives, Conferences and Exhibitions (MICE) industry.",
+    cmsContent?.about?.paragraph2 || 'BICC manages the Sir Dawda Kairaba Jawara International Conference Center and the VVIP Lounge at the Banjul International Airport, delivering tailored event solutions for summits, conferences, and special events.',
+    cmsContent?.about?.paragraph3 || '',
+  ].filter(Boolean);
+  const aboutValues = [
+    { icon: Star, text: cmsContent?.about?.values?.value1 || 'Excellence' },
+    { icon: Globe2, text: cmsContent?.about?.values?.value2 || 'Innovation' },
+    { icon: Shield, text: cmsContent?.about?.values?.value3 || 'Integrity' },
+    { icon: Award, text: cmsContent?.about?.values?.value4 || 'Sustainability' },
+  ].filter((value) => value.text);
+  const aboutImage = cmsContent?.about?.image || IMAGES.conferenceHall;
+  const aboutImageStatValue = cmsContent?.about?.imageStat?.value || '14,000';
+  const aboutImageStatLabel = cmsContent?.about?.imageStat?.label || 'm² of Event Space';
+
+  const venuesEyebrow = cmsContent?.venues?.eyebrow || 'Our Facilities';
+  const venuesTitle = cmsContent?.venues?.title || 'World-Class Event Spaces';
+  const venuesDescription = cmsContent?.venues?.description || 'From grand plenary halls to intimate bilateral rooms, our versatile venues cater to events of every scale.';
+  const venuesButtonText = cmsContent?.venues?.buttonText || 'View All Venues';
+  const venueCards = [
+    cmsContent?.venues?.cards?.card1 || { name: 'Plenary Hall', capacity: '1,013 seats', image: IMAGES.conferenceHall, description: 'Our flagship UN General Assembly-style conference hall' },
+    cmsContent?.venues?.cards?.card2 || { name: 'Banquet Halls', capacity: '500 guests', image: IMAGES.banquetHall, description: 'Elegant spaces for galas, dinners, and ceremonies' },
+    cmsContent?.venues?.cards?.card3 || { name: 'VVIP Airport Lounge', capacity: 'Exclusive', image: IMAGES.vvipLounge, description: 'Ultra-modern arrival experience at Banjul Airport' },
+  ].map((card, index) => ({
+    ...card,
+    image: card?.image || [IMAGES.conferenceHall, IMAGES.banquetHall, IMAGES.vvipLounge][index],
+  }));
+
+  const ctaTitle = cmsContent?.cta?.title || 'Ready to Host Your Next Event?';
+  const ctaDescription = cmsContent?.cta?.description || "Let BICC deliver a world-class experience. From conferences to galas, we provide comprehensive event management that reflects excellence, innovation, and The Gambia's legendary hospitality.";
+  const ctaButtonText = cmsContent?.cta?.buttonText || 'Book an Event';
+  const ctaBackgroundImage = cmsContent?.cta?.backgroundImage || IMAGES.banquetHall;
 
   return (
     <div>
@@ -247,27 +328,39 @@ export default function Home() {
       />
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${IMAGES.heroBg})` }} />
+        {useHeroVideo ? (
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster={heroVideoPoster}
+          >
+            <source src={heroBackgroundVideo} />
+          </video>
+        ) : (
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroBackgroundImage})` }} />
+        )}
         <div className="absolute inset-0 bg-black/30" />
         <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-400/30 rounded-full text-blue-200 text-sm font-medium mb-8 backdrop-blur-sm">
             <Star size={14} />
-            The Gambia's Premier MICE Destination
+            {heroBadge}
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            Banjul International
-            <span className="block text-blue-400">Convention Centre</span>
+            {heroTitle}
+            <span className="block text-blue-400">{heroSubtitle}</span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed">
-            Managing the Sir Dawda Kairaba Jawara International Conference Centre — 
-            a world-class facility where diplomacy, innovation, and culture converge on the shores of the Atlantic.
+            {heroDescription}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/venues" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-400 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/30">
-              Explore Our Venues <ArrowRight size={20} />
+              {heroPrimaryButton} <ArrowRight size={20} />
             </Link>
             <Link to="/booking" className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-xl font-bold text-lg hover:bg-white/10 transition-all backdrop-blur-sm">
-              Book an Event
+              {heroSecondaryButton}
             </Link>
           </div>
         </div>
@@ -278,24 +371,28 @@ export default function Home() {
       </section>
 
       {/* Stats Bar — animated counters */}
-      <StatsBar />
+      <StatsBar cmsStats={cmsContent?.stats} />
 
       {/* About Preview */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">About BICC</span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3 mb-6">Where Excellence Meets <span className="text-blue-700">African Hospitality</span></h2>
-              <p className="text-gray-600 leading-relaxed mb-6">The Banjul International Convention Centre (BICC) is The Gambia's national premier event management institution, established by the Government of The Gambia to advance the country's Meetings, Incentives, Conferences and Exhibitions (MICE) industry.</p>
-              <p className="text-gray-600 leading-relaxed mb-8">BICC manages the Sir Dawda Kairaba Jawara International Conference Center and the VVIP Lounge at the Banjul International Airport, delivering tailored event solutions for summits, conferences, and special events.</p>
+              <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">{aboutEyebrow}</span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3 mb-6">
+                {aboutTitlePrefix}
+                {aboutHighlightText && <span className="text-blue-700"> {aboutHighlightText}</span>}
+              </h2>
+              {aboutParagraphs.map((paragraph, index) => (
+                <p
+                  key={index}
+                  className={`text-gray-600 leading-relaxed ${index === aboutParagraphs.length - 1 ? 'mb-8' : 'mb-6'}`}
+                >
+                  {paragraph}
+                </p>
+              ))}
               <div className="grid grid-cols-2 gap-4 mb-8">
-                {[
-                  { icon: Star, text: 'Excellence' },
-                  { icon: Globe2, text: 'Innovation' },
-                  { icon: Shield, text: 'Integrity' },
-                  { icon: Award, text: 'Sustainability' },
-                ].map((v, i) => (
+                {aboutValues.map((v, i) => (
                   <div key={i} className="flex items-center gap-3 bg-blue-50 rounded-lg p-3">
                     <v.icon size={20} className="text-blue-700" />
                     <span className="font-medium text-[#1F85A8]">{v.text}</span>
@@ -305,10 +402,10 @@ export default function Home() {
               <Link to="/about" className="inline-flex items-center gap-2 text-blue-700 font-semibold hover:text-blue-800 transition-colors">Learn More About Us <ArrowRight size={18} /></Link>
             </div>
             <div className="relative mt-8 lg:mt-0">
-              <img src={IMAGES.conferenceHall} alt="Conference Centre" className="rounded-2xl shadow-2xl w-full aspect-[4/3] object-cover" />
+              <img src={aboutImage} alt="Conference Centre" className="rounded-2xl shadow-2xl w-full aspect-[4/3] object-cover" />
               <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-blue-600 text-white rounded-xl p-4 sm:p-6 shadow-xl">
-                <div className="text-2xl sm:text-3xl font-bold">14,000</div>
-                <div className="text-xs sm:text-sm font-medium">m² of Event Space</div>
+                <div className="text-2xl sm:text-3xl font-bold">{aboutImageStatValue}</div>
+                <div className="text-xs sm:text-sm font-medium">{aboutImageStatLabel}</div>
               </div>
             </div>
           </div>
@@ -319,30 +416,26 @@ export default function Home() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">Our Facilities</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">World-Class Event Spaces</h2>
-            <p className="text-gray-500 mt-4 max-w-2xl mx-auto">From grand plenary halls to intimate bilateral rooms, our versatile venues cater to events of every scale.</p>
+            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">{venuesEyebrow}</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">{venuesTitle}</h2>
+            <p className="text-gray-500 mt-4 max-w-2xl mx-auto">{venuesDescription}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { name: 'Plenary Hall', capacity: '1,013 seats', img: IMAGES.conferenceHall, desc: 'Our flagship UN General Assembly-style conference hall' },
-              { name: 'Banquet Halls', capacity: '500 guests', img: IMAGES.banquetHall, desc: 'Elegant spaces for galas, dinners, and ceremonies' },
-              { name: 'VVIP Airport Lounge', capacity: 'Exclusive', img: IMAGES.vvipLounge, desc: 'Ultra-modern arrival experience at Banjul Airport' },
-            ].map((venue, i) => (
+            {venueCards.map((venue, i) => (
               <div key={i} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
                 <div className="relative overflow-hidden">
-                  <img src={venue.img} alt={venue.name} className="w-full aspect-[3/2] object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={venue.image} alt={venue.name} className="w-full aspect-[3/2] object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute top-4 right-4 bg-[#1F85A8]/80 backdrop-blur-sm text-white text-sm px-3 py-1 rounded-full font-medium">{venue.capacity}</div>
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-[#1F85A8] mb-2">{venue.name}</h3>
-                  <p className="text-gray-500 text-sm">{venue.desc}</p>
+                  <p className="text-gray-500 text-sm">{venue.description}</p>
                 </div>
               </div>
             ))}
           </div>
           <div className="text-center mt-10">
-            <Link to="/venues" className="inline-flex items-center gap-2 px-6 py-3 bg-[#1F85A8] text-white rounded-xl font-semibold hover:bg-[#1a6d8a] transition-all">View All Venues <ArrowRight size={18} /></Link>
+            <Link to="/venues" className="inline-flex items-center gap-2 px-6 py-3 bg-[#1F85A8] text-white rounded-xl font-semibold hover:bg-[#1a6d8a] transition-all">{venuesButtonText} <ArrowRight size={18} /></Link>
           </div>
         </div>
       </section>
@@ -417,15 +510,14 @@ export default function Home() {
 
       {/* CTA */}
       <section className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${IMAGES.banquetHall})` }} />
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${ctaBackgroundImage})` }} />
         <div className="absolute inset-0 bg-[#1F85A8]/85" />
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">Ready to Host Your Next Event?</h2>
-          <p className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto">Let BICC deliver a world-class experience. From conferences to galas, we provide comprehensive event management that reflects excellence, innovation, and The Gambia's legendary hospitality.</p>
-          <Link to="/booking" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-400 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/30">Book an Event <ArrowRight size={20} /></Link>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">{ctaTitle}</h2>
+          <p className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto">{ctaDescription}</p>
+          <Link to="/booking" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-400 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/30">{ctaButtonText} <ArrowRight size={20} /></Link>
         </div>
       </section>
     </div>
   );
 }
-

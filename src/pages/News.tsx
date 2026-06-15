@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { fetchNews } from '../api';
-import { useApi } from '../hooks/useApi';
+import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 import { Calendar, User, ArrowLeft } from 'lucide-react';
 import SEO from '../components/SEO';
 import { SkeletonList } from '../components/Skeleton';
 import { IMAGES } from '../images';
 
 export default function News() {
-  const { data: news, loading } = useApi(() => fetchNews(), []);
+  const { data: news, loading } = useRealtimeCollection<any>('news', []);
   const [selected, setSelected] = useState<any | null>(null);
 
   return (
@@ -31,7 +30,7 @@ export default function News() {
             <SkeletonList count={6} />
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {(news || []).map(item => (
+              {news.map(item => (
                 <article key={item.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group" onClick={() => setSelected(item)}>
                   <div className="relative overflow-hidden"><img src={item.image} alt={item.title} className="w-full aspect-[2/1] object-cover group-hover:scale-105 transition-transform duration-500" /></div>
                   <div className="p-6">
@@ -68,5 +67,4 @@ export default function News() {
     </div>
   );
 }
-
 

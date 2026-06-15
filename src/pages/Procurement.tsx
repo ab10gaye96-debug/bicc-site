@@ -1,20 +1,8 @@
 import { useState } from 'react';
 import { FileText, Clock, Calendar, Download, Search, AlertCircle } from 'lucide-react';
-import { useApi } from '../hooks/useApi';
+import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 import SEO from '../components/SEO';
 import { IMAGES } from '../images';
-
-// Fetch tenders from Firestore
-async function fetchTenders() {
-  try {
-    const { getDocs, collection } = await import('firebase/firestore');
-    const { db } = await import('../firebase');
-    const snap = await getDocs(collection(db, 'tenders'));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch {
-    return [];
-  }
-}
 
 // Fallback data
 const FALLBACK_TENDERS = [
@@ -71,7 +59,7 @@ const CATEGORIES = ['All', 'Open', 'Closed'];
 const TYPES = ['All', 'Goods', 'Services', 'Works'];
 
 export default function Procurement() {
-  const { data: dbTenders } = useApi(fetchTenders, []);
+  const { data: dbTenders } = useRealtimeCollection<any>('tenders', []);
   const tenders = (dbTenders && dbTenders.length > 0) ? dbTenders : FALLBACK_TENDERS;
 
   const [statusFilter, setStatusFilter] = useState('All');
@@ -89,13 +77,7 @@ export default function Procurement() {
   const openTenders = filtered.filter((t: any) => t.status === 'Open');
   const closedTenders = filtered.filter((t: any) => t.status === 'Closed');
 
-  const handleDownload = (doc: any) => {
-    if (doc.url && doc.url !== '#') {
-      window.open(doc.url, '_blank');
-    } else {
-      alert('This is a demo document. In production, this would download the actual file.');
-    }
-  };
+  const isDocumentAvailable = (url?: string) => Boolean(url && url !== '#');
 
   return (
     <div className="pt-20">
@@ -239,15 +221,28 @@ export default function Procurement() {
                     <h4 className="font-semibold text-gray-800 mb-3">Tender Documents</h4>
                     <div className="flex flex-wrap gap-3">
                       {tender.documents.map((doc: any, i: number) => (
-                        <button
-                          key={i}
-                          onClick={() => handleDownload(doc)}
-                          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-blue-100 text-gray-700 hover:text-blue-700 rounded-lg transition-all"
-                        >
-                          <Download size={16} />
-                          <span className="text-sm font-medium">{doc.name}</span>
-                          <span className="text-xs text-gray-500">({doc.size})</span>
-                        </button>
+                        isDocumentAvailable(doc.url) ? (
+                          <a
+                            key={i}
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-blue-100 text-gray-700 hover:text-blue-700 rounded-lg transition-all"
+                          >
+                            <Download size={16} />
+                            <span className="text-sm font-medium">{doc.name}</span>
+                            <span className="text-xs text-gray-500">({doc.size})</span>
+                          </a>
+                        ) : (
+                          <span
+                            key={i}
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-400 rounded-lg"
+                          >
+                            <Download size={16} />
+                            <span className="text-sm font-medium">{doc.name}</span>
+                            <span className="text-xs">({doc.size})</span>
+                          </span>
+                        )
                       ))}
                     </div>
                   </div>

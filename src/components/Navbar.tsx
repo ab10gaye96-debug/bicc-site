@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, ChevronDown, Building2, Package, Calendar, Globe2, Download, Briefcase, FileText, ClipboardCheck } from 'lucide-react';
 import { IMAGES } from '../images';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -26,7 +27,12 @@ const resourcesDropdown = [
   { name: 'Procurement', path: '/procurement', icon: FileText, desc: 'Tenders & opportunities' },
 ];
 
+const adminPortalUrl = import.meta.env.VITE_ADMIN_PORTAL_URL?.trim();
+const embeddedAdminEnabled =
+  import.meta.env.DEV || import.meta.env.VITE_ENABLE_EMBEDDED_ADMIN === 'true';
+
 export default function Navbar() {
+  const { settings } = useSiteSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showVenuesMenu, setShowVenuesMenu] = useState(false);
@@ -89,8 +95,8 @@ export default function Navbar() {
           <Link to="/" className="flex items-center gap-3">
             <img src={IMAGES.logo} alt="BICC Logo" className="h-12 w-auto rounded-md bg-white p-1 object-contain" />
             <div>
-              <span className="text-white font-bold text-lg tracking-wide">BICC</span>
-              <span className="hidden sm:block text-white/80 text-xs tracking-wider">Banjul International Convention Centre</span>
+              <span className="text-white font-bold text-lg tracking-wide">{settings.siteName}</span>
+              <span className="hidden sm:block text-white/80 text-xs tracking-wider">{settings.siteTagline}</span>
             </div>
           </Link>
 
@@ -227,12 +233,23 @@ export default function Navbar() {
             >
               Book an Event
             </Link>
-            <Link
-              to="/admin"
-              className="ml-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-bold hover:from-blue-400 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/20"
-            >
-              Admin
-            </Link>
+            {(adminPortalUrl || embeddedAdminEnabled) && (
+              adminPortalUrl ? (
+                <a
+                  href={adminPortalUrl}
+                  className="ml-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-bold hover:from-blue-400 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/20"
+                >
+                  Admin
+                </a>
+              ) : (
+                <Link
+                  to="/admin"
+                  className="ml-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-bold hover:from-blue-400 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/20"
+                >
+                  Admin
+                </Link>
+              )
+            )}
           </div>
 
           {/* Mobile: search + menu */}
@@ -392,13 +409,25 @@ export default function Navbar() {
             >
               Book an Event
             </Link>
-            <Link
-              to="/admin"
-              onClick={() => setIsOpen(false)}
-              className="block px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-bold text-center mt-2"
-            >
-              Admin Panel
-            </Link>
+            {(adminPortalUrl || embeddedAdminEnabled) && (
+              adminPortalUrl ? (
+                <a
+                  href={adminPortalUrl}
+                  onClick={() => setIsOpen(false)}
+                  className="block px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-bold text-center mt-2"
+                >
+                  Admin Panel
+                </a>
+              ) : (
+                <Link
+                  to="/admin"
+                  onClick={() => setIsOpen(false)}
+                  className="block px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-bold text-center mt-2"
+                >
+                  Admin Panel
+                </Link>
+              )
+            )}
           </div>
         </div>
       )}

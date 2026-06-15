@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { submitContact } from '../api';
+import { useEffect, useState } from 'react';
+import { fetchContactContent, fetchFooterContent, submitContact } from '../api';
 import { sendContactConfirmationEmail, sendContactNotificationEmail } from '../emailService';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -8,6 +8,41 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
+  const [cmsContent, setCmsContent] = useState<any>(null);
+  const [footerContent, setFooterContent] = useState<any>(null);
+
+  useEffect(() => {
+    fetchContactContent().then(data => {
+      if (data) setCmsContent(data);
+    });
+    fetchFooterContent().then(data => {
+      if (data) setFooterContent(data);
+    });
+  }, []);
+
+  const heroEyebrow = cmsContent?.hero?.eyebrow || 'Get in Touch';
+  const heroTitle = cmsContent?.hero?.title || 'Contact Us';
+  const heroDescription = cmsContent?.hero?.description || "Have a question or want to book an event? We'd love to hear from you.";
+  const heroBackgroundImage = cmsContent?.hero?.backgroundImage || '/images/vvip-lounge.jpg';
+  const officeTitle = cmsContent?.office?.title || 'Contact Information';
+  const contactItems = [
+    { icon: MapPin, title: 'Location', text: cmsContent?.office?.address || 'Sir Dawda Kairaba Jawara International Conference Centre, Bijilo, The Gambia' },
+    { icon: Phone, title: 'Phone', text: [cmsContent?.office?.phone1 || '+220 7784425', cmsContent?.office?.phone2 || '+220 3728659'].filter(Boolean).join('\n') },
+    { icon: Mail, title: 'Email', text: cmsContent?.office?.email || 'info@bicc.gm' },
+    { icon: Clock, title: 'Working Hours', text: cmsContent?.office?.hours || 'Monday - Friday\n8:00 AM - 5:00 PM' },
+  ];
+  const socialTitle = cmsContent?.social?.title || 'Follow Us';
+  const formTitle = cmsContent?.form?.title || 'Send Us a Message';
+  const formDescription = cmsContent?.form?.description || "Fill in the form below and we'll get back to you as soon as possible.";
+  const formSuccessMessage = cmsContent?.form?.successMessage || 'Thank you! Your message has been sent successfully.';
+  const submitButtonText = cmsContent?.form?.buttonText || 'Send Message';
+  const mapTitle = cmsContent?.map?.title || 'Find Us';
+  const mapDescription = cmsContent?.map?.description || 'Sir Dawda Kairaba Jawara International Conference Centre, Bijilo, The Gambia';
+  const mapOpenButtonText = cmsContent?.map?.openButtonText || 'Open in Google Maps';
+  const mapDirectionsButtonText = cmsContent?.map?.directionsButtonText || 'Get Directions';
+  const facebookUrl = footerContent?.social?.facebook || 'https://www.facebook.com/BICCGM';
+  const instagramUrl = footerContent?.social?.instagram || 'https://www.instagram.com/banjulconventioncentre/';
+  const linkedinUrl = footerContent?.social?.linkedin || 'https://www.linkedin.com/company/banjul-international-convention-centre/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,12 +71,12 @@ export default function Contact() {
         description="Get in touch with the Banjul International Convention Centre. Call us, email us, or fill in the contact form for event inquiries and bookings."
       />
       <section className="relative py-24 bg-[#1F85A8]">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/images/vvip-lounge.jpg)' }} />
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroBackgroundImage})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <span className="text-blue-400 font-semibold text-sm tracking-widest uppercase">Get in Touch</span>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mt-4 mb-6">Contact Us</h1>
-          <p className="text-gray-300 text-lg max-w-3xl mx-auto">Have a question or want to book an event? We'd love to hear from you.</p>
+          <span className="text-blue-400 font-semibold text-sm tracking-widest uppercase">{heroEyebrow}</span>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mt-4 mb-6">{heroTitle}</h1>
+          <p className="text-gray-300 text-lg max-w-3xl mx-auto">{heroDescription}</p>
         </div>
       </section>
       <section className="py-16 sm:py-20 bg-white">
@@ -50,14 +85,9 @@ export default function Contact() {
             {/* Contact Info */}
             <div className="lg:col-span-1 space-y-6 sm:space-y-8">
               <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-[#1F85A8] mb-6">Contact Information</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-[#1F85A8] mb-6">{officeTitle}</h2>
                 <div className="space-y-4 sm:space-y-6">
-                  {[
-                    { icon: MapPin, title: 'Location', text: 'Sir Dawda Kairaba Jawara International Conference Centre, Bijilo, The Gambia' },
-                    { icon: Phone, title: 'Phone', text: '+220 7784425\n+220 3728659' },
-                    { icon: Mail, title: 'Email', text: 'info@bicc.gm' },
-                    { icon: Clock, title: 'Working Hours', text: 'Monday - Friday\n8:00 AM - 5:00 PM' },
-                  ].map((item, i) => (
+                  {contactItems.map((item, i) => (
                     <div key={i} className="flex items-start gap-3 sm:gap-4">
                       <div className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
                         <item.icon className="text-blue-700" size={20} />
@@ -72,15 +102,15 @@ export default function Contact() {
               </div>
               {/* Social Links */}
               <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
-                <h3 className="font-semibold text-[#1F85A8] mb-4 text-sm sm:text-base">Follow Us</h3>
+                <h3 className="font-semibold text-[#1F85A8] mb-4 text-sm sm:text-base">{socialTitle}</h3>
                 <div className="space-y-2 sm:space-y-3">
-                  <a href="https://www.facebook.com/BICCGM" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs sm:text-sm text-gray-600 hover:text-blue-700 transition-colors">
+                  <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs sm:text-sm text-gray-600 hover:text-blue-700 transition-colors">
                     <span className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">📘</span>Facebook
                   </a>
-                  <a href="https://www.instagram.com/banjulconventioncentre/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs sm:text-sm text-gray-600 hover:text-blue-700 transition-colors">
+                  <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs sm:text-sm text-gray-600 hover:text-blue-700 transition-colors">
                     <span className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">📸</span>Instagram
                   </a>
-                  <a href="https://www.linkedin.com/company/banjul-international-convention-centre/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs sm:text-sm text-gray-600 hover:text-blue-700 transition-colors">
+                  <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs sm:text-sm text-gray-600 hover:text-blue-700 transition-colors">
                     <span className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">💼</span>LinkedIn
                   </a>
                 </div>
@@ -89,12 +119,12 @@ export default function Contact() {
             {/* Contact Form */}
             <div className="sm:col-span-1 lg:col-span-2">
               <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-6 sm:p-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-[#1F85A8] mb-2">Send Us a Message</h2>
-                <p className="text-gray-500 text-sm sm:text-base mb-6 sm:mb-8">Fill in the form below and we'll get back to you as soon as possible.</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#1F85A8] mb-2">{formTitle}</h2>
+                <p className="text-gray-500 text-sm sm:text-base mb-6 sm:mb-8">{formDescription}</p>
                 {submitted && (
                   <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-6">
                     <CheckCircle className="text-green-500 shrink-0" size={20} />
-                    <p className="text-green-700 text-xs sm:text-sm font-medium">Thank you! Your message has been sent successfully.</p>
+                    <p className="text-green-700 text-xs sm:text-sm font-medium">{formSuccessMessage}</p>
                   </div>
                 )}
                 <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
@@ -161,7 +191,7 @@ export default function Contact() {
                     disabled={sending}
                     className="w-full inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg sm:rounded-xl font-bold hover:from-blue-500 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                   >
-                    <Send size={18} /> {sending ? 'Sending...' : 'Send Message'}
+                    <Send size={18} /> {sending ? 'Sending...' : submitButtonText}
                   </button>
                 </form>
               </div>
@@ -174,8 +204,8 @@ export default function Contact() {
       <section className="bg-gray-50 py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#1F85A8]">Find Us</h2>
-            <p className="text-gray-500 mt-2 text-sm">Sir Dawda Kairaba Jawara International Conference Centre, Bijilo, The Gambia</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#1F85A8]">{mapTitle}</h2>
+            <p className="text-gray-500 mt-2 text-sm">{mapDescription}</p>
           </div>
           <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
             <iframe
@@ -197,7 +227,7 @@ export default function Contact() {
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#1F85A8] text-white rounded-xl font-semibold hover:bg-[#1a6d8a] transition-all text-sm"
             >
-              Open in Google Maps
+              {mapOpenButtonText}
             </a>
             <a
               href="https://maps.google.com/?q=Sir+Dawda+Kairaba+Jawara+International+Conference+Centre+Bijilo+Gambia&dirflg=d"
@@ -205,7 +235,7 @@ export default function Contact() {
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-[#1F85A8] text-[#1F85A8] rounded-xl font-semibold hover:bg-[#1F85A8] hover:text-white transition-all text-sm"
             >
-              Get Directions
+              {mapDirectionsButtonText}
             </a>
           </div>
         </div>

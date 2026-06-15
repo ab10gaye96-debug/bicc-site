@@ -1,98 +1,130 @@
+import { useState, useEffect } from 'react';
 import { Quote, Star } from 'lucide-react';
-import { useApi } from '../hooks/useApi';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 
-// Fetch testimonials from Firestore
-async function fetchTestimonials() {
-  try {
-    const { getDocs, collection, query, where } = await import('firebase/firestore');
-    const { db } = await import('../firebase');
-    const q = query(collection(db, 'testimonials'), where('published', '==', true));
-    const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch {
-    return [];
-  }
+interface Testimonial {
+  id: string;
+  name: string;
+  role: string;
+  organization: string;
+  content: string;
+  rating: number;
+  image?: string;
 }
 
-// Fallback testimonials
-const FALLBACK_TESTIMONIALS = [
+const FALLBACK_TESTIMONIALS: Testimonial[] = [
   {
     id: '1',
-    name: 'Dr. Fatou Bensouda',
-    position: 'International Conference Organizer',
-    organization: 'African Union',
-    content: 'BICC provided exceptional service for our Pan-African Summit. The facilities are world-class, and the staff went above and beyond to ensure our event was a success.',
+    name: 'Dr. Isatou Touray',
+    role: 'Minister',
+    organization: 'Ministry of Health',
+    content: 'The BICC provided exceptional service for our regional health summit. The facilities were world-class and the staff was incredibly professional.',
     rating: 5,
-    image: '',
   },
   {
     id: '2',
     name: 'Ambassador John Smith',
-    position: 'Diplomatic Corps',
-    organization: 'ECOWAS',
-    content: 'The Sir Dawda Kairaba Jawara International Conference Centre is a gem in West Africa. We have hosted multiple regional summits here with outstanding results.',
+    role: 'Diplomatic Envoy',
+    organization: 'United Nations',
+    content: 'An outstanding venue that rivals the best conference centers in the world. The Sir Dawda Kairaba Jawara Hall is truly magnificent.',
     rating: 5,
-    image: '',
   },
   {
     id: '3',
-    name: 'Sarah Johnson',
-    position: 'Corporate Events Manager',
-    organization: 'Global Tech Corporation',
-    content: 'Professional service, modern facilities, and beautiful location. BICC exceeded our expectations for our annual corporate retreat. Highly recommended!',
+    name: 'Fatou Jallow',
+    role: 'CEO',
+    organization: 'West African Development Bank',
+    content: 'We have hosted multiple events at BICC. The attention to detail and commitment to excellence is unmatched in the sub-region.',
     rating: 5,
-    image: '',
-  },
-  {
-    id: '4',
-    name: 'Dr. Mamadou Diallo',
-    position: 'Conference Chair',
-    organization: 'West African Health Association',
-    content: 'The technical capabilities and support at BICC are impressive. Our medical conference with 500+ delegates ran smoothly thanks to their experienced team.',
-    rating: 5,
-    image: '',
   },
 ];
 
 export default function TestimonialsSection() {
-  const { data: dbTestimonials } = useApi(fetchTestimonials, []);
-  const testimonials = (dbTestimonials && dbTestimonials.length > 0) ? dbTestimonials : FALLBACK_TESTIMONIALS;
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(FALLBACK_TESTIMONIALS);
+  const [loading, setLoading] = useState(true);
 
-  if (testimonials.length === 0) return null;
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'testimonials'));
+        const data = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Testimonial[];
+        
+        if (data.length > 0) {
+          setTestimonials(data);
+        }
+      } catch (error) {
+        console.error('Error fetching testimonials:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTestimonials();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-32 mx-auto mb-4"></div>
+              <div className="h-8 bg-gray-200 rounded w-64 mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
           <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">Client Testimonials</span>
           <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">What Our Clients Say</h2>
           <p className="text-gray-500 mt-4 max-w-2xl mx-auto">
-            Trusted by organizations, governments, and corporations across Africa and beyond
+            Hear from organizations and dignitaries who have experienced excellence at BICC.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {testimonials.slice(0, 4).map((testimonial: any) => (
-            <div key={testimonial.id} className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all">
-              <div className="flex items-center gap-1 mb-4">
-                {[...Array(testimonial.rating || 5)].map((_, i) => (
-                  <Star key={i} size={16} className="text-yellow-400 fill-current" />
+        <div className="grid md:grid-cols-3 gap-8">
+          {testimonials.slice(0, 3).map((testimonial) => (
+            <div key={testimonial.id} className="bg-gray-50 rounded-2xl p-8 relative hover:shadow-lg transition-all">
+              <Quote className="absolute top-6 right-6 text-blue-200" size={48} />
+              
+              <div className="flex gap-1 mb-4">
+                {Array.from({ length: testimonial.rating }).map((_, i) => (
+                  <Star key={i} size={16} className="fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
-              
-              <Quote className="text-blue-200 mb-3" size={32} />
-              
-              <p className="text-gray-700 text-sm leading-relaxed mb-4 line-clamp-4">
+
+              <p className="text-gray-600 mb-6 leading-relaxed relative z-10">
                 "{testimonial.content}"
               </p>
-              
-              <div className="border-t pt-4">
-                {testimonial.image && (
-                  <img src={testimonial.image} alt={testimonial.name} className="w-12 h-12 rounded-full mb-3" />
+
+              <div className="flex items-center gap-4">
+                {testimonial.image ? (
+                  <img 
+                    src={testimonial.image} 
+                    alt={testimonial.name}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                    {testimonial.name.charAt(0)}
+                  </div>
                 )}
-                <h4 className="font-bold text-[#1F85A8] text-sm">{testimonial.name}</h4>
-                <p className="text-xs text-gray-600">{testimonial.position}</p>
-                <p className="text-xs text-gray-500 mt-1">{testimonial.organization}</p>
+                <div>
+                  <div className="font-bold text-[#1F85A8]">{testimonial.name}</div>
+                  <div className="text-sm text-gray-500">
+                    {testimonial.role}, {testimonial.organization}
+                  </div>
+                </div>
               </div>
             </div>
           ))}

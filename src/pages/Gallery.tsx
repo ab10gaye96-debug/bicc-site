@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchGallery } from '../api';
-import { useApi } from '../hooks/useApi';
+import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 import { X, ChevronLeft, ChevronRight, ZoomIn, Play } from 'lucide-react';
 import { IMAGES } from '../images';
 import SEO from '../components/SEO';
@@ -117,11 +116,11 @@ function Lightbox({ images, index, onClose }: { images: any[]; index: number; on
 
 // ── Main Gallery page ─────────────────────────────────────────────────────────
 export default function Gallery() {
-  const { data: images, loading } = useApi(() => fetchGallery(), []);
+  const { data: images, loading } = useRealtimeCollection<any>('gallery', []);
   const [filter, setFilter] = useState('All');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const allItems = images || [];
+  const allItems = images;
   const categories = ['All', ...Array.from(new Set(allItems.map((i: any) => i.category).filter(Boolean)))];
   const filtered = filter === 'All' ? allItems : allItems.filter((i: any) => i.category === filter);
 

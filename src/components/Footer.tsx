@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import { IMAGES } from '../images';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 function FacebookIcon() {
   return <svg viewBox="0 0 24 24" fill="currentColor" className="w-[18px] h-[18px]"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>;
@@ -13,6 +14,14 @@ function LinkedinIcon() {
 }
 
 export default function Footer() {
+  const { settings } = useSiteSettings();
+  const address = `${settings.contactAddress}, ${settings.contactCity}, ${settings.contactCountry}`;
+  const socialLinks = [
+    { href: settings.socialFacebook || 'https://www.facebook.com/BICCGM', label: 'BICC Facebook', icon: FacebookIcon },
+    { href: settings.socialInstagram || 'https://www.instagram.com/banjulconventioncentre/', label: 'BICC Instagram', icon: InstagramIcon },
+    { href: settings.socialLinkedIn || 'https://www.linkedin.com/company/banjul-international-convention-centre/', label: 'BICC LinkedIn', icon: LinkedinIcon },
+  ];
+
   return (
     <footer className="bg-[#1F85A8] text-gray-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -22,23 +31,19 @@ export default function Footer() {
             <div className="flex items-center gap-3 mb-5">
               <img src={IMAGES.logo} alt="BICC Logo" className="h-12 w-auto rounded-md bg-white p-1 object-contain" />
               <div>
-                <h3 className="text-white font-bold text-lg">BICC</h3>
-                <p className="text-white/70 text-xs">Banjul International Convention Centre</p>
+                <h3 className="text-white font-bold text-lg">{settings.siteName}</h3>
+                <p className="text-white/70 text-xs">{settings.footerTagline}</p>
               </div>
             </div>
             <p className="text-sm leading-relaxed text-gray-400">
-              The Gambia's national premier event management institution, dedicated to positioning The Gambia as a leading MICE destination in the region.
+              {settings.siteTagline}
             </p>
             <div className="flex gap-3 mt-6">
-              <a href="https://www.facebook.com/BICCGM" target="_blank" rel="noopener noreferrer" aria-label="BICC Facebook" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white hover:text-[#1F85A8] transition-all">
-                <FacebookIcon />
-              </a>
-              <a href="https://www.instagram.com/banjulconventioncentre/" target="_blank" rel="noopener noreferrer" aria-label="BICC Instagram" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white hover:text-[#1F85A8] transition-all">
-                <InstagramIcon />
-              </a>
-              <a href="https://www.linkedin.com/company/banjul-international-convention-centre/" target="_blank" rel="noopener noreferrer" aria-label="BICC LinkedIn" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white hover:text-[#1F85A8] transition-all">
-                <LinkedinIcon />
-              </a>
+              {socialLinks.map((social) => (
+                <a key={social.label} href={social.href} target="_blank" rel="noopener noreferrer" aria-label={social.label} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white hover:text-[#1F85A8] transition-all">
+                  <social.icon />
+                </a>
+              ))}
             </div>
           </div>
 
@@ -100,22 +105,22 @@ export default function Footer() {
             <ul className="space-y-4 text-sm">
               <li className="flex items-start gap-3">
                 <MapPin size={18} className="text-blue-400 mt-0.5 shrink-0" />
-                <span>Sir Dawda Kairaba Jawara International Conference Centre, Bijilo, The Gambia</span>
+                <span>{address}</span>
               </li>
               <li className="flex items-start gap-3">
                 <Phone size={18} className="text-white shrink-0 mt-0.5" />
                 <div>
-                  <p>+220 7784425</p>
-                  <p>+220 3728659</p>
+                  <p>{settings.contactPhone}</p>
+                  <p>{settings.contactAlternatePhone}</p>
                 </div>
               </li>
               <li className="flex items-center gap-3">
                 <Mail size={18} className="text-white shrink-0" />
-                <span>info@bicc.gm</span>
+                <span>{settings.contactEmail}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Clock size={18} className="text-white shrink-0" />
-                <span>Mon - Fri: 8:00 AM - 5:00 PM</span>
+                <span>{settings.contactHours}</span>
               </li>
             </ul>
           </div>
@@ -126,7 +131,7 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} Banjul International Convention Centre (BICC). All rights reserved.
+            {settings.footerText}
           </p>
           <div className="flex gap-6 text-sm text-gray-500">
             <span>Excellence</span>
@@ -140,6 +145,4 @@ export default function Footer() {
     </footer>
   );
 }
-
-
 

@@ -3,15 +3,20 @@ import { submitContact } from '../api';
 import { sendContactConfirmationEmail, sendContactNotificationEmail } from '../emailService';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from 'lucide-react';
 import SEO from '../components/SEO';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 export default function Contact() {
+  const { settings } = useSiteSettings();
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const address = `${settings.contactAddress}, ${settings.contactCity}, ${settings.contactCountry}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
+    setErrorMessage('');
     try {
       await submitContact(form);
       // Fire both emails — notify staff + confirm to sender
@@ -23,7 +28,7 @@ export default function Contact() {
       setForm({ name: '', email: '', phone: '', subject: '', message: '' });
       setTimeout(() => setSubmitted(false), 5000);
     } catch (err) {
-      alert('Failed to send message. Please try again.');
+      setErrorMessage('Failed to send your message. Please try again.');
     } finally {
       setSending(false);
     }
@@ -53,10 +58,10 @@ export default function Contact() {
                 <h2 className="text-2xl sm:text-3xl font-bold text-[#1F85A8] mb-6">Contact Information</h2>
                 <div className="space-y-4 sm:space-y-6">
                   {[
-                    { icon: MapPin, title: 'Location', text: 'Sir Dawda Kairaba Jawara International Conference Centre, Bijilo, The Gambia' },
-                    { icon: Phone, title: 'Phone', text: '+220 7784425\n+220 3728659' },
-                    { icon: Mail, title: 'Email', text: 'info@bicc.gm' },
-                    { icon: Clock, title: 'Working Hours', text: 'Monday - Friday\n8:00 AM - 5:00 PM' },
+                    { icon: MapPin, title: 'Location', text: address },
+                    { icon: Phone, title: 'Phone', text: `${settings.contactPhone}\n${settings.contactAlternatePhone}` },
+                    { icon: Mail, title: 'Email', text: settings.contactEmail },
+                    { icon: Clock, title: 'Working Hours', text: settings.contactHours },
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-3 sm:gap-4">
                       <div className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
@@ -74,13 +79,13 @@ export default function Contact() {
               <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
                 <h3 className="font-semibold text-[#1F85A8] mb-4 text-sm sm:text-base">Follow Us</h3>
                 <div className="space-y-2 sm:space-y-3">
-                  <a href="https://www.facebook.com/BICCGM" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs sm:text-sm text-gray-600 hover:text-blue-700 transition-colors">
+                  <a href={settings.socialFacebook || 'https://www.facebook.com/BICCGM'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs sm:text-sm text-gray-600 hover:text-blue-700 transition-colors">
                     <span className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">📘</span>Facebook
                   </a>
-                  <a href="https://www.instagram.com/banjulconventioncentre/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs sm:text-sm text-gray-600 hover:text-blue-700 transition-colors">
+                  <a href={settings.socialInstagram || 'https://www.instagram.com/banjulconventioncentre/'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs sm:text-sm text-gray-600 hover:text-blue-700 transition-colors">
                     <span className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">📸</span>Instagram
                   </a>
-                  <a href="https://www.linkedin.com/company/banjul-international-convention-centre/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs sm:text-sm text-gray-600 hover:text-blue-700 transition-colors">
+                  <a href={settings.socialLinkedIn || 'https://www.linkedin.com/company/banjul-international-convention-centre/'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs sm:text-sm text-gray-600 hover:text-blue-700 transition-colors">
                     <span className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">💼</span>LinkedIn
                   </a>
                 </div>
@@ -95,6 +100,11 @@ export default function Contact() {
                   <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-6">
                     <CheckCircle className="text-green-500 shrink-0" size={20} />
                     <p className="text-green-700 text-xs sm:text-sm font-medium">Thank you! Your message has been sent successfully.</p>
+                  </div>
+                )}
+                {errorMessage && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-6">
+                    <p className="text-red-700 text-xs sm:text-sm font-medium">{errorMessage}</p>
                   </div>
                 )}
                 <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
@@ -175,7 +185,7 @@ export default function Contact() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-[#1F85A8]">Find Us</h2>
-            <p className="text-gray-500 mt-2 text-sm">Sir Dawda Kairaba Jawara International Conference Centre, Bijilo, The Gambia</p>
+            <p className="text-gray-500 mt-2 text-sm">{address}</p>
           </div>
           <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
             <iframe
