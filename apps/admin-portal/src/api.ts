@@ -1,4 +1,4 @@
-import { db, auth } from './firebase';
+import { db, auth, getSecondaryAdminAuth } from './firebase';
 import {
   collection,
   getDocs,
@@ -18,6 +18,62 @@ import {
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
 import { sendBookingStatusEmail } from './emailService';
+
+const TOKEN_KEY = 'bicc_token';
+const USERNAME_KEY = 'bicc_username';
+const ROLE_KEY = 'bicc_user_role';
+const DISPLAY_NAME_KEY = 'bicc_display_name';
+const PERMISSIONS_KEY = 'bicc_user_permissions';
+
+export const ADMIN_TAB_LABELS: Record<string, string> = {
+  dashboard: 'Dashboard',
+  settings: 'Content',
+  pages: 'Page Content',
+  media: 'Media Library',
+  events: 'Events',
+  news: 'News',
+  contacts: 'Messages',
+  bookings: 'Bookings',
+  gallery: 'Gallery',
+  venues: 'Venues',
+  users: 'Users',
+  testimonials: 'Testimonials',
+  partners: 'Partners',
+  downloads: 'Downloads',
+  careers: 'Careers',
+  tenders: 'Tenders',
+  subscribers: 'Subscribers',
+  pricing: 'Pricing',
+  quotations: 'Quotations',
+};
+
+export const ROLE_TAB_PRESETS: Record<string, string[]> = {
+  'Super Admin': Object.keys(ADMIN_TAB_LABELS),
+  'Manager': [
+    'dashboard', 'settings', 'pages', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues',
+    'testimonials', 'partners', 'downloads', 'careers', 'tenders', 'subscribers', 'pricing', 'quotations',
+  ],
+  'Staff': [
+    'dashboard', 'settings', 'pages', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery',
+    'downloads', 'careers', 'testimonials', 'partners',
+  ],
+};
+
+function clearAdminStorage() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USERNAME_KEY);
+  localStorage.removeItem(ROLE_KEY);
+  localStorage.removeItem(DISPLAY_NAME_KEY);
+  localStorage.removeItem(PERMISSIONS_KEY);
+}
+
+function normalisePermissions(permissions: unknown, fallbackRole: string): string[] {
+  if (Array.isArray(permissions) && permissions.length > 0) {
+    return permissions.filter((entry): entry is string => typeof entry === 'string');
+  }
+
+  return ROLE_TAB_PRESETS[fallbackRole] || ROLE_TAB_PRESETS.Staff;
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // ADMIN API - Authentication, CRUD operations, and admin management
@@ -50,23 +106,37 @@ export async function loginAdmin(
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const token = await userCredential.user.getIdToken();
 
-    localStorage.setItem('bicc_token', token);
-    localStorage.setItem('bicc_username', userCredential.user.email || '');
-
     // Fetch and save the user's role after login
     const q = query(
       collection(db, 'users'),
       where('email', '==', userCredential.user.email)
     );
     const snapshot = await getDocs(q);
-    if (!snapshot.empty) {
-      const userData = snapshot.docs[0].data();
-      localStorage.setItem('bicc_user_role', userData.role || 'Staff');
+    if (snapshot.empty) {
+      await signOut(auth);
+      clearAdminStorage();
+      return false;
     }
+
+    const userDoc = snapshot.docs[0];
+    const userData = userDoc.data();
+
+    if (userData.status === 'inactive') {
+      await signOut(auth);
+      clearAdminStorage();
+      return false;
+    }
+
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USERNAME_KEY, userData.username || userCredential.user.email || '');
+    localStorage.setItem(ROLE_KEY, userData.role || 'Staff');
+    localStorage.setItem(DISPLAY_NAME_KEY, userData.username || userCredential.user.email || 'Admin');
+    localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(normalisePermissions(userData.permissions, userData.role || 'Staff')));
 
     return true;
   } catch (error) {
     console.error(error);
+    clearAdminStorage();
     return false;
   }
 }
@@ -82,19 +152,30 @@ export async function verifyToken(): Promise<boolean> {
 
 export function logoutAdmin() {
   signOut(auth).catch(console.error);
-  localStorage.removeItem('bicc_token');
-  localStorage.removeItem('bicc_username');
-  localStorage.removeItem('bicc_user_role');
+  clearAdminStorage();
 }
 
 export function isAdminLoggedIn(): boolean {
-  return !!localStorage.getItem('bicc_token');
+  return !!localStorage.getItem(TOKEN_KEY);
 }
 
 // ── Role & Permissions ────────────────────────────────────────────────────────
 
 export function getCurrentUserRole(): string {
-  return localStorage.getItem('bicc_user_role') || 'Staff';
+  return localStorage.getItem(ROLE_KEY) || 'Staff';
+}
+
+export function getCurrentUserDisplayName(): string {
+  return localStorage.getItem(DISPLAY_NAME_KEY) || localStorage.getItem(USERNAME_KEY) || 'Admin';
+}
+
+export function getCurrentUserPermissions(): string[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PERMISSIONS_KEY) || '[]');
+    return normalisePermissions(parsed, getCurrentUserRole());
+  } catch {
+    return ROLE_TAB_PRESETS[getCurrentUserRole()] || ROLE_TAB_PRESETS.Staff;
+  }
 }
 
 export function isSuperAdmin(): boolean {
@@ -112,24 +193,7 @@ export function hasPermission(action: string): boolean {
 }
 
 export function canAccessTab(tab: string): boolean {
-  const role = getCurrentUserRole();
-  const tabAccess: Record<string, string[]> = {
-    'Super Admin': [
-      'dashboard', 'settings', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues', 'users',
-      'testimonials', 'partners', 'downloads', 'careers', 'tenders', 'subscribers',
-      'pricing', 'quotations',
-    ],
-    'Manager': [
-      'dashboard', 'settings', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues',
-      'testimonials', 'partners', 'downloads', 'careers', 'tenders', 'subscribers',
-      'pricing', 'quotations',
-    ],
-    'Staff': [
-      'dashboard', 'settings', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery',
-      'downloads', 'careers',
-    ],
-  };
-  return tabAccess[role]?.includes(tab) || false;
+  return getCurrentUserPermissions().includes(tab);
 }
 
 export function canEdit(): boolean {
@@ -341,7 +405,9 @@ export async function deleteContact(id: string | number): Promise<void> {
 
 export async function fetchUsers(): Promise<any[]> {
   const snap = await getDocs(collection(db, 'users'));
-  return snap.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
+  return snap.docs
+    .map((entry) => ({ id: entry.id, ...entry.data() }))
+    .sort((a: any, b: any) => (a.username || '').localeCompare(b.username || ''));
 }
 
 /**
@@ -353,24 +419,34 @@ export async function createUser(data: {
   username: string;
   password: string;
   role?: string;
+  status?: 'active' | 'inactive';
+  permissions?: string[];
 }): Promise<any> {
-  // Create account in Firebase Auth
-  await createUserWithEmailAndPassword(auth, data.email, data.password);
+  const secondaryAuth = getSecondaryAdminAuth();
+  const userCredential = await createUserWithEmailAndPassword(secondaryAuth, data.email, data.password);
+  await signOut(secondaryAuth);
 
   // Save metadata to Firestore — NO password
   const userData = {
     email: data.email,
     username: data.username,
     role: data.role || 'Staff',
+    status: data.status || 'active',
+    permissions: normalisePermissions(data.permissions, data.role || 'Staff'),
     created_at: new Date().toISOString(),
   };
 
   const docRef = await addDoc(collection(db, 'users'), userData);
-  return { id: docRef.id, ...userData };
+  return { id: docRef.id, authUid: userCredential.user.uid, ...userData };
 }
 
 export async function updateUser(id: string | number, data: any): Promise<void> {
-  await updateDoc(doc(db, 'users', id.toString()), data);
+  const { password, ...safeData } = data;
+  const payload = {
+    ...safeData,
+    permissions: normalisePermissions(safeData.permissions, safeData.role || 'Staff'),
+  };
+  await updateDoc(doc(db, 'users', id.toString()), payload);
 }
 
 export async function deleteUser(id: string | number): Promise<void> {
@@ -594,3 +670,77 @@ export async function updateContentSection(section: string, content: any): Promi
     throw error;
   }
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// USER MANAGEMENT
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Fetch all admin users
+ */
+export async function fetchAllUsers(): Promise<any[]> {
+  try {
+    const snap = await getDocs(collection(db, 'users'));
+    return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create a new admin user
+ */
+export async function createAdminUser(userData: any): Promise<string> {
+  try {
+    // Create Firebase Auth user
+    const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password || 'TemporaryPass123!');
+    const uid = userCredential.user.uid;
+
+    // Create user document in Firestore
+    await setDoc(doc(db, 'users', uid), {
+      uid,
+      email: userData.email,
+      username: userData.username,
+      role: userData.role || 'Staff',
+      status: userData.status || 'active',
+      permissions: userData.permissions || [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    return uid;
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update admin user
+ */
+export async function updateAdminUser(uid: string, userData: any): Promise<void> {
+  try {
+    await updateDoc(doc(db, 'users', uid), {
+      ...userData,
+      updatedAt: new Date().toISOString(),
+      updatedBy: localStorage.getItem(USERNAME_KEY),
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete admin user
+ */
+export async function deleteAdminUser(uid: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'users', uid));
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw error;
+  }
+}
+

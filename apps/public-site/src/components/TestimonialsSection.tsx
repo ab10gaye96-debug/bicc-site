@@ -6,11 +6,13 @@ import { db } from '../firebase';
 interface Testimonial {
   id: string;
   name: string;
-  role: string;
+  role?: string;
+  position?: string;
   organization: string;
   content: string;
   rating: number;
   image?: string;
+  published?: boolean;
 }
 
 const FALLBACK_TESTIMONIALS: Testimonial[] = [
@@ -53,8 +55,10 @@ export default function TestimonialsSection() {
           ...doc.data(),
         })) as Testimonial[];
         
-        if (data.length > 0) {
-          setTestimonials(data);
+        const publishedTestimonials = data.filter((item) => item.published !== false);
+
+        if (publishedTestimonials.length > 0) {
+          setTestimonials(publishedTestimonials);
         }
       } catch (error) {
         console.error('Error fetching testimonials:', error);
@@ -122,7 +126,7 @@ export default function TestimonialsSection() {
                 <div>
                   <div className="font-bold text-[#1F85A8]">{testimonial.name}</div>
                   <div className="text-sm text-gray-500">
-                    {testimonial.role}, {testimonial.organization}
+                    {testimonial.role || testimonial.position || 'Guest'}, {testimonial.organization}
                   </div>
                 </div>
               </div>

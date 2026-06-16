@@ -1,8 +1,12 @@
+import { fetchPageContent } from '../api';
 import { Award, Globe2, Heart, Lightbulb, Shield, Target, Users, Building2 } from 'lucide-react';
 import { IMAGES } from '../images';
 import SEO from '../components/SEO';
+import { useApi } from '../hooks/useApi';
 
 export default function About() {
+  const { data: pageContent } = useApi(() => fetchPageContent('aboutPage'), []);
+
   return (
     <div className="pt-20">
       <SEO
@@ -11,15 +15,13 @@ export default function About() {
       />
       {/* Hero */}
       <section className="relative py-24 bg-[#1F85A8]">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${IMAGES.heroBg})` }} />
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${pageContent?.hero?.backgroundImage || IMAGES.heroBg})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <span className="text-blue-400 font-semibold text-sm tracking-widest uppercase">About Us</span>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mt-4 mb-6">
-            Positioning The Gambia as Africa's Leading MICE Destination
-          </h1>
+          <span className="text-blue-400 font-semibold text-sm tracking-widest uppercase">{pageContent?.hero?.eyebrow || 'About Us'}</span>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mt-4 mb-6">{pageContent?.hero?.title || "Positioning The Gambia as Africa's Leading MICE Destination"}</h1>
           <p className="text-gray-300 text-lg max-w-3xl mx-auto">
-            Established by the Government of The Gambia to advance the country's Meetings, Incentives, Conferences and Exhibitions industry.
+            {pageContent?.hero?.description || "Established by the Government of The Gambia to advance the country's Meetings, Incentives, Conferences and Exhibitions industry."}
           </p>
         </div>
       </section>
@@ -29,13 +31,16 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-[#1F85A8] mb-6">Our Story</h2>
+              <h2 className="text-3xl font-bold text-[#1F85A8] mb-6">{pageContent?.intro?.title || 'Our Story'}</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
                 The Banjul International Convention Centre (BICC) was born from The Gambia's ambition to become a premier destination 
                 for international events and diplomacy. Originally established as the OIC Secretariat in preparation for the 15th OIC 
                 Islamic Summit held in Banjul in May 2024, the organization was officially renamed and restructured as BICC — a limited 
                 liability company with a broader mandate.
               </p>
+              {pageContent?.intro?.description && (
+                <p className="text-gray-600 leading-relaxed mb-4">{pageContent.intro.description}</p>
+              )}
               <p className="text-gray-600 leading-relaxed mb-4">
                 BICC manages two landmark facilities: the Sir Dawda Kairaba Jawara International Conference Centre (SDKJ-ICC) — a $50 million, 
                 14,000m² state-of-the-art complex inaugurated by President Adama Barrow in January 2020, and the VVIP Lounge at Banjul 
@@ -136,5 +141,4 @@ export default function About() {
     </div>
   );
 }
-
 

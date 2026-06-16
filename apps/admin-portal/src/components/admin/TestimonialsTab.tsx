@@ -9,6 +9,7 @@ export default function TestimonialsTab() {
   const [form, setForm] = useState({
     name: '',
     position: '',
+    role: '',
     organization: '',
     content: '',
     rating: 5,
@@ -24,10 +25,10 @@ export default function TestimonialsTab() {
     e.preventDefault();
     try {
       if (editingItem) {
-        await api.updateTestimonial(editingItem.id, form);
+        await api.updateTestimonial(editingItem.id, { ...form, role: form.position || form.role });
         alert('✅ Testimonial updated successfully!');
       } else {
-        await api.createTestimonial(form);
+        await api.createTestimonial({ ...form, role: form.position || form.role });
         alert('✅ Testimonial added successfully!');
       }
       setTestimonials(await api.fetchTestimonials());
@@ -42,6 +43,7 @@ export default function TestimonialsTab() {
     setForm({
       name: item.name || '',
       position: item.position || '',
+      role: item.role || item.position || '',
       organization: item.organization || '',
       content: item.content || '',
       rating: item.rating || 5,
@@ -57,6 +59,7 @@ export default function TestimonialsTab() {
     setForm({
       name: '',
       position: '',
+      role: '',
       organization: '',
       content: '',
       rating: 5,

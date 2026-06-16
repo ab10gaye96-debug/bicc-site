@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fetchVenues } from '../api';
+import { fetchPageContent, fetchVenues } from '../api';
 import { useApi } from '../hooks/useApi';
 import { Users, Check, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -81,6 +81,7 @@ function VenueCard({ venue, index }: { venue: any; index: number }) {
 
 export default function Venues() {
   const { data: venues, loading } = useApi(() => fetchVenues(), []);
+  const { data: pageContent } = useApi(() => fetchPageContent('venuesPage'), []);
 
   return (
     <div className="pt-20">
@@ -92,14 +93,13 @@ export default function Venues() {
       {/* Hero */}
       <section className="relative py-20 sm:py-24 bg-[#1F85A8]">
         <div className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${IMAGES.conferenceHall})` }} />
+          style={{ backgroundImage: `url(${pageContent?.hero?.backgroundImage || IMAGES.conferenceHall})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">Our Facilities</span>
-          <h1 className="text-3xl sm:text-5xl font-bold text-white mt-4 mb-6">World-Class Venues</h1>
+          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">{pageContent?.hero?.eyebrow || 'Our Facilities'}</span>
+          <h1 className="text-3xl sm:text-5xl font-bold text-white mt-4 mb-6">{pageContent?.hero?.title || 'World-Class Venues'}</h1>
           <p className="text-gray-300 text-base sm:text-lg max-w-3xl mx-auto">
-            With the capacity to accommodate over 4,000 guests, the Sir Dawda Kairaba Jawara International
-            Conference Center can host events of any size or shape.
+            {pageContent?.hero?.description || 'With the capacity to accommodate over 4,000 guests, the Sir Dawda Kairaba Jawara International Conference Center can host events of any size or shape.'}
           </p>
         </div>
       </section>
@@ -127,8 +127,8 @@ export default function Venues() {
       <section className="py-16 sm:py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#1F85A8]">Venue Capacity Overview</h2>
-            <p className="text-gray-500 mt-2 text-sm sm:text-base">Quick reference for all event spaces</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#1F85A8]">{pageContent?.intro?.title || 'Venue Capacity Overview'}</h2>
+            <p className="text-gray-500 mt-2 text-sm sm:text-base">{pageContent?.intro?.description || 'Quick reference for all event spaces'}</p>
           </div>
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
@@ -164,18 +164,18 @@ export default function Venues() {
       {/* CTA */}
       <section className="py-16 sm:py-20 bg-[#1F85A8]">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">Ready to Book an Event?</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">{pageContent?.cta?.title || 'Ready to Book an Event?'}</h2>
           <p className="text-white/70 text-base sm:text-lg mb-8">
-            Submit a booking request and our team will get back to you within 1–2 business days.
+            {pageContent?.cta?.description || 'Submit a booking request and our team will get back to you within 1–2 business days.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/booking"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#1F85A8] rounded-xl font-bold text-base hover:bg-gray-100 transition-all shadow-lg">
-              Book an Event <ArrowRight size={18} />
+              {pageContent?.cta?.primaryButtonText || 'Book an Event'} <ArrowRight size={18} />
             </Link>
             <Link to="/contact"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white text-white rounded-xl font-bold text-base hover:bg-white/10 transition-all">
-              Contact Us
+              {pageContent?.cta?.secondaryButtonText || 'Contact Us'}
             </Link>
           </div>
         </div>

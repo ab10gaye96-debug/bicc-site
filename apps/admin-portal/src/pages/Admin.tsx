@@ -25,11 +25,14 @@ import PricingTab from '../components/admin/PricingTab';
 import QuotationsTab from '../components/admin/QuotationsTab';
 import ContentManagementTab from '../components/admin/ContentManagementTab';
 import MediaLibraryTab from '../components/admin/MediaLibraryTab';
+import PagesContentTab from '../components/admin/PagesContentTab';
+import UserManagementTab from '../components/admin/UserManagementTab';
+import { IMAGES } from '../images';
 
 type Tab =
   | 'dashboard' | 'events' | 'news' | 'contacts' | 'bookings' | 'gallery' | 'venues' | 'users'
   | 'testimonials' | 'partners' | 'downloads' | 'careers' | 'tenders' | 'subscribers'
-  | 'pricing' | 'quotations' | 'settings' | 'media';
+  | 'pricing' | 'quotations' | 'settings' | 'media' | 'pages';
 
 // Image compression utility
 const compressImage = async (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<Blob> => {
@@ -82,6 +85,7 @@ export default function Admin() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingBookings, setPendingBookings] = useState(0);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [displayName, setDisplayName] = useState(api.getCurrentUserDisplayName());
 
   useEffect(() => {
     if (loggedIn) {
@@ -94,13 +98,14 @@ export default function Admin() {
       }).catch(() => { });
       const superAdmin = api.isSuperAdmin();
       setIsSuperAdmin(superAdmin);
+      setDisplayName(api.getCurrentUserDisplayName());
     }
   }, [loggedIn]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const ok = await api.loginAdmin(username, password);
-    if (ok) { setLoggedIn(true); setLoginError(''); }
+    if (ok) { setLoggedIn(true); setDisplayName(api.getCurrentUserDisplayName()); setLoginError(''); }
     else setLoginError('Invalid credentials. Please check your username and password.');
   };
 
@@ -108,12 +113,18 @@ export default function Admin() {
 
   if (!loggedIn) {
     return (
-      <div className="pt-20 min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+      <div className="pt-20 min-h-screen bg-gradient-to-br from-slate-100 via-white to-blue-50 flex items-center justify-center px-4">
+        <div className="bg-white/95 backdrop-blur rounded-3xl shadow-xl border border-white p-8 max-w-md w-full">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-[#1F85A8] rounded-2xl flex items-center justify-center mx-auto mb-4"><Lock className="text-blue-400" size={28} /></div>
-            <h1 className="text-2xl font-bold text-[#1F85A8]">Admin Login</h1>
-            <p className="text-gray-500 text-sm mt-2">Sign in to manage the BICC website</p>
+            <div className="w-24 h-24 bg-white rounded-3xl shadow-md border border-blue-100 flex items-center justify-center mx-auto mb-4 overflow-hidden">
+              <img src={IMAGES.logo} alt="BICC logo" className="w-16 h-16 object-contain" />
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-4">
+              <Lock size={14} />
+              BICC Admin Portal
+            </div>
+            <h1 className="text-2xl font-bold text-[#1F85A8]">Welcome back</h1>
+            <p className="text-gray-500 text-sm mt-2">Sign in to manage website content, users, and live updates.</p>
           </div>
           {loginError && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 mb-6"><AlertCircle className="text-red-500 shrink-0" size={16} /><span className="text-red-600 text-sm">{loginError}</span></div>}
           <form onSubmit={handleLogin} className="space-y-4">
@@ -129,6 +140,7 @@ export default function Admin() {
   const allTabs: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { key: 'settings', label: 'Content', icon: Settings },
+    { key: 'pages', label: 'Page Content', icon: StickyNote },
     { key: 'media', label: 'Media Library', icon: Image },
     { key: 'events', label: 'Events', icon: Calendar },
     { key: 'news', label: 'News', icon: Newspaper },
@@ -150,22 +162,28 @@ export default function Admin() {
   const tabs = allTabs.filter(tab => api.canAccessTab(tab.key));
 
   return (
-    <div className="pt-20 min-h-screen bg-gray-100">
+    <div className="pt-20 min-h-screen bg-gradient-to-br from-slate-100 via-white to-blue-50">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-6 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#1F85A8] truncate">Admin Panel</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4 animate-fade-in-up">
+          <div className="min-w-0 flex items-center gap-4">
+            <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-white shadow-md border border-blue-100 items-center justify-center overflow-hidden animate-scale-in">
+              <img src={IMAGES.logo} alt="BICC logo" className="w-10 h-10 object-contain" />
+            </div>
+            <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#1F85A8] truncate">BICC Admin Panel</h1>
             <p className="text-gray-500 text-xs sm:text-sm mt-1 flex flex-wrap items-center gap-2">
-              Manage your BICC website content
-              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${isSuperAdmin ? 'bg-purple-100 text-purple-700' :
-                api.getCurrentUserRole() === 'Manager' ? 'bg-blue-100 text-blue-700' :
-                  'bg-gray-100 text-gray-700'
+              <span className="text-blue-600 font-semibold">Welcome, {displayName}! 👋</span>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap shadow-sm transition-all ${isSuperAdmin ? 'bg-purple-100 text-purple-700 border border-purple-200' :
+                api.getCurrentUserRole() === 'Manager' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                api.getCurrentUserRole() === 'Editor' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                  'bg-gray-100 text-gray-700 border border-gray-200'
                 }`}>
                 {api.getCurrentUserRole()}
               </span>
             </p>
+            </div>
           </div>
-          <button onClick={handleLogout} className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors whitespace-nowrap"><LogOut size={16} /> Logout</button>
+          <button onClick={handleLogout} className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-medium hover:bg-red-100 transition-all btn-hover whitespace-nowrap border border-red-200"><LogOut size={16} /> Logout</button>
         </div>
         <div className="grid lg:grid-cols-[220px_1fr] gap-6 lg:gap-8">
           <div className="hidden lg:block bg-white rounded-2xl p-3 lg:p-4 h-fit shadow-sm sticky top-24">
@@ -203,13 +221,14 @@ export default function Admin() {
               {activeTab === 'dashboard' && <DashboardTab />}
               {activeTab === 'settings' && <ContentManagementTab />}
               {activeTab === 'media' && <MediaLibraryTab />}
+              {activeTab === 'pages' && <PagesContentTab />}
               {activeTab === 'events' && <EventsTab />}
               {activeTab === 'news' && <NewsTab />}
               {activeTab === 'contacts' && <ContactsTab />}
               {activeTab === 'bookings' && <BookingsTab />}
               {activeTab === 'gallery' && <GalleryTab />}
               {activeTab === 'venues' && <VenuesTab />}
-              {activeTab === 'users' && <UsersTab />}
+              {activeTab === 'users' && <UserManagementTab />}
               {activeTab === 'testimonials' && <TestimonialsTab />}
               {activeTab === 'partners' && <PartnersTab />}
               {activeTab === 'downloads' && <DownloadsTab />}
@@ -1297,37 +1316,57 @@ function UsersTab() {
   const [users, setUsers] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<any | null>(null);
-  const [form, setForm] = useState({ email: '', username: '', password: '', role: 'Staff' });
+  const [form, setForm] = useState({
+    email: '',
+    username: '',
+    password: '',
+    role: 'Staff',
+    status: 'active',
+    permissions: api.ROLE_TAB_PRESETS.Staff,
+  });
 
   useEffect(() => {
-    console.log('Fetching users...');
-    api.fetchUsers().then(users => {
-      console.log('Users loaded:', users);
-      setUsers(users);
-    }).catch(err => {
-      console.error('Error fetching users:', err);
-    });
+    api.fetchUsers().then(setUsers).catch(console.error);
   }, []);
+
+  const applyRolePreset = (role: string) => {
+    setForm((current) => ({
+      ...current,
+      role,
+      permissions: api.ROLE_TAB_PRESETS[role] || api.ROLE_TAB_PRESETS.Staff,
+    }));
+  };
+
+  const togglePermission = (tab: string) => {
+    setForm((current) => ({
+      ...current,
+      permissions: current.permissions.includes(tab)
+        ? current.permissions.filter((entry) => entry !== tab)
+        : [...current.permissions, tab],
+    }));
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       if (editingUser) {
-        // Update existing user
-        console.log('Updating user:', editingUser.id, form);
         await api.updateUser(editingUser.id, form);
         alert('✅ User updated successfully!');
       } else {
-        // Create new user
-        console.log('Creating user with data:', form);
-        const result = await api.createUser(form);
-        console.log('User created:', result);
+        await api.createUser(form);
         alert('✅ User created successfully!');
       }
       setUsers(await api.fetchUsers());
       setShowForm(false);
       setEditingUser(null);
-      setForm({ email: '', username: '', password: '', role: 'Staff' });
+      setForm({
+        email: '',
+        username: '',
+        password: '',
+        role: 'Staff',
+        status: 'active',
+        permissions: api.ROLE_TAB_PRESETS.Staff,
+      });
     } catch (error: any) {
       console.error('Error saving user:', error);
       alert('❌ ' + (error.message || 'Failed to save user'));
@@ -1339,8 +1378,10 @@ function UsersTab() {
     setForm({
       email: user.email,
       username: user.username,
-      password: user.password || '',
-      role: user.role
+      password: '',
+      role: user.role || 'Staff',
+      status: user.status || 'active',
+      permissions: user.permissions || api.ROLE_TAB_PRESETS[user.role] || api.ROLE_TAB_PRESETS.Staff,
     });
     setShowForm(true);
   };
@@ -1348,11 +1389,18 @@ function UsersTab() {
   const handleCancel = () => {
     setShowForm(false);
     setEditingUser(null);
-    setForm({ email: '', username: '', password: '', role: 'Staff' });
+    setForm({
+      email: '',
+      username: '',
+      password: '',
+      role: 'Staff',
+      status: 'active',
+      permissions: api.ROLE_TAB_PRESETS.Staff,
+    });
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Delete this user? They will no longer be able to log in.')) {
+    if (confirm('Remove this user from the admin portal? They will no longer be able to log in.')) {
       await api.deleteUser(id);
       setUsers(await api.fetchUsers());
     }
@@ -1363,7 +1411,7 @@ function UsersTab() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-bold text-[#1F85A8]">Manage Users</h2>
-          <p className="text-sm text-gray-500 mt-1">Create and manage admin accounts</p>
+          <p className="text-sm text-gray-500 mt-1">Create users, set roles, and choose which admin sections they can access</p>
         </div>
         <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700"><Plus size={16} /> Add User</button>
       </div>
@@ -1371,7 +1419,7 @@ function UsersTab() {
       {showForm && (
         <form onSubmit={handleAdd} className="bg-gray-50 rounded-xl p-6 mb-6 space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-blue-800"><strong>{editingUser ? 'Edit User:' : 'Create New User:'}</strong> {editingUser ? 'Update the user details below.' : 'Fill in the details below to create a new admin account. The user will be able to log in with their email or username.'}</p>
+            <p className="text-sm text-blue-800"><strong>{editingUser ? 'Edit User:' : 'Create New User:'}</strong> {editingUser ? 'Update access, status, and profile details below.' : 'Create a new admin user and define exactly which parts of the admin they can access.'}</p>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4">
@@ -1400,22 +1448,22 @@ function UsersTab() {
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[#1F85A8] mb-1">Password *</label>
+              <label className="block text-sm font-medium text-[#1F85A8] mb-1">Password {editingUser ? '' : '*'}</label>
               <input
                 type="password"
-                required
+                required={!editingUser}
                 value={form.password}
                 onChange={e => setForm({ ...form, password: e.target.value })}
-                placeholder="••••••••"
+                placeholder={editingUser ? 'Leave blank to keep existing password' : '••••••••'}
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600"
               />
-              <p className="text-xs text-gray-500 mt-1">Minimum 6 characters recommended</p>
+              <p className="text-xs text-gray-500 mt-1">{editingUser ? 'Password updates require a separate reset in Firebase Auth.' : 'Minimum 6 characters recommended'}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-[#1F85A8] mb-1">Role *</label>
               <select
                 value={form.role}
-                onChange={e => setForm({ ...form, role: e.target.value })}
+                onChange={e => applyRolePreset(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600"
               >
                 <option>Staff</option>
@@ -1425,12 +1473,61 @@ function UsersTab() {
             </div>
           </div>
 
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-[#1F85A8] mb-1">Account Status</label>
+              <select
+                value={form.status}
+                onChange={e => setForm({ ...form, status: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-3">
+              <p className="text-xs text-gray-600">
+                <strong>Preset behavior:</strong> changing the role loads a default access set. You can then fine-tune the pages below.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3 gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-[#1F85A8]">Section Access</h3>
+                <p className="text-xs text-gray-500">Choose which admin tabs this user can see.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => applyRolePreset(form.role)}
+                className="text-xs px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100"
+              >
+                Reset to Role Preset
+              </button>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {Object.entries(api.ADMIN_TAB_LABELS).map(([tabKey, label]) => (
+                <label key={tabKey} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.permissions.includes(tabKey)}
+                    onChange={() => togglePermission(tabKey)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-xs text-blue-700">
               <strong>Roles:</strong><br />
-              • <strong>Staff</strong> - Can manage events, news, gallery, and contacts<br />
-              • <strong>Manager</strong> - Staff permissions + venue management<br />
-              • <strong>Super Admin</strong> - Full access including user management
+              • <strong>Staff</strong> - Daily content operations and lighter publishing work<br />
+              • <strong>Manager</strong> - Broader business content and operational control<br />
+              • <strong>Super Admin</strong> - Full access including user management and system-wide control
             </p>
           </div>
 
@@ -1443,10 +1540,10 @@ function UsersTab() {
 
       <div className="space-y-3">
         {users.length === 0 ? (
-          <div className="text-center py-10 text-gray-400">No users yet. Click "Add User" to create one.</div>
+            <div className="text-center py-10 text-gray-400">No users yet. Click "Add User" to create one.</div>
         ) : (
           users.map(user => (
-            <div key={user.id} className="flex items-center gap-4 bg-gray-50 rounded-xl p-4">
+            <div key={user.id} className="flex items-center gap-4 bg-gray-50 rounded-xl p-4 border border-gray-100">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
                 <Users size={20} className="text-blue-700" />
               </div>
@@ -1457,9 +1554,14 @@ function UsersTab() {
                     user.role === 'Manager' ? 'bg-blue-100 text-blue-700' :
                       'bg-gray-100 text-gray-700'
                     }`}>{user.role}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${(user.status || 'active') === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                    {(user.status || 'active') === 'active' ? 'Active' : 'Inactive'}
+                  </span>
                 </div>
                 <p className="text-sm text-gray-500">{user.email}</p>
-                <p className="text-xs text-gray-400 mt-1">Created: {new Date(user.created_at).toLocaleDateString()}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Access: {(user.permissions || api.ROLE_TAB_PRESETS[user.role] || []).length} sections · Created: {new Date(user.created_at).toLocaleDateString()}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <button

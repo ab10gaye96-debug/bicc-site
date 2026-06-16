@@ -8,6 +8,7 @@ interface Partner {
   logo: string;
   website?: string;
   category?: string;
+  active?: boolean;
 }
 
 const FALLBACK_PARTNERS: Partner[] = [
@@ -62,8 +63,10 @@ export default function PartnersSection() {
           ...doc.data(),
         })) as Partner[];
         
-        if (data.length > 0) {
-          setPartners(data);
+        const activePartners = data.filter((item) => item.active !== false);
+
+        if (activePartners.length > 0) {
+          setPartners(activePartners);
         }
       } catch (error) {
         console.error('Error fetching partners:', error);

@@ -17,6 +17,12 @@ service cloud.firestore {
       allow read: if true; // Anyone can read site settings (for public website)
       allow write: if isAdmin(); // Only authenticated admins can write
     }
+
+    // CMS page content - Public read, admin write
+    match /pageContent/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     
     // Media Library - Only admins can manage
     match /mediaLibrary/{document=**} {
@@ -117,6 +123,12 @@ service cloud.firestore {
     match /quotations/{document=**} {
       allow create: if true; // Quotation request submission
       allow read, update, delete: if isAdmin();
+    }
+
+    // Hotels - Public read, admin write
+    match /hotels/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Download, FileText, FolderOpen, Search } from 'lucide-react';
+import { fetchPageContent } from '../api';
 import { useApi } from '../hooks/useApi';
 import SEO from '../components/SEO';
 import { IMAGES } from '../images';
@@ -95,6 +96,7 @@ const CATEGORIES = [
 
 export default function Downloads() {
   const { data: dbDownloads } = useApi(fetchDownloads, []);
+  const { data: pageContent } = useApi(() => fetchPageContent('downloadsPage'), []);
   const downloads = (dbDownloads && dbDownloads.length > 0) ? dbDownloads : FALLBACK_DOWNLOADS;
 
   const [category, setCategory] = useState('All');
@@ -119,22 +121,22 @@ export default function Downloads() {
     <div className="pt-20">
       <SEO
         title="Downloads Centre — BICC Documents & Resources"
-        description="Download BICC brochures, floor plans, technical specifications, and event planning resources."
+        description={pageContent?.hero?.description || 'Download BICC brochures, floor plans, technical specifications, and event planning resources.'}
       />
 
       {/* Hero */}
       <section className="relative py-24 bg-[#1F85A8]">
         <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${IMAGES.conferenceHall})` }} />
+          style={{ backgroundImage: `url(${pageContent?.hero?.backgroundImage || IMAGES.conferenceHall})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-5xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/30 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
             <FileText size={16} />
-            Resource Centre
+            {pageContent?.hero?.eyebrow || 'Resource Centre'}
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">Downloads Centre</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">{pageContent?.hero?.title || 'Downloads Centre'}</h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto">
-            Access brochures, floor plans, technical specifications, and event planning resources
+            {pageContent?.hero?.description || 'Access brochures, floor plans, technical specifications, and event planning resources'}
           </p>
         </div>
       </section>
@@ -148,7 +150,7 @@ export default function Downloads() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Search documents..."
+                placeholder={pageContent?.search?.placeholder || 'Search documents...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"
@@ -181,8 +183,8 @@ export default function Downloads() {
           {filtered.length === 0 ? (
             <div className="text-center py-16">
               <FolderOpen className="mx-auto text-gray-300 mb-4" size={64} />
-              <h3 className="text-xl font-bold text-gray-600 mb-2">No documents found</h3>
-              <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+              <h3 className="text-xl font-bold text-gray-600 mb-2">{pageContent?.search?.emptyTitle || 'No documents found'}</h3>
+              <p className="text-gray-500">{pageContent?.search?.emptyDescription || 'Try adjusting your search or filter criteria'}</p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -221,15 +223,15 @@ export default function Downloads() {
       {/* CTA */}
       <section className="py-20 bg-gradient-to-r from-[#1F85A8] to-blue-700 text-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6">Need a Custom Document?</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6">{pageContent?.cta?.title || 'Need a Custom Document?'}</h2>
           <p className="text-xl text-gray-200 mb-10 max-w-2xl mx-auto">
-            Can't find what you're looking for? Contact us and we'll prepare the information you need.
+            {pageContent?.cta?.description || "Can't find what you're looking for? Contact us and we'll prepare the information you need."}
           </p>
           <a
             href="mailto:info@bicc.gm"
             className="inline-flex items-center gap-2 px-8 py-4 bg-white text-[#1F85A8] rounded-xl font-bold hover:bg-gray-100 transition-all"
           >
-            Contact Us
+            {pageContent?.cta?.primaryButtonText || 'Contact Us'}
           </a>
         </div>
       </section>

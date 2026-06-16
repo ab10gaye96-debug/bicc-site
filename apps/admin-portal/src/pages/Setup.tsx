@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, setDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { Lock, AlertCircle, Check } from 'lucide-react';
 
@@ -33,19 +33,25 @@ export default function Setup() {
       // Create user in Firebase Auth
       console.log('Creating Firebase Auth user...');
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      console.log('✅ Auth user created:', userCredential.user.uid);
+      const uid = userCredential.user.uid;
+      console.log('✅ Auth user created:', uid);
 
-      // Create user document in Firestore
-      console.log('Creating Firestore document...');
+      // Create user document in Firestore with UID as document ID
+      console.log('Creating Firestore document with UID:', uid);
       const userData = {
+        uid,
         email,
         username,
         role: 'Super Admin',
-        created_at: new Date().toISOString(),
+        status: 'active',
+        permissions: ['dashboard', 'settings', 'pages', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues', 'users', 'testimonials', 'partners', 'downloads', 'careers', 'tenders', 'subscribers', 'pricing', 'quotations'],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
-      const docRef = await addDoc(collection(db, 'users'), userData);
-      console.log('✅ Firestore document created:', docRef.id);
+      // Use UID as document ID to match Firestore rules
+      await setDoc(doc(db, 'users', uid), userData);
+      console.log('✅ Firestore document created with UID:', uid);
 
       setSuccess(true);
       setError('');
@@ -59,7 +65,7 @@ export default function Setup() {
       console.error('Error creating user:', err);
       
       if (err.code === 'auth/email-already-in-use') {
-        setError('This email is already registered. Try logging in.');
+        setError('This email is already registered. Try logging in with your credentials.');
       } else if (err.code === 'auth/invalid-email') {
         setError('Invalid email format.');
       } else if (err.code === 'auth/weak-password') {
@@ -89,7 +95,7 @@ export default function Setup() {
                 <strong>✅ Role:</strong> Super Admin
               </p>
             </div>
-            <p className="text-sm text-gray-500">Redirecting to login...</p>
+            <p className="text-sm text-gray-500">Redirecting to login in 2 seconds...</p>
           </div>
         </div>
       </div>
@@ -110,7 +116,7 @@ export default function Setup() {
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-6">
           <p className="text-xs text-blue-800">
             <strong>⚠️ First Time Setup</strong><br />
-            No admin users found. Create your first Super Admin account to access the full admin portal.
+            Create your first Super Admin account to access the full admin portal.
           </p>
         </div>
 

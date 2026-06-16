@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fetchEvents } from '../api';
+import { fetchEvents, fetchPageContent } from '../api';
 import { useApi } from '../hooks/useApi';
 import { Calendar, MapPin, Clock, Filter, X, Users, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -59,6 +59,7 @@ function EventModal({ event, onClose }: { event: any; onClose: () => void }) {
 
 export default function Events() {
   const { data: events, loading } = useApi(() => fetchEvents(), []);
+  const { data: pageContent } = useApi(() => fetchPageContent('eventsPage'), []);
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [timeFilter, setTimeFilter] = useState<'upcoming' | 'past' | 'all'>('all');
   const [selected, setSelected] = useState<any | null>(null);
@@ -92,14 +93,13 @@ export default function Events() {
       {/* Hero */}
       <section className="relative py-20 sm:py-24 bg-[#1F85A8]">
         <div className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${IMAGES.banquetHall})` }} />
+          style={{ backgroundImage: `url(${pageContent?.hero?.backgroundImage || IMAGES.banquetHall})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">Events</span>
-          <h1 className="text-3xl sm:text-5xl font-bold text-white mt-4 mb-6">Events at BICC</h1>
+          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">{pageContent?.hero?.eyebrow || 'Events'}</span>
+          <h1 className="text-3xl sm:text-5xl font-bold text-white mt-4 mb-6">{pageContent?.hero?.title || 'Events at BICC'}</h1>
           <p className="text-gray-300 text-base sm:text-lg max-w-3xl mx-auto">
-            Stay informed about the latest conferences, summits, and events hosted at the
-            SDKJ International Conference Centre.
+            {pageContent?.hero?.description || 'Stay informed about the latest conferences, summits, and events hosted at the SDKJ International Conference Centre.'}
           </p>
         </div>
       </section>
@@ -149,8 +149,8 @@ export default function Events() {
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">
               <Calendar className="mx-auto text-gray-300 mb-4" size={48} />
-              <h3 className="text-xl font-bold text-gray-400 mb-2">No events found</h3>
-              <p className="text-gray-400 text-sm">Try changing the filters above.</p>
+              <h3 className="text-xl font-bold text-gray-400 mb-2">{pageContent?.search?.emptyTitle || 'No events found'}</h3>
+              <p className="text-gray-400 text-sm">{pageContent?.search?.emptyDescription || 'Try changing the filters above.'}</p>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
