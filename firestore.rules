@@ -3,130 +3,161 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // Helper function to check if user is authenticated
-    function isAuthenticated() {
+    function isSignedIn() {
       return request.auth != null;
     }
     
-    // Helper function to check if user is admin (logged in)
+    // Helper function to check if user is admin (by checking users collection)
     function isAdmin() {
-      return isAuthenticated();
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['Super Admin', 'Manager', 'Staff', 'Editor'];
     }
     
-    // Site Settings - Only admins can read/write
-    match /siteSettings/{document=**} {
-      allow read: if true; // Anyone can read site settings (for public website)
-      allow write: if isAdmin(); // Only authenticated admins can write
+    // Helper function to check if user is Super Admin
+    function isSuperAdmin() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Super Admin';
+    }
+    
+    // Page Content - Public read, Admin write
+    match /pageContent/{section} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Site Settings - Public read, Admin write (CRITICAL: Frontend needs to read this!)
+    match /siteSettings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Media Library - Public read, Admin write (CRITICAL: Frontend needs to read uploaded images!)
+    match /mediaLibrary/{mediaId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    // CMS page content - Public read, admin write
-    match /pageContent/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Media Library - Only admins can manage
-    match /mediaLibrary/{document=**} {
-      allow read: if true; // Anyone can read (for displaying images)
-      allow write: if isAdmin(); // Only authenticated admins can upload/edit
-    }
-    
-    // Events - Public read, admin write
-    match /events/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // News - Public read, admin write
-    match /news/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Contacts - Anyone can create, only admins can read/update/delete
-    match /contacts/{document=**} {
-      allow create: if true; // Contact form submission
-      allow read, update, delete: if isAdmin();
-    }
-    
-    // Bookings - Anyone can create, only admins can read/update/delete
-    match /bookings/{document=**} {
-      allow create: if true; // Booking form submission
-      allow read, update, delete: if isAdmin();
-    }
-    
-    // Gallery - Public read, admin write
-    match /gallery/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Venues - Public read, admin write
-    match /venues/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Users - Only admins can read/write (sensitive data)
-    match /users/{document=**} {
+    // Audit logs - Admin only
+    match /auditLogs/{logId} {
       allow read, write: if isAdmin();
     }
     
-    // Testimonials - Public read, admin write
-    match /testimonials/{document=**} {
+    // Username lookup for admin login
+    match /adminUsernames/{username} {
       allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Partners - Public read, admin write
-    match /partners/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Downloads - Public read, admin write
-    match /downloads/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Vacancies/Careers - Public read, admin write
-    match /vacancies/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Job Applications - Anyone can create, only admins can read/delete
-    match /applications/{document=**} {
-      allow create: if true; // Job application submission
-      allow read, update, delete: if isAdmin();
-    }
-    
-    // Tenders - Public read, admin write
-    match /tenders/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Subscribers - Anyone can create, only admins can read/delete
-    match /subscribers/{document=**} {
-      allow create: if true; // Newsletter subscription
-      allow read, delete: if isAdmin();
-    }
-    
-    // Pricing - Public read, admin write
-    match /pricing/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Quotations - Anyone can create, only admins can read/update/delete
-    match /quotations/{document=**} {
-      allow create: if true; // Quotation request submission
-      allow read, update, delete: if isAdmin();
+      allow create: if isSuperAdmin() || (isSignedIn() && request.resource.data.uid == request.auth.uid);
+      allow update: if isSuperAdmin() || (isSignedIn() &&
+        resource.data.uid == request.auth.uid &&
+        request.resource.data.uid == request.auth.uid);
+      allow delete: if isSuperAdmin();
     }
 
-    // Hotels - Public read, admin write
-    match /hotels/{document=**} {
+    // Users collection - Super Admin can manage all, users can read their own
+    match /users/{userId} {
+      allow read: if isSignedIn() && (
+        userId == request.auth.uid ||
+        resource.data.uid == request.auth.uid ||
+        resource.data.email == request.auth.token.email ||
+        isSuperAdmin()
+      );
+      allow create: if isSuperAdmin() || (isSignedIn() && userId == request.auth.uid);
+      allow update, delete: if isSuperAdmin(); // Only Super Admin can delete/modify others
+    }
+    
+    // Events
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // News
+    match /news/{newsId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Gallery
+    match /gallery/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Venues
+    match /venues/{venueId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Bookings
+    match /bookings/{bookingId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+    
+    // Contacts
+    match /contacts/{contactId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if true;
+    }
+    
+    // Testimonials
+    match /testimonials/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Partners
+    match /partners/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Downloads
+    match /downloads/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Vacancies/Careers
+    match /vacancies/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Applications
+    match /applications/{id} {
+      allow read, update, delete: if isAdmin();
+      allow create: if true;
+    }
+    
+    // Tenders
+    match /tenders/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Subscribers
+    match /subscribers/{id} {
+      allow read, delete: if isAdmin();
+      allow create: if true;
+    }
+    
+    // Pricing
+    match /pricing/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Quotations
+    match /quotations/{id} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Hotels
+    match /hotels/{id} {
       allow read: if true;
       allow write: if isAdmin();
     }

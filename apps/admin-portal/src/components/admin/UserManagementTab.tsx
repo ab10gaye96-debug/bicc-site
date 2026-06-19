@@ -19,7 +19,7 @@ export default function UserManagementTab() {
   const [editing, setEditing] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<AdminUser>>({});
   const [newUserMode, setNewUserMode] = useState(false);
-  const [newUser, setNewUser] = useState({ email: '', username: '', role: 'Staff' });
+  const [newUser, setNewUser] = useState({ email: '', username: '', password: '', role: 'Staff' });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -72,20 +72,21 @@ export default function UserManagementTab() {
   };
 
   const handleCreateUser = async () => {
-    if (!newUser.email || !newUser.username) {
-      setError('Email and username are required');
+    if (!newUser.email || !newUser.username || !newUser.password) {
+      setError('Email, username, and password are required');
       return;
     }
     try {
       await api.createAdminUser?.({
         email: newUser.email,
         username: newUser.username,
+        password: newUser.password,
         role: newUser.role as AdminUser['role'],
         status: 'active',
         permissions: api.ROLE_TAB_PRESETS[newUser.role] || [],
       });
       setMessage('User created successfully!');
-      setNewUser({ email: '', username: '', role: 'Staff' });
+      setNewUser({ email: '', username: '', password: '', role: 'Staff' });
       setNewUserMode(false);
       loadUsers();
       setTimeout(() => setMessage(''), 3000);
@@ -152,6 +153,13 @@ export default function UserManagementTab() {
               placeholder="Username"
               value={newUser.username}
               onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+              className="px-4 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={newUser.password}
+              onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
               className="px-4 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <select

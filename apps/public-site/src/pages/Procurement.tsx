@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FileText, Clock, Calendar, Download, Search, AlertCircle } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
+import { fetchPageContent } from '../api';
 import SEO from '../components/SEO';
 import { IMAGES } from '../images';
 
@@ -72,7 +73,10 @@ const TYPES = ['All', 'Goods', 'Services', 'Works'];
 
 export default function Procurement() {
   const { data: dbTenders } = useApi(fetchTenders, []);
-  const tenders = (dbTenders && dbTenders.length > 0) ? dbTenders : FALLBACK_TENDERS;
+  const { data: pageContent } = useApi(() => fetchPageContent('procurementPage'), []);
+  const tenders = (dbTenders && dbTenders.length > 0)
+    ? dbTenders.filter((item: any) => item.active !== false)
+    : FALLBACK_TENDERS;
 
   const [statusFilter, setStatusFilter] = useState('All');
   const [typeFilter, setTypeFilter] = useState('All');
@@ -101,22 +105,22 @@ export default function Procurement() {
     <div className="pt-20">
       <SEO
         title="Procurement & Tenders — BICC"
-        description="View open tenders, closed tenders, and procurement notices from the Banjul International Convention Centre."
+        description={pageContent?.hero?.description || 'View open tenders, closed tenders, and procurement notices from the Banjul International Convention Centre.'}
       />
 
       {/* Hero */}
       <section className="relative py-24 bg-gradient-to-br from-blue-600 to-green-600">
         <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${IMAGES.conferenceHall})` }} />
+          style={{ backgroundImage: `url(${pageContent?.hero?.backgroundImage || IMAGES.conferenceHall})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-5xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/30 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
             <FileText size={16} />
-            Business Opportunities
+            {pageContent?.hero?.eyebrow || 'Business Opportunities'}
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">Procurement & Tenders</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">{pageContent?.hero?.title || 'Procurement & Tenders'}</h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto">
-            Browse open tenders, procurement notices, and business opportunities with BICC
+            {pageContent?.hero?.description || 'Browse open tenders, procurement notices, and business opportunities with BICC'}
           </p>
         </div>
       </section>
@@ -127,10 +131,9 @@ export default function Procurement() {
           <div className="flex gap-3">
             <AlertCircle className="text-blue-600 shrink-0 mt-1" size={24} />
             <div>
-              <h3 className="font-bold text-blue-900 mb-1">Procurement Guidelines</h3>
+              <h3 className="font-bold text-blue-900 mb-1">{pageContent?.notice?.title || 'Procurement Guidelines'}</h3>
               <p className="text-sm text-blue-800">
-                BICC follows transparent procurement procedures in accordance with The Gambia Public Procurement Authority (GPPA) regulations. 
-                All bids must be submitted before the closing date and time. Late submissions will not be accepted.
+                {pageContent?.notice?.description || 'BICC follows transparent procurement procedures in accordance with The Gambia Public Procurement Authority (GPPA) regulations. All bids must be submitted before the closing date and time. Late submissions will not be accepted.'}
               </p>
             </div>
           </div>
@@ -146,7 +149,7 @@ export default function Procurement() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Search tenders..."
+                placeholder={pageContent?.search?.placeholder || 'Search tenders...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"
@@ -187,8 +190,8 @@ export default function Procurement() {
           {openTenders.length === 0 ? (
             <div className="bg-white rounded-xl p-12 text-center">
               <FileText className="mx-auto text-gray-300 mb-4" size={64} />
-              <h3 className="text-xl font-bold text-gray-600 mb-2">No open tenders</h3>
-              <p className="text-gray-500">Check back soon for new opportunities</p>
+              <h3 className="text-xl font-bold text-gray-600 mb-2">{pageContent?.search?.emptyTitle || 'No open tenders'}</h3>
+              <p className="text-gray-500">{pageContent?.search?.emptyDescription || 'Check back soon for new opportunities'}</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -299,23 +302,22 @@ export default function Procurement() {
       {/* Contact Section */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-[#1F85A8] mb-6">Procurement Inquiries</h2>
+          <h2 className="text-3xl font-bold text-[#1F85A8] mb-6">{pageContent?.cta?.title || 'Procurement Inquiries'}</h2>
           <p className="text-gray-600 mb-8">
-            For questions about procurement procedures, tender documents, or submission requirements, 
-            please contact our Procurement Office.
+            {pageContent?.cta?.description || 'For questions about procurement procedures, tender documents, or submission requirements, please contact our Procurement Office.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="mailto:procurement@bicc.gm"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#1F85A8] text-white rounded-xl font-bold hover:bg-[#1a6d8a] transition-all"
             >
-              Email Procurement Office
+              {pageContent?.cta?.primaryButtonText || 'Email Procurement Office'}
             </a>
             <a
               href="tel:+2207784425"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-[#1F85A8] text-[#1F85A8] rounded-xl font-bold hover:bg-[#1F85A8] hover:text-white transition-all"
             >
-              +220 778 4425
+              {pageContent?.cta?.secondaryButtonText || '+220 778 4425'}
             </a>
           </div>
         </div>

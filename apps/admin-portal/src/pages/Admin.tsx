@@ -36,12 +36,12 @@ type Tab =
 
 // Image compression utility
 const compressImage = async (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<Blob> => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
+      const img = new window.Image();
+      img.src = (event.target?.result as string) || '';
       img.onload = () => {
         const canvas = document.createElement('canvas');
         let width = img.width;
@@ -55,15 +55,19 @@ const compressImage = async (file: File, maxWidth: number = 1200, quality: numbe
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        canvas.toBlob(resolve, 'image/jpeg', quality);
+        if (!ctx) {
+          reject(new Error('Image compression failed (canvas context unavailable).'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Image compression failed (toBlob returned null).'));
+        }, 'image/jpeg', quality);
       };
     };
   });
-};
-
-const formatDate = (date: string | Date) => {
-  return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
 const isThisMonth = (dateString: string): boolean => {
@@ -78,6 +82,13 @@ const isUpcoming = (dateString: string): boolean => {
 
 export default function Admin() {
   const [loggedIn, setLoggedIn] = useState(api.isAdminLoggedIn());
+  const [showSetup, setShowSetup] = useState(false);
+  const [setupEmail, setSetupEmail] = useState('');
+  const [setupUsername, setSetupUsername] = useState('');
+  const [setupPassword, setSetupPassword] = useState('');
+  const [setupConfirmPassword, setSetupConfirmPassword] = useState('');
+  const [setupError, setSetupError] = useState('');
+  const [setupSuccess, setSetupSuccess] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -106,7 +117,48 @@ export default function Admin() {
     e.preventDefault();
     const ok = await api.loginAdmin(username, password);
     if (ok) { setLoggedIn(true); setDisplayName(api.getCurrentUserDisplayName()); setLoginError(''); }
-    else setLoginError('Invalid credentials. Please check your username and password.');
+    else setLoginError('Login failed. Use your email and password first if your username was created before today, then username login will work after that.');
+  };
+
+  const handleSetup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSetupError('');
+    setSetupSuccess('');
+
+    if (!setupEmail || !setupUsername || !setupPassword || !setupConfirmPassword) {
+      setSetupError('All fields are required');
+      return;
+    }
+
+    if (setupPassword !== setupConfirmPassword) {
+      setSetupError('Passwords do not match');
+      return;
+    }
+
+    if (setupPassword.length < 8) {
+      setSetupError('Password must be at least 8 characters');
+      return;
+    }
+
+    try {
+      await api.createAdminUser({
+        email: setupEmail,
+        username: setupUsername,
+        password: setupPassword,
+        role: 'Super Admin',
+        status: 'active'
+      });
+      setSetupSuccess('Super Admin account created! You can now log in.');
+      setTimeout(() => {
+        setShowSetup(false);
+        setSetupEmail('');
+        setSetupUsername('');
+        setSetupPassword('');
+        setSetupConfirmPassword('');
+      }, 2000);
+    } catch (err: any) {
+      setSetupError(err.message || 'Failed to create account');
+    }
   };
 
   const handleLogout = () => { api.logoutAdmin(); setLoggedIn(false); };
@@ -123,15 +175,38 @@ export default function Admin() {
               <Lock size={14} />
               BICC Admin Portal
             </div>
-            <h1 className="text-2xl font-bold text-[#1F85A8]">Welcome back</h1>
-            <p className="text-gray-500 text-sm mt-2">Sign in to manage website content, users, and live updates.</p>
+            <h1 className="text-2xl font-bold text-[#1F85A8]">{showSetup ? 'Create Account' : 'Welcome back'}</h1>
+            <p className="text-gray-500 text-sm mt-2">{showSetup ? 'Set up your Super Admin account' : 'Sign in to manage website content, users, and live updates.'}</p>
           </div>
-          {loginError && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 mb-6"><AlertCircle className="text-red-500 shrink-0" size={16} /><span className="text-red-600 text-sm">{loginError}</span></div>}
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Email / Username</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="admin@bicc.gm" /></div>
-            <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Password</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="••••••••" /></div>
-            <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold hover:from-blue-400 hover:to-blue-600 transition-all">Sign In</button>
-          </form>
+
+          {!showSetup ? (
+            <>
+              {loginError && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 mb-6"><AlertCircle className="text-red-500 shrink-0" size={16} /><span className="text-red-600 text-sm">{loginError}</span></div>}
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Email / Username</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="admin@bicc.gm" /></div>
+                <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Password</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="••••••••" /></div>
+                <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold hover:from-blue-400 hover:to-blue-600 transition-all">Sign In</button>
+              </form>
+              <div className="mt-4 pt-4 border-t border-gray-200 text-center">
+                <button onClick={() => setShowSetup(true)} className="text-blue-600 hover:text-blue-700 text-sm font-medium">Create new account →</button>
+              </div>
+            </>
+          ) : (
+            <>
+              {setupError && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 mb-6"><AlertCircle className="text-red-500 shrink-0" size={16} /><span className="text-red-600 text-sm">{setupError}</span></div>}
+              {setupSuccess && <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-3 mb-6"><Check className="text-green-500 shrink-0" size={16} /><span className="text-green-600 text-sm">{setupSuccess}</span></div>}
+              <form onSubmit={handleSetup} className="space-y-4">
+                <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Email Address</label><input type="email" value={setupEmail} onChange={e => setSetupEmail(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="admin@bicc.gm" /></div>
+                <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Username</label><input type="text" value={setupUsername} onChange={e => setSetupUsername(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="admin" /></div>
+                <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Password</label><input type="password" value={setupPassword} onChange={e => setSetupPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="••••••••" /></div>
+                <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Confirm Password</label><input type="password" value={setupConfirmPassword} onChange={e => setSetupConfirmPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="••••••••" /></div>
+                <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold hover:from-blue-400 hover:to-blue-600 transition-all">Create Super Admin Account</button>
+              </form>
+              <div className="mt-4 pt-4 border-t border-gray-200 text-center">
+                <button onClick={() => setShowSetup(false)} className="text-blue-600 hover:text-blue-700 text-sm font-medium">← Back to Sign In</button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
@@ -160,55 +235,106 @@ export default function Admin() {
   ];
 
   const tabs = allTabs.filter(tab => api.canAccessTab(tab.key));
+  const currentRole = api.getCurrentUserRole();
+  const roleBadgeClass = isSuperAdmin
+    ? 'bg-purple-100 text-purple-700 border border-purple-200'
+    : currentRole === 'Manager'
+      ? 'bg-blue-100 text-blue-700 border border-blue-200'
+      : currentRole === 'Editor'
+        ? 'bg-amber-100 text-amber-700 border border-amber-200'
+        : 'bg-gray-100 text-gray-700 border border-gray-200';
+  const roleBadgeLabel = isSuperAdmin
+    ? 'Super Admin'
+    : currentRole === 'Manager'
+      ? 'Manager'
+      : currentRole === 'Editor'
+        ? 'Editor'
+        : 'Staff';
+  const quickAccessTabs = tabs.filter(tab => ['dashboard', 'pages', 'media', 'bookings', 'contacts'].includes(tab.key));
 
   return (
     <div className="pt-20 min-h-screen bg-gradient-to-br from-slate-100 via-white to-blue-50">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-6 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4 animate-fade-in-up">
-          <div className="min-w-0 flex items-center gap-4">
-            <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-white shadow-md border border-blue-100 items-center justify-center overflow-hidden animate-scale-in">
-              <img src={IMAGES.logo} alt="BICC logo" className="w-10 h-10 object-contain" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="rounded-3xl border border-blue-100 bg-white/90 shadow-sm backdrop-blur p-4 sm:p-6 lg:p-7 mb-6 sm:mb-8 animate-fade-in-up">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0 flex items-start sm:items-center gap-4">
+              <div className="flex w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-white shadow-md border border-blue-100 items-center justify-center overflow-hidden animate-scale-in shrink-0">
+                <img src={IMAGES.logo} alt="BICC logo" className="w-11 h-11 sm:w-14 sm:h-14 object-contain" />
+              </div>
+              <div className="min-w-0">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-3">
+                  <Lock size={14} />
+                  BICC Admin Portal
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#1F85A8] leading-tight">Manage content, media, and operations</h1>
+                <div className="mt-3 flex flex-col gap-2 text-sm text-slate-600">
+                  <span className="font-medium">Welcome back, <span className="text-blue-700">{displayName}</span>.</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold shadow-sm ${roleBadgeClass}`}>{roleBadgeLabel}</span>
+                    <span className="inline-flex px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-medium">Unread messages: {unreadCount}</span>
+                    <span className="inline-flex px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium">Pending bookings: {pendingBookings}</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#1F85A8] truncate">BICC Admin Panel</h1>
-            <p className="text-gray-500 text-xs sm:text-sm mt-1 flex flex-wrap items-center gap-2">
-              <span className="text-blue-600 font-semibold">Welcome, {displayName}! 👋</span>
-              <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap shadow-sm transition-all ${isSuperAdmin ? 'bg-purple-100 text-purple-700 border border-purple-200' :
-                api.getCurrentUserRole() === 'Manager' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
-                api.getCurrentUserRole() === 'Editor' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
-                  'bg-gray-100 text-gray-700 border border-gray-200'
-                }`}>
-                {api.getCurrentUserRole()}
-              </span>
-            </p>
+            <div className="flex flex-col sm:items-end gap-3">
+              <p className="text-sm text-slate-500 max-w-md">The navigation has been tightened for better phone, tablet, and desktop viewing, while keeping every section reachable.</p>
+              <button onClick={handleLogout} className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 rounded-xl text-sm font-medium hover:bg-red-100 transition-all border border-red-200 w-full sm:w-auto"><LogOut size={16} /> Logout</button>
             </div>
           </div>
-          <button onClick={handleLogout} className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-medium hover:bg-red-100 transition-all btn-hover whitespace-nowrap border border-red-200"><LogOut size={16} /> Logout</button>
         </div>
-        <div className="grid lg:grid-cols-[220px_1fr] gap-6 lg:gap-8">
-          <div className="hidden lg:block bg-white rounded-2xl p-3 lg:p-4 h-fit shadow-sm sticky top-24">
-            <nav className="space-y-1">
+
+        <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] gap-6 lg:gap-8">
+          <aside className="hidden lg:flex lg:flex-col gap-4 bg-white rounded-3xl p-4 shadow-sm border border-slate-200 sticky top-24 self-start max-h-[calc(100vh-7rem)]">
+            <div className="flex items-center gap-3 rounded-2xl bg-slate-50 border border-slate-200 p-3">
+              <div className="w-12 h-12 rounded-2xl bg-white border border-blue-100 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                <img src={IMAGES.logo} alt="BICC logo" className="w-8 h-8 object-contain" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#1F85A8] truncate">BICC Admin</p>
+                <p className="text-xs text-slate-500 truncate">Navigation and control panel</p>
+              </div>
+            </div>
+            <nav className="space-y-1 overflow-y-auto pr-1">
               {tabs.map(tab => (
-                <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-xl text-xs lg:text-sm font-medium transition-all ${activeTab === tab.key ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
-                  <tab.icon size={16} className="shrink-0" /><span className="hidden lg:inline">{tab.label}</span>
-                  {tab.key === 'contacts' && unreadCount > 0 && <span className="ml-auto bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">{unreadCount}</span>}
-                  {tab.key === 'bookings' && pendingBookings > 0 && <span className="ml-auto bg-yellow-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">{pendingBookings}</span>}
+                <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${activeTab === tab.key ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-700 hover:bg-slate-50'}`}>
+                  <tab.icon size={18} className="shrink-0" />
+                  <span className="flex-1 text-left">{tab.label}</span>
+                  {tab.key === 'contacts' && unreadCount > 0 && <span className={`text-xs w-5 h-5 rounded-full flex items-center justify-center ${activeTab === tab.key ? 'bg-white text-blue-600' : 'bg-red-500 text-white'}`}>{unreadCount > 9 ? '9+' : unreadCount}</span>}
+                  {tab.key === 'bookings' && pendingBookings > 0 && <span className={`text-xs w-5 h-5 rounded-full flex items-center justify-center ${activeTab === tab.key ? 'bg-white text-blue-600' : 'bg-yellow-500 text-white'}`}>{pendingBookings > 9 ? '9+' : pendingBookings}</span>}
                 </button>
               ))}
             </nav>
-          </div>
-          <div>
-            {/* Mobile tab switcher */}
-            <div className="lg:hidden mb-4 -mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto">
-              <div className="flex gap-2 pb-2">
+          </aside>
+
+          <div className="min-w-0">
+            <div className="lg:hidden mb-4 rounded-3xl bg-white border border-slate-200 shadow-sm p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-white border border-blue-100 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                  <img src={IMAGES.logo} alt="BICC logo" className="w-8 h-8 object-contain" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#1F85A8] truncate">BICC Admin Menu</p>
+                  <p className="text-xs text-slate-500">Choose a section below</p>
+                </div>
+              </div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Current section</label>
+              <select
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value as Tab)}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500"
+              >
                 {tabs.map(tab => (
+                  <option key={tab.key} value={tab.key}>{tab.label}</option>
+                ))}
+              </select>
+              <div className="flex flex-wrap gap-2 mt-4">
+                {quickAccessTabs.map(tab => (
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                      activeTab === tab.key
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                      activeTab === tab.key ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
                     }`}
                   >
                     <tab.icon size={14} />
@@ -217,7 +343,8 @@ export default function Admin() {
                 ))}
               </div>
             </div>
-            <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 min-h-[600px]">
+
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-6 min-h-[600px]">
               {activeTab === 'dashboard' && <DashboardTab />}
               {activeTab === 'settings' && <ContentManagementTab />}
               {activeTab === 'media' && <MediaLibraryTab />}
@@ -251,6 +378,7 @@ function DashboardTab() {
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [allBookings, setAllBookings] = useState<any[]>([]);
   const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   useEffect(() => {
     api.fetchDashboard().then(setStats).catch(() => { });
@@ -260,6 +388,7 @@ function DashboardTab() {
       setRecentBookings(b.filter((x: any) => x.status === 'Pending').slice(0, 3));
     }).catch(() => { });
     api.fetchEvents().then(setAllEvents).catch(() => { });
+    api.fetchAuditLogs().then(logs => setAuditLogs(logs.slice(0, 8))).catch(() => { });
   }, []);
 
   const bookingsThisMonth = allBookings.filter(b => isThisMonth(b.created_at)).length;
@@ -323,6 +452,31 @@ function DashboardTab() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-8">
+        <h3 className="text-lg font-bold text-[#1F85A8] mb-4">Security & Activity Logs</h3>
+        {auditLogs.length === 0 ? (
+          <p className="text-gray-400 text-sm">No audit entries yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {auditLogs.map((entry) => (
+              <div key={entry.id} className="bg-gray-50 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-[#1F85A8]">
+                    {(entry.actorDisplayName || entry.actorUsername || 'Admin')} {entry.action} {entry.targetType}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {entry.details?.title || entry.details?.name || entry.details?.username || entry.targetId || 'System activity'}
+                  </p>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {entry.createdAt ? new Date(entry.createdAt).toLocaleString() : 'Unknown time'}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1316,7 +1470,7 @@ function UsersTab() {
   const [users, setUsers] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<any | null>(null);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<any>({
     email: '',
     username: '',
     password: '',
@@ -1330,7 +1484,7 @@ function UsersTab() {
   }, []);
 
   const applyRolePreset = (role: string) => {
-    setForm((current) => ({
+    setForm((current: any) => ({
       ...current,
       role,
       permissions: api.ROLE_TAB_PRESETS[role] || api.ROLE_TAB_PRESETS.Staff,
@@ -1338,10 +1492,10 @@ function UsersTab() {
   };
 
   const togglePermission = (tab: string) => {
-    setForm((current) => ({
+    setForm((current: any) => ({
       ...current,
       permissions: current.permissions.includes(tab)
-        ? current.permissions.filter((entry) => entry !== tab)
+        ? current.permissions.filter((entry: any) => entry !== tab)
         : [...current.permissions, tab],
     }));
   };
@@ -1467,6 +1621,7 @@ function UsersTab() {
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600"
               >
                 <option>Staff</option>
+                <option>Editor</option>
                 <option>Manager</option>
                 <option>Super Admin</option>
               </select>
@@ -1526,6 +1681,7 @@ function UsersTab() {
             <p className="text-xs text-blue-700">
               <strong>Roles:</strong><br />
               • <strong>Staff</strong> - Daily content operations and lighter publishing work<br />
+              • <strong>Editor</strong> - Content publishing and page updates without user management or destructive access<br />
               • <strong>Manager</strong> - Broader business content and operational control<br />
               • <strong>Super Admin</strong> - Full access including user management and system-wide control
             </p>

@@ -97,7 +97,9 @@ const CATEGORIES = [
 export default function Downloads() {
   const { data: dbDownloads } = useApi(fetchDownloads, []);
   const { data: pageContent } = useApi(() => fetchPageContent('downloadsPage'), []);
-  const downloads = (dbDownloads && dbDownloads.length > 0) ? dbDownloads : FALLBACK_DOWNLOADS;
+  const downloads = (dbDownloads && dbDownloads.length > 0)
+    ? dbDownloads.filter((item: any) => item.active !== false)
+    : FALLBACK_DOWNLOADS;
 
   const [category, setCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');

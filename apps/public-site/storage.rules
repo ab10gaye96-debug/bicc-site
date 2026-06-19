@@ -1,0 +1,101 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for BICC Public Site
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isSignedIn() && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['Super Admin', 'Manager', 'Staff', 'Editor'];
+    }
+    
+    // Helper to validate image files
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // Helper to validate video files
+    function isVideo() {
+      return request.resource.contentType.matches('video/.*');
+    }
+    
+    // Helper to validate file size (20MB max)
+    function isValidSize() {
+      return request.resource.size < 20 * 1024 * 1024;
+    }
+    
+    // Media Library - Admin can upload, everyone can read
+    match /media/{category}/{fileName} {
+      allow read: if true; // Public read for all media
+      allow write: if isAdmin() && (isImage() || isVideo()) && isValidSize();
+      allow delete: if isAdmin();
+    }
+    
+    // Uploads folder - Admin only
+    match /uploads/{allPaths=**} {
+      allow read: if true; // Public read
+      allow write: if isAdmin() && isValidSize();
+      allow delete: if isAdmin();
+    }
+    
+    // Venue images - Admin upload, public read
+    match /venues/{venueId}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && isImage() && isValidSize();
+      allow delete: if isAdmin();
+    }
+    
+    // Event images - Admin upload, public read
+    match /events/{eventId}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && isImage() && isValidSize();
+      allow delete: if isAdmin();
+    }
+    
+    // Gallery - Admin upload, public read
+    match /gallery/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && (isImage() || isVideo()) && isValidSize();
+      allow delete: if isAdmin();
+    }
+    
+    // Documents/Downloads - Admin upload, public read
+    match /documents/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidSize();
+      allow delete: if isAdmin();
+    }
+
+    // Unified admin-managed public content uploads
+    match /content/{folder}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidSize();
+      allow delete: if isAdmin();
+    }
+
+    // Career application resumes
+    match /resumes/{fileName} {
+      allow read: if true;
+      allow create: if isValidSize();
+      allow update, delete: if isAdmin();
+    }
+    
+    // Partner logos - Admin upload, public read
+    match /partners/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && isImage() && isValidSize();
+      allow delete: if isAdmin();
+    }
+    
+    // Fallback - deny everything else
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

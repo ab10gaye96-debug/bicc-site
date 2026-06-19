@@ -27,10 +27,42 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    // Site Settings - Public read, Admin write (CRITICAL: Frontend needs to read this!)
+    match /siteSettings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Media Library - Public read, Admin write (CRITICAL: Frontend needs to read uploaded images!)
+    match /mediaLibrary/{mediaId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Audit logs - Admin only
+    match /auditLogs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Username lookup for admin login
+    match /adminUsernames/{username} {
+      allow read: if true;
+      allow create: if isSuperAdmin() || (isSignedIn() && request.resource.data.uid == request.auth.uid);
+      allow update: if isSuperAdmin() || (isSignedIn() &&
+        resource.data.uid == request.auth.uid &&
+        request.resource.data.uid == request.auth.uid);
+      allow delete: if isSuperAdmin();
+    }
+
     // Users collection - Super Admin can manage all, users can read their own
     match /users/{userId} {
-      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isSuperAdmin());
-      allow create: if isSignedIn(); // Allow anyone authenticated to create their own user doc
+      allow read: if isSignedIn() && (
+        userId == request.auth.uid ||
+        resource.data.uid == request.auth.uid ||
+        resource.data.email == request.auth.token.email ||
+        isSuperAdmin()
+      );
+      allow create: if isSuperAdmin() || (isSignedIn() && userId == request.auth.uid);
       allow update, delete: if isSuperAdmin(); // Only Super Admin can delete/modify others
     }
     
@@ -97,7 +129,8 @@ service cloud.firestore {
     
     // Applications
     match /applications/{id} {
-      allow read, write: if isAdmin();
+      allow read, update, delete: if isAdmin();
+      allow create: if true;
     }
     
     // Tenders
