@@ -1,12 +1,16 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Users, Building2, Globe2, Star, Calendar, MapPin, Award, Shield, Play, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fetchEvents, fetchNews, fetchGallery, fetchHomeContent } from '../api';
+import { fetchEvents, fetchNews, fetchGallery } from '../api';
+import { usePageContent } from '../hooks/usePageContent';
 import { useApi } from '../hooks/useApi';
 import { IMAGES } from '../images';
 import SEO from '../components/SEO';
 import TestimonialsSection from '../components/TestimonialsSection';
 import PartnersSection from '../components/PartnersSection';
 import NewsletterForm from '../components/NewsletterForm';
+import HomeHero from '../components/home/HomeHero';
+import SectionHeader from '../components/ui/SectionHeader';
+import ScrollReveal from '../components/motion/ScrollReveal';
 import { useEffect, useRef, useState } from 'react';
 
 // ── Animated counter hook ─────────────────────────────────────────────────────
@@ -70,10 +74,13 @@ function StatsBar({ cmsStats }: { cmsStats?: any }) {
   ];
 
   return (
-    <section ref={ref} className="bg-[#1F85A8] border-y border-white/10">
-      <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+    <section ref={ref} className="relative bg-gradient-to-r from-bicc-primary via-[#1a7394] to-bicc-primary border-y border-white/10 overflow-hidden">
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_50%,white_0%,transparent_50%)]" />
+      <div className="relative max-w-7xl mx-auto px-4 py-10 sm:py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
         {stats.map((stat, i) => (
-          <StatItem key={i} {...stat} animate={visible} />
+          <ScrollReveal key={i} delay={i * 100} animation="fade-up">
+            <StatItem {...stat} animate={visible} />
+          </ScrollReveal>
         ))}
       </div>
     </section>
@@ -86,11 +93,11 @@ function StatItem({ icon: Icon, target, suffix, label, animate }: {
   const count = useCounter(target, 1800, animate);
   return (
     <div className="text-center">
-      <Icon className="mx-auto text-white mb-2" size={28} />
-      <div className="text-2xl sm:text-3xl font-bold text-white">
+      <Icon className="mx-auto text-bicc-gold mb-3" size={26} />
+      <div className="font-display text-3xl sm:text-4xl font-semibold text-white">
         {animate ? count.toLocaleString() : '0'}{suffix}
       </div>
-      <div className="text-sm text-gray-400 mt-1">{label}</div>
+      <div className="text-xs sm:text-sm text-white/70 mt-2 tracking-wide uppercase">{label}</div>
     </div>
   );
 }
@@ -156,27 +163,27 @@ function VirtualTour() {
   if (!room) return null;
 
   return (
-    <section className="py-20 bg-gray-900">
+    <section className="py-20 sm:py-28 bg-slate-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <span className="text-blue-400 font-semibold text-sm tracking-widest uppercase">Explore the Facility</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mt-3">Virtual Tour</h2>
-          <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
-            Browse through the spaces of the Sir Dawda Kairaba Jawara International Conference Centre.
-          </p>
-        </div>
+        <SectionHeader
+          eyebrow="Explore the Facility"
+          title="Virtual Tour"
+          description="Browse through the distinguished spaces of the Sir Dawda Kairaba Jawara International Conference Centre."
+          light
+        />
 
         <div className="grid lg:grid-cols-[1fr_340px] gap-6 lg:gap-8 items-start">
           {/* Main image */}
-          <div className="relative rounded-2xl overflow-hidden group cursor-pointer" onClick={() => setLightbox(true)}>
+          <ScrollReveal animation="scale-in">
+          <div className="relative rounded-2xl overflow-hidden group cursor-pointer ring-1 ring-white/10" onClick={() => setLightbox(true)}>
             <img
               src={room.url}
               alt={room.caption}
-              className="w-full aspect-[16/9] object-cover transition-transform duration-700 group-hover:scale-105"
+              className="w-full aspect-[16/9] object-cover motion-safe:transition-transform motion-safe:duration-[1200ms] group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/40">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 motion-safe:transition-opacity motion-safe:duration-500">
+              <div className="w-16 h-16 bg-white/15 backdrop-blur-md rounded-full flex items-center justify-center border border-bicc-gold/40">
                 <Play size={24} className="text-white ml-1" />
               </div>
             </div>
@@ -189,43 +196,43 @@ function VirtualTour() {
               <ChevronRight size={18} />
             </button>
             <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-              <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-1">
+              <p className="text-bicc-gold text-xs font-semibold uppercase tracking-[0.2em] mb-1">
                 {active + 1} / {total}
               </p>
-              <h3 className="text-white text-base sm:text-xl font-bold">{room.caption}</h3>
+              <h3 className="font-display text-white text-lg sm:text-2xl">{room.caption}</h3>
               {room.category && room.category !== room.caption && (
-                <p className="text-gray-300 text-sm mt-1">{room.category}</p>
+                <p className="text-white/65 text-sm mt-1">{room.category}</p>
               )}
             </div>
           </div>
+          </ScrollReveal>
 
-          {/* Thumbnail strip — horizontal scroll on mobile, grid on desktop */}
+          {/* Thumbnail strip */}
           <div className="flex gap-3 overflow-x-auto pb-2 lg:pb-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:max-h-[480px] lg:overflow-y-auto lg:overflow-x-visible pr-0 lg:pr-1">
             {tourImages.map((r, i) => (
+              <ScrollReveal key={i} delay={i * 60} animation="fade-up">
               <button
-                key={i}
                 onClick={() => setActive(i)}
-                className={`relative rounded-xl overflow-hidden transition-all shrink-0 w-28 sm:w-32 lg:w-auto ${
-                  i === active ? 'ring-2 ring-blue-400 scale-105' : 'opacity-60 hover:opacity-100'
+                className={`relative rounded-xl overflow-hidden motion-safe:transition-all motion-safe:duration-500 shrink-0 w-28 sm:w-32 lg:w-auto ${
+                  i === active ? 'ring-2 ring-bicc-gold scale-[1.02]' : 'opacity-55 hover:opacity-100'
                 }`}
               >
                 <img src={r.url} alt={r.caption} className="w-full aspect-[4/3] object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <p className="absolute bottom-1 sm:bottom-2 left-1 sm:left-2 right-1 sm:right-2 text-white text-xs font-semibold line-clamp-1">{r.caption}</p>
               </button>
+              </ScrollReveal>
             ))}
           </div>
         </div>
 
+        <ScrollReveal animation="fade-up" delay={200}>
         <div className="text-center mt-10 flex flex-col sm:flex-row gap-3 justify-center">
-          <Link to="/gallery"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-semibold hover:bg-white/20 transition-all">
+          <Link to="/gallery" className="btn-elegant-outline !text-white !border-white/25 !bg-white/5 mx-auto sm:mx-0">
             View Full Photo Gallery <ArrowRight size={16} />
           </Link>
-          <p className="text-gray-500 text-xs self-center">
-            Tour images are managed from the Admin → Gallery panel
-          </p>
         </div>
+        </ScrollReveal>
       </div>
 
       {/* Lightbox */}
@@ -256,17 +263,10 @@ function VirtualTour() {
 export default function Home() {
   const { data: events } = useApi(() => fetchEvents(), []);
   const { data: news } = useApi(() => fetchNews(), []);
-  const [cmsContent, setCmsContent] = useState<any>(null);
-  
+  const { data: cmsContent } = usePageContent('home');
+
   const displayEvents = (events || []).slice(0, 3);
   const displayNews = (news || []).slice(0, 3);
-
-  // Fetch CMS content for home page
-  useEffect(() => {
-    fetchHomeContent().then(data => {
-      if (data) setCmsContent(data);
-    });
-  }, []);
 
   // Default content values (fallbacks)
   const heroTitle = cmsContent?.hero?.title || 'Banjul International';
@@ -321,202 +321,199 @@ export default function Home() {
   const ctaBackgroundImage = cmsContent?.cta?.backgroundImage || IMAGES.banquetHall;
 
   return (
-    <div>
+    <div className="overflow-x-hidden">
       <SEO
         title="BICC — Banjul International Convention Centre"
         description="The Gambia's premier MICE destination. World-class venues for conferences, summits, banquets, and events at the Sir Dawda Kairaba Jawara International Conference Centre."
       />
-      {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        {useHeroVideo ? (
-          <video
-            className="absolute inset-0 w-full h-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
-            poster={heroVideoPoster}
-          >
-            <source src={heroBackgroundVideo} />
-          </video>
-        ) : (
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroBackgroundImage})` }} />
-        )}
-        <div className="absolute inset-0 bg-black/30" />
-        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-400/30 rounded-full text-blue-200 text-sm font-medium mb-8 backdrop-blur-sm">
-            <Star size={14} />
-            {heroBadge}
-          </div>
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            {heroTitle}
-            <span className="block text-blue-400">{heroSubtitle}</span>
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed">
-            {heroDescription}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/venues" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-400 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/30">
-              {heroPrimaryButton} <ArrowRight size={20} />
-            </Link>
-            <Link to="/booking" className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-xl font-bold text-lg hover:bg-white/10 transition-all backdrop-blur-sm">
-              {heroSecondaryButton}
-            </Link>
-          </div>
-        </div>
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/60">
-          <span className="text-xs tracking-widest uppercase">Scroll</span>
-          <div className="w-px h-8 bg-gradient-to-b from-white/60 to-transparent" />
-        </div>
-      </section>
 
-      {/* Stats Bar — animated counters */}
+      <HomeHero
+        badge={heroBadge}
+        title={heroTitle}
+        subtitle={heroSubtitle}
+        description={heroDescription}
+        primaryButton={heroPrimaryButton}
+        secondaryButton={heroSecondaryButton}
+        backgroundImage={heroBackgroundImage}
+        backgroundVideo={heroBackgroundVideo}
+        videoPoster={heroVideoPoster}
+        useVideo={useHeroVideo}
+      />
+
       <StatsBar cmsStats={cmsContent?.stats} />
 
       {/* About Preview */}
-      <section className="py-20 bg-white">
+      <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div>
-              <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">{aboutEyebrow}</span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3 mb-6">
-                {aboutTitlePrefix}
-                {aboutHighlightText && <span className="text-blue-700"> {aboutHighlightText}</span>}
-              </h2>
+              <SectionHeader
+                eyebrow={aboutEyebrow}
+                title={`${aboutTitlePrefix}${aboutHighlightText ? ` ${aboutHighlightText}` : ''}`}
+                align="left"
+                className="mb-8 sm:mb-10"
+              />
               {aboutParagraphs.map((paragraph, index) => (
-                <p
-                  key={index}
-                  className={`text-gray-600 leading-relaxed ${index === aboutParagraphs.length - 1 ? 'mb-8' : 'mb-6'}`}
-                >
-                  {paragraph}
-                </p>
+                <ScrollReveal key={index} delay={index * 100} animation="fade-up">
+                  <p className={`text-slate-600 leading-relaxed text-base sm:text-lg ${index === aboutParagraphs.length - 1 ? 'mb-8' : 'mb-5'}`}>
+                    {paragraph}
+                  </p>
+                </ScrollReveal>
               ))}
-              <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-8">
                 {aboutValues.map((v, i) => (
-                  <div key={i} className="flex items-center gap-3 bg-blue-50 rounded-lg p-3">
-                    <v.icon size={20} className="text-blue-700" />
-                    <span className="font-medium text-[#1F85A8]">{v.text}</span>
-                  </div>
+                  <ScrollReveal key={i} delay={i * 80} animation="fade-up">
+                    <div className="flex items-center gap-3 bg-bicc-primary-light/60 rounded-xl p-3 sm:p-4 border border-bicc-primary/10">
+                      <v.icon size={18} className="text-bicc-primary shrink-0" />
+                      <span className="font-medium text-slate-800 text-sm">{v.text}</span>
+                    </div>
+                  </ScrollReveal>
                 ))}
               </div>
-              <Link to="/about" className="inline-flex items-center gap-2 text-blue-700 font-semibold hover:text-blue-800 transition-colors">Learn More About Us <ArrowRight size={18} /></Link>
+              <ScrollReveal animation="fade-up" delay={200}>
+                <Link to="/about" className="inline-flex items-center gap-2 text-bicc-primary font-semibold hover:text-bicc-primary-dark motion-safe:transition-colors group">
+                  Learn More About Us
+                  <ArrowRight size={18} className="motion-safe:transition-transform group-hover:translate-x-1" />
+                </Link>
+              </ScrollReveal>
             </div>
-            <div className="relative mt-8 lg:mt-0">
-              <img src={aboutImage} alt="Conference Centre" className="rounded-2xl shadow-2xl w-full aspect-[4/3] object-cover" />
-              <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-blue-600 text-white rounded-xl p-4 sm:p-6 shadow-xl">
-                <div className="text-2xl sm:text-3xl font-bold">{aboutImageStatValue}</div>
-                <div className="text-xs sm:text-sm font-medium">{aboutImageStatLabel}</div>
+            <ScrollReveal animation="fade-right" delay={150}>
+              <div className="relative mt-8 lg:mt-0 photo-frame">
+                <img
+                  src={aboutImage}
+                  alt="Conference Centre"
+                  className="rounded-2xl shadow-2xl w-full aspect-[4/3] object-cover motion-safe:animate-image-reveal"
+                />
+                <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-gradient-to-br from-bicc-primary to-bicc-primary-dark text-white rounded-xl p-4 sm:p-6 shadow-xl border border-white/10">
+                  <div className="font-display text-2xl sm:text-3xl font-semibold">{aboutImageStatValue}</div>
+                  <div className="text-xs sm:text-sm text-white/80 mt-1">{aboutImageStatLabel}</div>
+                </div>
               </div>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
 
       {/* Venues Preview */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 sm:py-28 bg-stone-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">{venuesEyebrow}</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">{venuesTitle}</h2>
-            <p className="text-gray-500 mt-4 max-w-2xl mx-auto">{venuesDescription}</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <SectionHeader eyebrow={venuesEyebrow} title={venuesTitle} description={venuesDescription} />
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
             {venueCards.map((venue, i) => (
-              <div key={i} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
-                <div className="relative overflow-hidden">
-                  <img src={venue.image} alt={venue.name} className="w-full aspect-[3/2] object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute top-4 right-4 bg-[#1F85A8]/80 backdrop-blur-sm text-white text-sm px-3 py-1 rounded-full font-medium">{venue.capacity}</div>
+              <ScrollReveal key={i} delay={i * 120} animation="fade-up">
+                <div className="group elegant-card h-full">
+                  <div className="relative image-reveal-wrap">
+                    <img src={venue.image} alt={venue.name} className="w-full aspect-[3/2] object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 to-transparent opacity-0 group-hover:opacity-100 motion-safe:transition-opacity motion-safe:duration-500" />
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-bicc-primary text-xs px-3 py-1.5 rounded-full font-semibold tracking-wide">
+                      {venue.capacity}
+                    </div>
+                  </div>
+                  <div className="p-6 sm:p-7">
+                    <h3 className="font-display text-xl sm:text-2xl text-slate-900 mb-2">{venue.name}</h3>
+                    <p className="text-slate-500 text-sm leading-relaxed">{venue.description}</p>
+                  </div>
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-[#1F85A8] mb-2">{venue.name}</h3>
-                  <p className="text-gray-500 text-sm">{venue.description}</p>
-                </div>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
-          <div className="text-center mt-10">
-            <Link to="/venues" className="inline-flex items-center gap-2 px-6 py-3 bg-[#1F85A8] text-white rounded-xl font-semibold hover:bg-[#1a6d8a] transition-all">{venuesButtonText} <ArrowRight size={18} /></Link>
-          </div>
+          <ScrollReveal animation="fade-up" delay={200} className="text-center mt-12">
+            <Link to="/venues" className="btn-elegant-secondary">
+              {venuesButtonText} <ArrowRight size={18} />
+            </Link>
+          </ScrollReveal>
         </div>
       </section>
 
-      {/* Virtual Tour */}
       <VirtualTour />
 
       {/* Upcoming Events */}
-      <section className="py-20 bg-white">
+      <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">What's Coming</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">Upcoming Events</h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {displayEvents.map((event) => (
-              <div key={event.id} className="bg-gray-50 rounded-2xl overflow-hidden hover:shadow-lg transition-all">
-                <img src={event.image} alt={event.title} className="w-full aspect-[2/1] object-cover" />
-                <div className="p-6">
-                  <div className="flex items-center gap-2 text-sm text-blue-700 font-medium mb-3">
-                    <Calendar size={14} />
-                    {new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          <SectionHeader eyebrow="What's Coming" title="Upcoming Events" />
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+            {displayEvents.map((event, i) => (
+              <ScrollReveal key={event.id} delay={i * 100} animation="fade-up">
+                <div className="group elegant-card h-full">
+                  <div className="image-reveal-wrap">
+                    <img src={event.image} alt={event.title} className="w-full aspect-[2/1] object-cover" />
                   </div>
-                  <h3 className="text-lg font-bold text-[#1F85A8] mb-2 line-clamp-2">{event.title}</h3>
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-                    <MapPin size={14} /><span className="line-clamp-1">{event.location}</span>
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 text-sm text-bicc-primary font-medium mb-3">
+                      <Calendar size={14} />
+                      {new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </div>
+                    <h3 className="font-display text-lg text-slate-900 mb-2 line-clamp-2">{event.title}</h3>
+                    <div className="flex items-center gap-2 text-sm text-slate-500 mb-3">
+                      <MapPin size={14} /><span className="line-clamp-1">{event.location}</span>
+                    </div>
+                    <span className="inline-block bg-bicc-primary-light text-bicc-primary text-xs font-semibold px-3 py-1 rounded-full">{event.category}</span>
                   </div>
-                  <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">{event.category}</span>
                 </div>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
-          <div className="text-center mt-10">
-            <Link to="/events" className="inline-flex items-center gap-2 px-6 py-3 border-2 border-[#1F85A8] text-[#1F85A8] rounded-xl font-semibold hover:bg-[#1F85A8] hover:text-white transition-all">View All Events <ArrowRight size={18} /></Link>
-          </div>
+          <ScrollReveal animation="fade-up" className="text-center mt-12">
+            <Link to="/events" className="btn-elegant-ghost">
+              View All Events <ArrowRight size={18} />
+            </Link>
+          </ScrollReveal>
         </div>
       </section>
 
       {/* Latest News */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 sm:py-28 bg-stone-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">Stay Updated</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">Latest News</h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {displayNews.map((item) => (
-              <div key={item.id} className="bg-white rounded-2xl overflow-hidden hover:shadow-lg transition-all group">
-                <img src={item.image} alt={item.title} className="w-full aspect-[2/1] object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="p-6">
-                  <div className="text-sm text-gray-400 mb-2">{new Date(item.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
-                  <h3 className="text-lg font-bold text-[#1F85A8] mb-2 line-clamp-2">{item.title}</h3>
-                  <p className="text-gray-500 text-sm line-clamp-2">{item.excerpt}</p>
+          <SectionHeader eyebrow="Stay Updated" title="Latest News" />
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+            {displayNews.map((item, i) => (
+              <ScrollReveal key={item.id} delay={i * 100} animation="fade-up">
+                <div className="group elegant-card h-full">
+                  <div className="image-reveal-wrap">
+                    <img src={item.image} alt={item.title} className="w-full aspect-[2/1] object-cover" />
+                  </div>
+                  <div className="p-6">
+                    <div className="text-xs text-slate-400 mb-2 tracking-wide uppercase">
+                      {new Date(item.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </div>
+                    <h3 className="font-display text-lg text-slate-900 mb-2 line-clamp-2">{item.title}</h3>
+                    <p className="text-slate-500 text-sm line-clamp-2 leading-relaxed">{item.excerpt}</p>
+                  </div>
                 </div>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
-          <div className="text-center mt-10">
-            <Link to="/news" className="inline-flex items-center gap-2 px-6 py-3 bg-[#1F85A8] text-white rounded-xl font-semibold hover:bg-[#1a6d8a] transition-all">All News <ArrowRight size={18} /></Link>
-          </div>
+          <ScrollReveal animation="fade-up" className="text-center mt-12">
+            <Link to="/news" className="btn-elegant-secondary">
+              All News <ArrowRight size={18} />
+            </Link>
+          </ScrollReveal>
         </div>
       </section>
 
-      {/* Testimonials */}
       <TestimonialsSection />
-
-      {/* Partners */}
       <PartnersSection />
-
-      {/* Newsletter */}
       <NewsletterForm />
 
       {/* CTA */}
-      <section className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${ctaBackgroundImage})` }} />
-        <div className="absolute inset-0 bg-[#1F85A8]/85" />
-        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">{ctaTitle}</h2>
-          <p className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto">{ctaDescription}</p>
-          <Link to="/booking" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-400 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/30">{ctaButtonText} <ArrowRight size={20} /></Link>
-        </div>
+      <section className="relative py-24 sm:py-32 overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center motion-safe:animate-ken-burns"
+          style={{ backgroundImage: `url(${ctaBackgroundImage})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-bicc-primary/90 via-bicc-primary/80 to-slate-950/85" />
+        <ScrollReveal animation="fade-up" className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+          <div className="inline-flex items-center gap-3 mb-6">
+            <span className="h-px w-12 bg-bicc-gold/70" />
+            <span className="text-bicc-gold text-xs font-semibold tracking-[0.28em] uppercase">Host With Us</span>
+            <span className="h-px w-12 bg-bicc-gold/70" />
+          </div>
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-white mb-6 leading-tight">{ctaTitle}</h2>
+          <p className="text-white/80 text-base sm:text-lg mb-10 max-w-2xl mx-auto leading-relaxed">{ctaDescription}</p>
+          <Link to="/booking" className="btn-elegant-primary mx-auto">
+            {ctaButtonText} <ArrowRight size={20} />
+          </Link>
+        </ScrollReveal>
       </section>
     </div>
   );

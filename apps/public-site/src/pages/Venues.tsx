@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { fetchPageContent, fetchVenues } from '../api';
+import { fetchVenues } from '../api';
+import { usePageContent } from '../hooks/usePageContent';
 import { useApi } from '../hooks/useApi';
 import { Users, Check, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -81,7 +82,7 @@ function VenueCard({ venue, index }: { venue: any; index: number }) {
 
 export default function Venues() {
   const { data: venues, loading } = useApi(() => fetchVenues(), []);
-  const { data: pageContent } = useApi(() => fetchPageContent('venuesPage'), []);
+  const { data: pageContent } = usePageContent('venuesPage');
 
   return (
     <div className="pt-20">

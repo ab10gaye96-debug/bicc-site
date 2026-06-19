@@ -1,22 +1,11 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Briefcase, Clock, MapPin, DollarSign, Users, ArrowRight, Search, Filter } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Briefcase, Clock, MapPin, DollarSign, Users, ArrowRight, Search, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
 import SEO from '../components/SEO';
 import { IMAGES } from '../images';
-
-// Fetch vacancies from Firestore
-async function fetchVacancies() {
-  try {
-    const { getDocs, collection, query, where } = await import('firebase/firestore');
-    const { db } = await import('../firebase');
-    const q = query(collection(db, 'vacancies'), where('status', '==', 'Open'));
-    const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch {
-    return [];
-  }
-}
+import { fetchVacancies } from '../api';
+import { usePageContent } from '../hooks/usePageContent';
 
 // Fallback data
 const FALLBACK_VACANCIES = [
@@ -98,10 +87,32 @@ const JOB_TYPES = ['All', 'Full-time', 'Internship', 'Graduate Programme', 'Cont
 
 export default function Careers() {
   const { data: dbVacancies } = useApi(fetchVacancies, []);
-  const vacancies = (dbVacancies && dbVacancies.length > 0) ? dbVacancies : FALLBACK_VACANCIES;
+  const { data: pageContent } = usePageContent('careersPage');
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [jobType, setJobType] = useState('All');
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const requestedType = searchParams.get('type');
+    if (!requestedType) return;
+
+    const matchedType = JOB_TYPES.find((type) =>
+      type.toLowerCase() === requestedType.toLowerCase() ||
+      type.toLowerCase().includes(requestedType.toLowerCase())
+    );
+
+    if (matchedType) {
+      setJobType(matchedType);
+    }
+  }, [searchParams]);
+
+  const vacancies = useMemo(() => {
+    const fromDb = Array.isArray(dbVacancies) ? dbVacancies : [];
+    const openVacancies = fromDb.filter((job: any) => (job.status || '').toString().toLowerCase() === 'open');
+    return openVacancies.length > 0 ? openVacancies : FALLBACK_VACANCIES;
+  }, [dbVacancies]);
 
   const filtered = vacancies.filter((job: any) => {
     const matchesType = jobType === 'All' || job.type === jobType;
@@ -110,26 +121,45 @@ export default function Careers() {
     return matchesType && matchesSearch;
   });
 
+  const toggleDetails = (jobId: string) => {
+    setExpandedJobId((current) => current === jobId ? null : jobId);
+  };
+
+  const updateJobType = (type: string) => {
+    setJobType(type);
+    const nextParams = new URLSearchParams(searchParams);
+    if (type === 'All') nextParams.delete('type');
+    else nextParams.set('type', type);
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  const formatDate = (value?: string) => {
+    if (!value) return 'Not specified';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
   return (
     <div className="pt-20">
       <SEO
         title="Careers at BICC — Join Our Team"
-        description="Explore career opportunities at the Banjul International Convention Centre. View current vacancies and apply online."
+        description={pageContent?.hero?.description || 'Explore career opportunities at the Banjul International Convention Centre. View current vacancies and apply online.'}
       />
 
       {/* Hero */}
       <section className="relative py-24 bg-gradient-to-br from-purple-600 to-blue-600">
         <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${IMAGES.conferenceHall})` }} />
+          style={{ backgroundImage: `url(${pageContent?.hero?.backgroundImage || IMAGES.conferenceHall})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-5xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/30 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
             <Briefcase size={16} />
-            Join Our Team
+            {pageContent?.hero?.eyebrow || 'Join Our Team'}
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">Careers at BICC</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">{pageContent?.hero?.title || 'Careers at BICC'}</h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto">
-            Be part of Africa's premier convention centre team and help shape the future of MICE in The Gambia
+            {pageContent?.hero?.description || "Be part of Africa's premier convention centre team and help shape the future of MICE in The Gambia"}
           </p>
         </div>
       </section>
@@ -138,9 +168,9 @@ export default function Careers() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-[#1F85A8] mb-4">Why Work at BICC?</h2>
+            <h2 className="text-3xl font-bold text-[#1F85A8] mb-4">{pageContent?.intro?.title || 'Why Work at BICC?'}</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Join a dynamic team delivering world-class events and conferences
+              {pageContent?.intro?.description || 'Join a dynamic team delivering world-class events and conferences'}
             </p>
           </div>
 
@@ -172,7 +202,7 @@ export default function Careers() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Search by job title or department..."
+                placeholder={pageContent?.search?.placeholder || 'Search by job title or department...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"
@@ -184,7 +214,7 @@ export default function Careers() {
               {JOB_TYPES.map(type => (
                 <button
                   key={type}
-                  onClick={() => setJobType(type)}
+                  onClick={() => updateJobType(type)}
                   className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-all ${
                     jobType === type
                       ? 'bg-[#1F85A8] text-white'
@@ -209,8 +239,8 @@ export default function Careers() {
           {filtered.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-xl">
               <Briefcase className="mx-auto text-gray-300 mb-4" size={64} />
-              <h3 className="text-xl font-bold text-gray-600 mb-2">No vacancies found</h3>
-              <p className="text-gray-500">Check back soon for new opportunities</p>
+              <h3 className="text-xl font-bold text-gray-600 mb-2">{pageContent?.search?.emptyTitle || 'No vacancies found'}</h3>
+              <p className="text-gray-500">{pageContent?.search?.emptyDescription || 'Check back soon for new opportunities'}</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -247,9 +277,9 @@ export default function Careers() {
 
                       <div className="mt-4 pt-4 border-t">
                         <p className="text-xs text-gray-500">
-                          Posted: {new Date(job.postedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                          Posted: {formatDate(job.postedDate)}
                           {' • '}
-                          Closes: {new Date(job.closingDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                          Closes: {formatDate(job.closingDate)}
                         </p>
                       </div>
                     </div>
@@ -261,11 +291,51 @@ export default function Careers() {
                       >
                         Apply Now <ArrowRight size={18} />
                       </Link>
-                      <button className="px-6 py-3 border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all">
-                        View Details
+                      <button
+                        onClick={() => toggleDetails(String(job.id))}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+                      >
+                        {expandedJobId === String(job.id) ? 'Hide Details' : 'View Details'}
+                        {expandedJobId === String(job.id) ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                       </button>
                     </div>
                   </div>
+
+                  {expandedJobId === String(job.id) && (
+                    <div className="mt-6 pt-6 border-t border-gray-100 grid lg:grid-cols-2 gap-6">
+                      <div className="bg-gray-50 rounded-xl p-5">
+                        <h4 className="text-lg font-bold text-[#1F85A8] mb-4">Requirements</h4>
+                        {Array.isArray(job.requirements) && job.requirements.length > 0 ? (
+                          <ul className="space-y-3">
+                            {job.requirements.map((requirement: string, index: number) => (
+                              <li key={index} className="flex items-start gap-3 text-sm text-gray-700">
+                                <CheckCircle2 size={18} className="text-green-600 mt-0.5 shrink-0" />
+                                <span>{requirement}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-gray-500">Requirements will be shared during the application review.</p>
+                        )}
+                      </div>
+
+                      <div className="bg-gray-50 rounded-xl p-5">
+                        <h4 className="text-lg font-bold text-[#1F85A8] mb-4">Responsibilities</h4>
+                        {Array.isArray(job.responsibilities) && job.responsibilities.length > 0 ? (
+                          <ul className="space-y-3">
+                            {job.responsibilities.map((responsibility: string, index: number) => (
+                              <li key={index} className="flex items-start gap-3 text-sm text-gray-700">
+                                <CheckCircle2 size={18} className="text-blue-600 mt-0.5 shrink-0" />
+                                <span>{responsibility}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-gray-500">Responsibilities will be shared during the application review.</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -298,15 +368,15 @@ export default function Careers() {
       {/* Contact Section */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-[#1F85A8] mb-6">Questions About Careers at BICC?</h2>
+          <h2 className="text-3xl font-bold text-[#1F85A8] mb-6">{pageContent?.cta?.title || 'Questions About Careers at BICC?'}</h2>
           <p className="text-gray-600 mb-8">
-            Our Human Resources team is here to help with any questions about careers, applications, or our recruitment process.
+            {pageContent?.cta?.description || 'Our Human Resources team is here to help with any questions about careers, applications, or our recruitment process.'}
           </p>
           <a
             href="mailto:hr@bicc.gm"
             className="inline-flex items-center gap-2 px-8 py-4 bg-[#1F85A8] text-white rounded-xl font-bold hover:bg-[#1a6d8a] transition-all"
           >
-            Contact HR Team
+            {pageContent?.cta?.primaryButtonText || 'Contact HR Team'}
           </a>
         </div>
       </section>

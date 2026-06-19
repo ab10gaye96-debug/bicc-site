@@ -1,31 +1,44 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, ChevronDown, Building2, Package, Calendar, Globe2, Download, Briefcase, FileText, ClipboardCheck } from 'lucide-react';
+import {
+  Menu,
+  X,
+  Search,
+  ChevronDown,
+  Building2,
+  Package,
+  Calendar,
+  Globe2,
+  Download,
+  Briefcase,
+  FileText,
+  ClipboardCheck,
+  type LucideIcon,
+} from 'lucide-react';
 import { IMAGES } from '../images';
-import { fetchNavbarContent } from '../api';
+import { usePageContent } from '../hooks/usePageContent';
+import {
+  DEFAULT_NAV_LINKS,
+  DEFAULT_VENUES_DROPDOWN,
+  DEFAULT_RESOURCES_DROPDOWN,
+  resolveLinks,
+  type NavDropdownLink,
+} from '../contentDefaults';
 
-const navLinks = [
-  { name: 'Home', path: '/' },
-  { name: 'About', path: '/about' },
-  { name: 'Events', path: '/events' },
-  { name: 'Gallery', path: '/gallery' },
-  { name: 'News', path: '/news' },
-  { name: 'Contact', path: '/contact' },
-];
+const NAV_ICON_MAP: Record<string, LucideIcon> = {
+  Building2,
+  Package,
+  Calendar,
+  Globe2,
+  Download,
+  Briefcase,
+  FileText,
+  ClipboardCheck,
+};
 
-const venuesDropdown = [
-  { name: 'Our Venues', path: '/venues', icon: Building2, desc: 'Explore all event spaces' },
-  { name: 'Services & Packages', path: '/services', icon: Package, desc: 'Conference & banquet packages' },
-  { name: 'Check Availability', path: '/availability', icon: Calendar, desc: 'View open dates' },
-];
-
-const resourcesDropdown = [
-  { name: 'Destination Gambia', path: '/destination', icon: Globe2, desc: 'Explore The Gambia' },
-  { name: 'Plan Your Event', path: '/plan-your-event', icon: ClipboardCheck, desc: 'Event planning guide' },
-  { name: 'Downloads', path: '/downloads', icon: Download, desc: 'Brochures & documents' },
-  { name: 'Careers', path: '/careers', icon: Briefcase, desc: 'Join our team' },
-  { name: 'Procurement', path: '/procurement', icon: FileText, desc: 'Tenders & opportunities' },
-];
+function getDropdownIcon(iconName?: string): LucideIcon {
+  return NAV_ICON_MAP[iconName || ''] || Building2;
+}
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,18 +46,15 @@ export default function Navbar() {
   const [showVenuesMenu, setShowVenuesMenu] = useState(false);
   const [showMobileVenues, setShowMobileVenues] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cmsContent, setCmsContent] = useState<any>(null);
+  const { data: cmsContent } = usePageContent('navbar');
   const location = useLocation();
   const navigate = useNavigate();
   const isHome = location.pathname === '/';
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch CMS content
-  useEffect(() => {
-    fetchNavbarContent().then(data => {
-      if (data) setCmsContent(data);
-    });
-  }, []);
+  const navLinks = resolveLinks(cmsContent?.navLinks, DEFAULT_NAV_LINKS);
+  const venuesDropdown = resolveLinks(cmsContent?.venuesDropdown, DEFAULT_VENUES_DROPDOWN) as NavDropdownLink[];
+  const resourcesDropdown = resolveLinks(cmsContent?.resourcesDropdown, DEFAULT_RESOURCES_DROPDOWN) as NavDropdownLink[];
 
   const brandShortName = cmsContent?.brand?.shortName || 'BICC';
   const brandFullName = cmsContent?.brand?.fullName || 'Banjul International Convention Centre';
@@ -79,9 +89,11 @@ export default function Navbar() {
     }
   };
 
-  const isVenuesActive = ['/venues', '/services', '/availability'].includes(location.pathname);
-  const isResourcesActive = ['/destination', '/plan-your-event', '/downloads', '/careers', '/procurement'].some(p => location.pathname.startsWith(p));
-  
+  const venuesPaths = venuesDropdown.map((item) => item.path);
+  const resourcesPaths = resourcesDropdown.map((item) => item.path);
+  const isVenuesActive = venuesPaths.includes(location.pathname);
+  const isResourcesActive = resourcesPaths.some((path) => location.pathname.startsWith(path));
+
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);
   const [showMobileResources, setShowMobileResources] = useState(false);
   const resourcesRef = useRef<HTMLDivElement>(null);
@@ -143,23 +155,26 @@ export default function Navbar() {
 
               {showVenuesMenu && (
                 <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
-                  {venuesDropdown.map((item) => (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`flex items-start gap-3 px-4 py-3.5 hover:bg-blue-50 transition-colors ${
-                        location.pathname === item.path ? 'bg-blue-50' : ''
-                      }`}
-                    >
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-                        <item.icon size={15} className="text-blue-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-[#1F85A8]">{item.name}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
-                      </div>
-                    </Link>
-                  ))}
+                  {venuesDropdown.map((item) => {
+                    const Icon = getDropdownIcon(item.icon);
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-start gap-3 px-4 py-3.5 hover:bg-blue-50 transition-colors ${
+                          location.pathname === item.path ? 'bg-blue-50' : ''
+                        }`}
+                      >
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+                          <Icon size={15} className="text-blue-700" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-[#1F85A8]">{item.name}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -195,23 +210,26 @@ export default function Navbar() {
 
               {showResourcesMenu && (
                 <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
-                  {resourcesDropdown.map((item) => (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`flex items-start gap-3 px-4 py-3.5 hover:bg-blue-50 transition-colors ${
-                        location.pathname.startsWith(item.path) ? 'bg-blue-50' : ''
-                      }`}
-                    >
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-                        <item.icon size={15} className="text-blue-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-[#1F85A8]">{item.name}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
-                      </div>
-                    </Link>
-                  ))}
+                  {resourcesDropdown.map((item) => {
+                    const Icon = getDropdownIcon(item.icon);
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-start gap-3 px-4 py-3.5 hover:bg-blue-50 transition-colors ${
+                          location.pathname.startsWith(item.path) ? 'bg-blue-50' : ''
+                        }`}
+                      >
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+                          <Icon size={15} className="text-blue-700" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-[#1F85A8]">{item.name}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Quote, Star } from 'lucide-react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
+import SectionHeader from './ui/SectionHeader';
+import ScrollReveal from './motion/ScrollReveal';
 
 interface Testimonial {
   id: string;
@@ -86,28 +88,27 @@ export default function TestimonialsSection() {
   }
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 sm:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-14">
-          <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">Client Testimonials</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">What Our Clients Say</h2>
-          <p className="text-gray-500 mt-4 max-w-2xl mx-auto">
-            Hear from organizations and dignitaries who have experienced excellence at BICC.
-          </p>
-        </div>
+        <SectionHeader
+          eyebrow="Client Testimonials"
+          title="What Our Clients Say"
+          description="Hear from organizations and dignitaries who have experienced excellence at BICC."
+        />
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {testimonials.slice(0, 3).map((testimonial) => (
-            <div key={testimonial.id} className="bg-gray-50 rounded-2xl p-8 relative hover:shadow-lg transition-all">
-              <Quote className="absolute top-6 right-6 text-blue-200" size={48} />
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+          {testimonials.slice(0, 3).map((testimonial, i) => (
+            <ScrollReveal key={testimonial.id} delay={i * 120} animation="fade-up">
+            <div className="elegant-card p-8 relative h-full bg-stone-50/50">
+              <Quote className="absolute top-6 right-6 text-bicc-primary/15" size={48} />
               
               <div className="flex gap-1 mb-4">
                 {Array.from({ length: testimonial.rating }).map((_, i) => (
-                  <Star key={i} size={16} className="fill-yellow-400 text-yellow-400" />
+                  <Star key={i} size={16} className="fill-bicc-gold text-bicc-gold" />
                 ))}
               </div>
 
-              <p className="text-gray-600 mb-6 leading-relaxed relative z-10">
+              <p className="text-slate-600 mb-6 leading-relaxed relative z-10 italic">
                 "{testimonial.content}"
               </p>
 
@@ -116,21 +117,22 @@ export default function TestimonialsSection() {
                   <img 
                     src={testimonial.image} 
                     alt={testimonial.name}
-                    className="w-12 h-12 rounded-full object-cover"
+                    className="w-12 h-12 rounded-full object-cover ring-2 ring-bicc-gold/30"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                  <div className="w-12 h-12 rounded-full bg-bicc-primary flex items-center justify-center text-white font-bold">
                     {testimonial.name.charAt(0)}
                   </div>
                 )}
                 <div>
-                  <div className="font-bold text-[#1F85A8]">{testimonial.name}</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="font-display font-semibold text-slate-900">{testimonial.name}</div>
+                  <div className="text-sm text-slate-500">
                     {testimonial.role || testimonial.position || 'Guest'}, {testimonial.organization}
                   </div>
                 </div>
               </div>
             </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>

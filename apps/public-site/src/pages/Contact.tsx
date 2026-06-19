@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { fetchContactContent, fetchFooterContent, submitContact } from '../api';
+import { useState } from 'react';
+import { submitContact } from '../api';
+import { usePageContent } from '../hooks/usePageContent';
 import { sendContactConfirmationEmail, sendContactNotificationEmail } from '../emailService';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -8,17 +9,8 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
-  const [cmsContent, setCmsContent] = useState<any>(null);
-  const [footerContent, setFooterContent] = useState<any>(null);
-
-  useEffect(() => {
-    fetchContactContent().then(data => {
-      if (data) setCmsContent(data);
-    });
-    fetchFooterContent().then(data => {
-      if (data) setFooterContent(data);
-    });
-  }, []);
+  const { data: cmsContent } = usePageContent('contact');
+  const { data: footerContent } = usePageContent('footer');
 
   const heroEyebrow = cmsContent?.hero?.eyebrow || 'Get in Touch';
   const heroTitle = cmsContent?.hero?.title || 'Contact Us';

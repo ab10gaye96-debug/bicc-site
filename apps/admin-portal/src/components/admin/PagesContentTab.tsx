@@ -43,14 +43,14 @@ export default function PagesContentTab() {
     setLoading(true);
     try {
       const data = await api.fetchContentSection(section);
-      const resolved = data || getDefaultContent(section);
+      const resolved = cloneContent(data || getDefaultContent(section));
       setContent(resolved);
-      setOriginalContent(resolved);
+      setOriginalContent(cloneContent(resolved));
     } catch (error) {
       console.error('Error loading page content:', error);
-      const fallback = getDefaultContent(section);
+      const fallback = cloneContent(getDefaultContent(section));
       setContent(fallback);
-      setOriginalContent(fallback);
+      setOriginalContent(cloneContent(fallback));
     } finally {
       setLoading(false);
     }
@@ -58,12 +58,13 @@ export default function PagesContentTab() {
 
   const updateField = (path: string, value: any) => {
     const keys = path.split('.');
-    const next = { ...content };
-    let current = next as any;
+    const next = cloneContent(content);
+    let current = next;
 
     for (let index = 0; index < keys.length - 1; index += 1) {
-      if (!current[keys[index]]) current[keys[index]] = {};
-      current = current[keys[index]];
+      const key = keys[index];
+      if (!current[key] || typeof current[key] !== 'object') current[key] = {};
+      current = current[key];
     }
 
     current[keys[keys.length - 1]] = value;
@@ -75,7 +76,7 @@ export default function PagesContentTab() {
     setSuccess(false);
     try {
       await api.updateContentSection(activeSection, content);
-      setOriginalContent(content);
+      setOriginalContent(cloneContent(content));
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2500);
     } catch (error) {
@@ -88,7 +89,7 @@ export default function PagesContentTab() {
 
   const handleReset = () => {
     if (confirm('Reset to the last saved values?')) {
-      setContent(originalContent);
+      setContent(cloneContent(originalContent));
     }
   };
 
@@ -97,13 +98,13 @@ export default function PagesContentTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[#1F85A8] mb-2">Page Content Studio</h2>
-        <p className="text-gray-600 text-sm">
+        <h2 className="admin-section-title mb-2">Page Content Studio</h2>
+        <p className="text-slate-600 text-sm">
           Manage the main public page headlines, descriptions, notices, CTA blocks, and search copy.
         </p>
       </div>
 
-      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         {SECTIONS.map((section) => (
           <button
             key={section.id}
@@ -127,15 +128,15 @@ export default function PagesContentTab() {
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between gap-3">
-          <div>
-            <h3 className="font-semibold text-gray-800">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden -mx-1 sm:mx-0">
+        <div className="admin-toolbar">
+          <div className="min-w-0">
+            <h3 className="font-semibold text-slate-800 text-sm sm:text-base">
               Editing: {SECTIONS.find((section) => section.id === activeSection)?.label}
             </h3>
             {hasChanges && <p className="text-xs text-yellow-700 mt-1">Unsaved changes</p>}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             {hasChanges && (
               <button
                 onClick={handleReset}
@@ -166,7 +167,7 @@ export default function PagesContentTab() {
           </div>
         )}
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {loading ? (
             <div className="text-center py-12 text-gray-400">Loading page content...</div>
           ) : (
@@ -429,4 +430,8 @@ function getDefaultContent(section: PageSection) {
   };
 
   return defaults[section];
+}
+
+function cloneContent<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
 }

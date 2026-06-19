@@ -12,8 +12,8 @@ interface SectionConfig {
 
 const SECTIONS: SectionConfig[] = [
   { id: 'home', label: 'Home Page', description: 'Hero section, stats, about preview, CTA' },
-  { id: 'footer', label: 'Footer', description: 'Footer links, contact info, social media' },
-  { id: 'navbar', label: 'Navigation Menu', description: 'Menu items and dropdown links' },
+  { id: 'footer', label: 'Footer', description: 'Brand info, links, contact, social, facilities' },
+  { id: 'navbar', label: 'Navigation Menu', description: 'Menu links, dropdowns, brand, and buttons' },
   { id: 'contact', label: 'Contact Page', description: 'Contact information and office details' },
 ];
 
@@ -34,15 +34,17 @@ export default function ContentManagementTab() {
     setLoading(true);
     try {
       const data = await api.fetchContentSection(section);
-      setContent(data || getDefaultContent(section));
-      setOriginalContent(data || getDefaultContent(section));
+      const resolved = mergeContent(section, data);
+      setContent(resolved);
+      setOriginalContent(cloneContent(resolved));
     } catch (error) {
       console.error('Error loading content:', error);
-      const defaultData = getDefaultContent(section);
-      setContent(defaultData);
-      setOriginalContent(defaultData);
+      const fallback = cloneContent(getDefaultContent(section));
+      setContent(fallback);
+      setOriginalContent(cloneContent(fallback));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSave = async () => {
@@ -50,7 +52,7 @@ export default function ContentManagementTab() {
     setSuccess(false);
     try {
       await api.updateContentSection(activeSection, content);
-      setOriginalContent(content);
+      setOriginalContent(cloneContent(content));
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
@@ -62,7 +64,7 @@ export default function ContentManagementTab() {
 
   const handleReset = () => {
     if (confirm('Reset to last saved version?')) {
-      setContent(originalContent);
+      setContent(cloneContent(originalContent));
     }
   };
 
@@ -76,16 +78,46 @@ export default function ContentManagementTab() {
 
   const updateField = (path: string, value: any) => {
     const keys = path.split('.');
-    const newContent = { ...content };
-    let current: any = newContent;
+    const next = cloneContent(content);
+    let current: any = next;
 
     for (let i = 0; i < keys.length - 1; i++) {
-      if (!current[keys[i]]) current[keys[i]] = {};
-      current = current[keys[i]];
+      const key = keys[i];
+      if (!current[key] || typeof current[key] !== 'object') current[key] = {};
+      current = current[key];
     }
 
     current[keys[keys.length - 1]] = value;
-    setContent(newContent);
+    setContent(next);
+  };
+
+  const addListItem = (path: string, item: Record<string, string>) => {
+    const keys = path.split('.');
+    const next = cloneContent(content);
+    let current: any = next;
+
+    for (const key of keys) {
+      if (!current[key]) current[key] = [];
+      current = current[key];
+    }
+
+    if (!Array.isArray(current)) return;
+    current.push(item);
+    setContent(next);
+  };
+
+  const removeListItem = (path: string, index: number) => {
+    const keys = path.split('.');
+    const next = cloneContent(content);
+    let current: any = next;
+
+    for (const key of keys) {
+      current = current[key];
+    }
+
+    if (!Array.isArray(current)) return;
+    current.splice(index, 1);
+    setContent(next);
   };
 
   const hasChanges = JSON.stringify(content) !== JSON.stringify(originalContent);
@@ -93,18 +125,21 @@ export default function ContentManagementTab() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-[#1F85A8] mb-2">Content Management</h2>
-        <p className="text-gray-600 text-sm">
-          Edit website text content. Changes will appear on the live site immediately after saving.
+        <h2 className="admin-section-title mb-2">Content Management</h2>
+        <p className="text-slate-600 text-sm">
+          Edit website text content. Saved changes appear on the live site automatically.
         </p>
       </div>
 
       {/* Section Selector */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">
         {SECTIONS.map(section => (
           <button
             key={section.id}
-            onClick={() => setActiveSection(section.id)}
+            onClick={() => {
+              if (hasChanges && !confirm('You have unsaved changes. Switch section anyway?')) return;
+              setActiveSection(section.id);
+            }}
             className={`p-4 rounded-xl text-left transition-all ${
               activeSection === section.id
                 ? 'bg-blue-600 text-white shadow-lg'
@@ -125,11 +160,11 @@ export default function ContentManagementTab() {
       </div>
 
       {/* Content Editor */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden -mx-1 sm:mx-0">
         {/* Toolbar */}
-        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h3 className="font-semibold text-gray-800">
+        <div className="admin-toolbar">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+            <h3 className="font-semibold text-slate-800 text-sm sm:text-base">
               Editing: {SECTIONS.find(s => s.id === activeSection)?.label}
             </h3>
             {hasChanges && (
@@ -138,7 +173,7 @@ export default function ContentManagementTab() {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             {hasChanges && (
               <button
                 onClick={handleReset}
@@ -171,14 +206,14 @@ export default function ContentManagementTab() {
         )}
 
         {/* Content Forms */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {loading ? (
             <div className="text-center py-12 text-gray-400">Loading content...</div>
           ) : (
             <>
               {activeSection === 'home' && <HomeContentEditor content={content} updateField={updateField} expandedSections={expandedSections} toggleSection={toggleSection} />}
-              {activeSection === 'footer' && <FooterContentEditor content={content} updateField={updateField} expandedSections={expandedSections} toggleSection={toggleSection} />}
-              {activeSection === 'navbar' && <NavbarContentEditor content={content} updateField={updateField} expandedSections={expandedSections} toggleSection={toggleSection} />}
+              {activeSection === 'footer' && <FooterContentEditor content={content} updateField={updateField} addListItem={addListItem} removeListItem={removeListItem} expandedSections={expandedSections} toggleSection={toggleSection} />}
+              {activeSection === 'navbar' && <NavbarContentEditor content={content} updateField={updateField} addListItem={addListItem} removeListItem={removeListItem} expandedSections={expandedSections} toggleSection={toggleSection} />}
               {activeSection === 'contact' && <ContactContentEditor content={content} updateField={updateField} expandedSections={expandedSections} toggleSection={toggleSection} />}
             </>
           )}
@@ -570,7 +605,7 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
 }
 
 // Footer Editor Component
-function FooterContentEditor({ content, updateField, expandedSections, toggleSection }: any) {
+function FooterContentEditor({ content, updateField, addListItem, removeListItem, expandedSections, toggleSection }: any) {
   return (
     <div className="space-y-6">
       <CollapsibleSection
@@ -634,6 +669,38 @@ function FooterContentEditor({ content, updateField, expandedSections, toggleSec
             placeholder="Contact Us"
           />
         </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Quick Links"
+        id="quickLinks"
+        expanded={expandedSections.includes('quickLinks')}
+        onToggle={toggleSection}
+      >
+        <LinkListEditor
+          links={content.quickLinks || []}
+          basePath="quickLinks"
+          updateField={updateField}
+          addListItem={addListItem}
+          removeListItem={removeListItem}
+          newItemTemplate={{ name: 'New Link', path: '/' }}
+        />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Resource Links"
+        id="resourceLinks"
+        expanded={expandedSections.includes('resourceLinks')}
+        onToggle={toggleSection}
+      >
+        <LinkListEditor
+          links={content.resourceLinks || []}
+          basePath="resourceLinks"
+          updateField={updateField}
+          addListItem={addListItem}
+          removeListItem={removeListItem}
+          newItemTemplate={{ name: 'New Link', path: '/' }}
+        />
       </CollapsibleSection>
 
       <CollapsibleSection
@@ -796,15 +863,63 @@ function FooterContentEditor({ content, updateField, expandedSections, toggleSec
 }
 
 // Navbar Editor Component
-function NavbarContentEditor({ content, updateField, expandedSections, toggleSection }: any) {
+function NavbarContentEditor({ content, updateField, addListItem, removeListItem, expandedSections, toggleSection }: any) {
   return (
     <div className="space-y-6">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          <strong>Note:</strong> Editing menu structure requires advanced configuration. Contact your developer for custom menu changes.
-          You can edit the brand text, menu group labels, and button text here.
+      <CollapsibleSection
+        title="Main Navigation Links"
+        id="navLinks"
+        expanded={expandedSections.includes('navLinks')}
+        onToggle={toggleSection}
+      >
+        <p className="text-xs text-gray-500 mb-4">
+          Order matters: links 1–2 appear before Venues, links 3–5 between dropdowns, and the rest after Resources.
         </p>
-      </div>
+        <LinkListEditor
+          links={content.navLinks || []}
+          basePath="navLinks"
+          updateField={updateField}
+          addListItem={addListItem}
+          removeListItem={removeListItem}
+          newItemTemplate={{ name: 'New Link', path: '/' }}
+        />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Venues Dropdown"
+        id="venuesDropdown"
+        expanded={expandedSections.includes('venuesDropdown')}
+        onToggle={toggleSection}
+      >
+        <LinkListEditor
+          links={content.venuesDropdown || []}
+          basePath="venuesDropdown"
+          updateField={updateField}
+          addListItem={addListItem}
+          removeListItem={removeListItem}
+          newItemTemplate={{ name: 'New Item', path: '/', desc: 'Short description', icon: 'Building2' }}
+          showDescription
+          showIcon
+        />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Resources Dropdown"
+        id="resourcesDropdown"
+        expanded={expandedSections.includes('resourcesDropdown')}
+        onToggle={toggleSection}
+      >
+        <LinkListEditor
+          links={content.resourcesDropdown || []}
+          basePath="resourcesDropdown"
+          updateField={updateField}
+          addListItem={addListItem}
+          removeListItem={removeListItem}
+          newItemTemplate={{ name: 'New Item', path: '/', desc: 'Short description', icon: 'Globe2' }}
+          showDescription
+          showIcon
+        />
+      </CollapsibleSection>
 
       <CollapsibleSection
         title="Brand"
@@ -1110,6 +1225,120 @@ function TextArea({ label, value, onChange, rows, placeholder }: TextAreaProps) 
   );
 }
 
+const NAV_ICON_OPTIONS = [
+  'Building2',
+  'Package',
+  'Calendar',
+  'Globe2',
+  'Download',
+  'Briefcase',
+  'FileText',
+  'ClipboardCheck',
+];
+
+interface LinkListEditorProps {
+  links: Array<{ name?: string; path?: string; desc?: string; icon?: string }>;
+  basePath: string;
+  updateField: (path: string, value: any) => void;
+  addListItem: (path: string, item: Record<string, string>) => void;
+  removeListItem: (path: string, index: number) => void;
+  newItemTemplate: Record<string, string>;
+  showDescription?: boolean;
+  showIcon?: boolean;
+}
+
+function LinkListEditor({
+  links,
+  basePath,
+  updateField,
+  addListItem,
+  removeListItem,
+  newItemTemplate,
+  showDescription = false,
+  showIcon = false,
+}: LinkListEditorProps) {
+  return (
+    <div className="space-y-4">
+      {links.map((link, index) => (
+        <div key={`${basePath}-${index}`} className="border border-gray-200 rounded-lg p-4 space-y-3 bg-gray-50/50">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-500">Link {index + 1}</span>
+            <button
+              type="button"
+              onClick={() => removeListItem(basePath, index)}
+              className="text-xs text-red-600 hover:text-red-800"
+            >
+              Remove
+            </button>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <TextInput
+              label="Label"
+              value={link.name || ''}
+              onChange={(value) => updateField(`${basePath}.${index}.name`, value)}
+              placeholder="About Us"
+            />
+            <TextInput
+              label="Path"
+              value={link.path || ''}
+              onChange={(value) => updateField(`${basePath}.${index}.path`, value)}
+              placeholder="/about"
+            />
+          </div>
+          {showDescription && (
+            <TextInput
+              label="Description"
+              value={link.desc || ''}
+              onChange={(value) => updateField(`${basePath}.${index}.desc`, value)}
+              placeholder="Short description shown in dropdown"
+            />
+          )}
+          {showIcon && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Icon</label>
+              <select
+                value={link.icon || 'Building2'}
+                onChange={(e) => updateField(`${basePath}.${index}.icon`, e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              >
+                {NAV_ICON_OPTIONS.map((icon) => (
+                  <option key={icon} value={icon}>{icon}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => addListItem(basePath, newItemTemplate)}
+        className="w-full py-2.5 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
+      >
+        + Add link
+      </button>
+    </div>
+  );
+}
+
+function mergeContent(section: ContentSection, data: any | null): any {
+  const defaults = getDefaultContent(section);
+  if (!data) return cloneContent(defaults);
+
+  const merged = cloneContent({ ...defaults, ...data });
+  const arrayFields: Partial<Record<ContentSection, string[]>> = {
+    footer: ['quickLinks', 'resourceLinks'],
+    navbar: ['navLinks', 'venuesDropdown', 'resourcesDropdown'],
+  };
+
+  for (const field of arrayFields[section] || []) {
+    if (!Array.isArray(data[field]) || data[field].length === 0) {
+      merged[field] = cloneContent(defaults[field]);
+    }
+  }
+
+  return merged;
+}
+
 // Default content templates
 function getDefaultContent(section: ContentSection): any {
   const defaults: Record<ContentSection, any> = {
@@ -1117,11 +1346,11 @@ function getDefaultContent(section: ContentSection): any {
       hero: {
         mediaType: 'image',
         badge: "The Gambia's Premier MICE Destination",
-        title: 'Banjul International Convention Centre',
-        subtitle: "The Gambia's Premier MICE Destination",
-        description: 'Managing the Sir Dawda Kairaba Jawara International Conference Centre — A world-class venue for conferences, summits, exhibitions, and special events.',
-        primaryButton: 'Book an Event',
-        secondaryButton: 'Explore Venues',
+        title: 'Banjul International',
+        subtitle: 'Convention Centre',
+        description: 'Managing the Sir Dawda Kairaba Jawara International Conference Centre — a world-class facility where diplomacy, innovation, and culture converge on the shores of the Atlantic.',
+        primaryButton: 'Explore Our Venues',
+        secondaryButton: 'Book an Event',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-3.jpg',
         backgroundVideo: '',
         videoPoster: 'https://www.oicgambia.org/media/nav/conference-center-3.jpg',
@@ -1136,9 +1365,9 @@ function getDefaultContent(section: ContentSection): any {
         eyebrow: 'About BICC',
         title: 'Where Excellence Meets African Hospitality',
         highlightText: 'African Hospitality',
-        paragraph1: 'The Banjul International Convention Centre (BICC) manages the Sir Dawda Kairaba Jawara International Conference Centre — The Gambia\'s flagship venue for meetings, conferences, and special events.',
-        paragraph2: 'BICC manages two landmark facilities: the Sir Dawda Kairaba Jawara International Conference Centre (SDKJ-ICC) and the VVIP Lounge at Banjul International Airport.',
-        paragraph3: 'With world-class facilities and dedicated event management services, we bring together innovation, professionalism, and authentic Gambian hospitality.',
+        paragraph1: "The Banjul International Convention Centre (BICC) is The Gambia's national premier event management institution, established by the Government of The Gambia to advance the country's Meetings, Incentives, Conferences and Exhibitions (MICE) industry.",
+        paragraph2: 'BICC manages the Sir Dawda Kairaba Jawara International Conference Center and the VVIP Lounge at the Banjul International Airport, delivering tailored event solutions for summits, conferences, and special events.',
+        paragraph3: '',
         values: {
           value1: 'Excellence',
           value2: 'Innovation',
@@ -1179,7 +1408,7 @@ function getDefaultContent(section: ContentSection): any {
       },
       cta: {
         title: 'Ready to Host Your Next Event?',
-        description: 'Let BICC deliver a world-class experience that exceeds your expectations.',
+        description: "Let BICC deliver a world-class experience. From conferences to galas, we provide comprehensive event management that reflects excellence, innovation, and The Gambia's legendary hospitality.",
         buttonText: 'Book an Event',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-1.jpg',
       },
@@ -1224,8 +1453,45 @@ function getDefaultContent(section: ContentSection): any {
         tag2: 'Innovation',
         tag3: 'Sustainability',
       },
+      quickLinks: [
+        { name: 'About Us', path: '/about' },
+        { name: 'Our Venues', path: '/venues' },
+        { name: 'Services & Packages', path: '/services' },
+        { name: 'Upcoming Events', path: '/events' },
+        { name: 'Photo Gallery', path: '/gallery' },
+        { name: 'Latest News', path: '/news' },
+        { name: 'Contact Us', path: '/contact' },
+      ],
+      resourceLinks: [
+        { name: 'Destination Gambia', path: '/destination' },
+        { name: 'Plan Your Event', path: '/plan-your-event' },
+        { name: 'Downloads Centre', path: '/downloads' },
+        { name: 'Careers', path: '/careers' },
+        { name: 'Procurement & Tenders', path: '/procurement' },
+        { name: 'Book an Event', path: '/booking' },
+      ],
     },
     navbar: {
+      navLinks: [
+        { name: 'Home', path: '/' },
+        { name: 'About', path: '/about' },
+        { name: 'Events', path: '/events' },
+        { name: 'Gallery', path: '/gallery' },
+        { name: 'News', path: '/news' },
+        { name: 'Contact', path: '/contact' },
+      ],
+      venuesDropdown: [
+        { name: 'Our Venues', path: '/venues', icon: 'Building2', desc: 'Explore all event spaces' },
+        { name: 'Services & Packages', path: '/services', icon: 'Package', desc: 'Conference & banquet packages' },
+        { name: 'Check Availability', path: '/availability', icon: 'Calendar', desc: 'View open dates' },
+      ],
+      resourcesDropdown: [
+        { name: 'Destination Gambia', path: '/destination', icon: 'Globe2', desc: 'Explore The Gambia' },
+        { name: 'Plan Your Event', path: '/plan-your-event', icon: 'ClipboardCheck', desc: 'Event planning guide' },
+        { name: 'Downloads', path: '/downloads', icon: 'Download', desc: 'Brochures & documents' },
+        { name: 'Careers', path: '/careers', icon: 'Briefcase', desc: 'Join our team' },
+        { name: 'Procurement', path: '/procurement', icon: 'FileText', desc: 'Tenders & opportunities' },
+      ],
       brand: {
         shortName: 'BICC',
         fullName: 'Banjul International Convention Centre',
@@ -1271,4 +1537,8 @@ function getDefaultContent(section: ContentSection): any {
   };
 
   return defaults[section] || {};
+}
+
+function cloneContent<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
 }

@@ -110,14 +110,14 @@ export default function UserManagementTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-[#1F85A8] mb-2">User Management</h2>
-          <p className="text-gray-600 text-sm">Create, edit, and manage admin users and their roles</p>
+          <h2 className="admin-section-title mb-2">User Management</h2>
+          <p className="text-slate-600 text-sm">Create, edit, and manage admin users and their roles</p>
         </div>
         <button
           onClick={() => setNewUserMode(!newUserMode)}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors w-full sm:w-auto shrink-0"
         >
           <Plus size={16} /> Create User
         </button>
@@ -138,9 +138,9 @@ export default function UserManagementTab() {
       )}
 
       {newUserMode && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
           <h3 className="font-semibold text-blue-900 mb-4">Create New User</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               type="email"
               placeholder="Email"

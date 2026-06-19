@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import { IMAGES } from '../images';
-import { useState, useEffect } from 'react';
-import { fetchFooterContent } from '../api';
+import { usePageContent } from '../hooks/usePageContent';
+import {
+  DEFAULT_FOOTER_QUICK_LINKS,
+  DEFAULT_FOOTER_RESOURCE_LINKS,
+  resolveLinks,
+} from '../contentDefaults';
 
 function FacebookIcon() {
   return <svg viewBox="0 0 24 24" fill="currentColor" className="w-[18px] h-[18px]"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>;
@@ -15,13 +19,7 @@ function LinkedinIcon() {
 }
 
 export default function Footer() {
-  const [cmsContent, setCmsContent] = useState<any>(null);
-
-  useEffect(() => {
-    fetchFooterContent().then(data => {
-      if (data) setCmsContent(data);
-    });
-  }, []);
+  const { data: cmsContent } = usePageContent('footer');
 
   const brandTitle = cmsContent?.brand?.title || 'BICC';
   const brandSubtitle = cmsContent?.brand?.subtitle || 'Banjul International Convention Centre';
@@ -52,13 +50,15 @@ export default function Footer() {
     cmsContent?.facilities?.item5 || '11 Bilateral Meeting Rooms',
     cmsContent?.facilities?.item6 || 'VVIP Airport Lounge',
   ].filter(Boolean);
+  const quickLinks = resolveLinks(cmsContent?.quickLinks, DEFAULT_FOOTER_QUICK_LINKS);
+  const resourceLinks = resolveLinks(cmsContent?.resourceLinks, DEFAULT_FOOTER_RESOURCE_LINKS);
 
   return (
     <footer className="bg-[#1F85A8] text-gray-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-8 xl:gap-10">
           {/* Brand */}
-          <div>
+          <div className="xl:col-span-4">
             <div className="flex items-center gap-3 mb-5">
               <img src={IMAGES.logo} alt="BICC Logo" className="h-12 w-auto rounded-md bg-white p-1 object-contain" />
               <div>
@@ -66,7 +66,7 @@ export default function Footer() {
                 <p className="text-white/70 text-xs">{brandSubtitle}</p>
               </div>
             </div>
-            <p className="text-sm leading-relaxed text-gray-400">
+            <p className="text-sm leading-relaxed text-white/75 max-w-md">
               {brandDescription}
             </p>
             <div className="flex gap-3 mt-6">
@@ -83,48 +83,33 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div>
+          <div className="xl:col-span-2">
             <h4 className="text-white font-semibold text-lg mb-5">{quickLinksLabel}</h4>
             <ul className="space-y-3">
-              {[
-                { name: 'About Us', path: '/about' },
-                { name: 'Our Venues', path: '/venues' },
-                { name: 'Services & Packages', path: '/services' },
-                { name: 'Upcoming Events', path: '/events' },
-                { name: 'Photo Gallery', path: '/gallery' },
-                { name: 'Latest News', path: '/news' },
-                { name: 'Contact Us', path: '/contact' },
-              ].map((link) => (
+              {quickLinks.map((link) => (
                 <li key={link.path}>
-                  <Link to={link.path} className="text-sm hover:text-white transition-colors">{link.name}</Link>
+                  <Link to={link.path} className="text-sm text-white/75 hover:text-white transition-colors">{link.name}</Link>
                 </li>
               ))}
             </ul>
           </div>
 
           {/* Resources */}
-          <div>
+          <div className="xl:col-span-2">
             <h4 className="text-white font-semibold text-lg mb-5">{resourcesLabel}</h4>
             <ul className="space-y-3">
-              {[
-                { name: 'Destination Gambia', path: '/destination' },
-                { name: 'Plan Your Event', path: '/plan-your-event' },
-                { name: 'Downloads Centre', path: '/downloads' },
-                { name: 'Careers', path: '/careers' },
-                { name: 'Procurement & Tenders', path: '/procurement' },
-                { name: 'Book an Event', path: '/booking' },
-              ].map((link) => (
+              {resourceLinks.map((link) => (
                 <li key={link.path}>
-                  <Link to={link.path} className="text-sm hover:text-white transition-colors">{link.name}</Link>
+                  <Link to={link.path} className="text-sm text-white/75 hover:text-white transition-colors">{link.name}</Link>
                 </li>
               ))}
             </ul>
           </div>
 
           {/* Our Facilities */}
-          <div>
+          <div className="xl:col-span-2">
             <h4 className="text-white font-semibold text-lg mb-5">{facilitiesLabel}</h4>
-            <ul className="space-y-3 text-sm">
+            <ul className="space-y-3 text-sm text-white/75">
               {facilities.map((facility, index) => (
                 <li key={index}>{facility}</li>
               ))}
@@ -132,9 +117,9 @@ export default function Footer() {
           </div>
 
           {/* Contact Info */}
-          <div>
+          <div className="xl:col-span-2">
             <h4 className="text-white font-semibold text-lg mb-5">{contactLabel}</h4>
-            <ul className="space-y-4 text-sm">
+            <ul className="space-y-4 text-sm text-white/75">
               <li className="flex items-start gap-3">
                 <MapPin size={18} className="text-blue-400 mt-0.5 shrink-0" />
                 <span className="whitespace-pre-line">{address}</span>
@@ -142,13 +127,13 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <Phone size={18} className="text-white shrink-0 mt-0.5" />
                 <div>
-                  <p>{phone1}</p>
-                  <p>{phone2}</p>
+                  <a href={`tel:${phone1.replace(/\s+/g, '')}`} className="block hover:text-white transition-colors">{phone1}</a>
+                  <a href={`tel:${phone2.replace(/\s+/g, '')}`} className="block hover:text-white transition-colors">{phone2}</a>
                 </div>
               </li>
               <li className="flex items-center gap-3">
                 <Mail size={18} className="text-white shrink-0" />
-                <span>{email}</span>
+                <a href={`mailto:${email}`} className="hover:text-white transition-colors break-all">{email}</a>
               </li>
               <li className="flex items-center gap-3">
                 <Clock size={18} className="text-white shrink-0" />
@@ -161,14 +146,14 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-gray-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <p className="text-sm text-white/70 text-center md:text-left">
             {copyrightText}
           </p>
-          <div className="flex gap-6 text-sm text-gray-500">
+          <div className="flex flex-wrap justify-center md:justify-end gap-x-4 gap-y-2 text-sm text-white/65">
             {bottomTags.map((tag, index) => (
-              <span key={tag}>
-                {index > 0 && <span className="mr-6">•</span>}
+              <span key={tag} className="inline-flex items-center">
+                {index > 0 && <span className="mr-4 text-white/30">•</span>}
                 {tag}
               </span>
             ))}
@@ -178,5 +163,4 @@ export default function Footer() {
     </footer>
   );
 }
-
 

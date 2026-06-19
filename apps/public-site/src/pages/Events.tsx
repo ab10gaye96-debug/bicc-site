@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { fetchEvents, fetchPageContent } from '../api';
+import { fetchEvents } from '../api';
+import { usePageContent } from '../hooks/usePageContent';
 import { useApi } from '../hooks/useApi';
 import { Calendar, MapPin, Clock, Filter, X, Users, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -59,7 +60,7 @@ function EventModal({ event, onClose }: { event: any; onClose: () => void }) {
 
 export default function Events() {
   const { data: events, loading } = useApi(() => fetchEvents(), []);
-  const { data: pageContent } = useApi(() => fetchPageContent('eventsPage'), []);
+  const { data: pageContent } = usePageContent('eventsPage');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [timeFilter, setTimeFilter] = useState<'upcoming' | 'past' | 'all'>('all');
   const [selected, setSelected] = useState<any | null>(null);

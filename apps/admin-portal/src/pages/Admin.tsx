@@ -13,7 +13,7 @@ import {
   AlertCircle, Check, Send, X, Edit, BookOpen, ChevronDown,
   TrendingUp, DollarSign, GripVertical, Download,
   Star, Handshake, Briefcase, FileSpreadsheet, Receipt,
-  ChevronLeft, ChevronRight, StickyNote, List, Settings,
+  ChevronLeft, ChevronRight, StickyNote, List, Settings, ArrowLeft,
 } from 'lucide-react';
 import TestimonialsTab from '../components/admin/TestimonialsTab';
 import PartnersTab from '../components/admin/PartnersTab';
@@ -27,6 +27,8 @@ import ContentManagementTab from '../components/admin/ContentManagementTab';
 import MediaLibraryTab from '../components/admin/MediaLibraryTab';
 import PagesContentTab from '../components/admin/PagesContentTab';
 import UserManagementTab from '../components/admin/UserManagementTab';
+import AdminShell from '../components/admin/layout/AdminShell';
+import EnhancedDashboard from '../components/admin/dashboard/EnhancedDashboard';
 import { IMAGES } from '../images';
 
 type Tab =
@@ -165,8 +167,8 @@ export default function Admin() {
 
   if (!loggedIn) {
     return (
-      <div className="pt-20 min-h-screen bg-gradient-to-br from-slate-100 via-white to-blue-50 flex items-center justify-center px-4">
-        <div className="bg-white/95 backdrop-blur rounded-3xl shadow-xl border border-white p-8 max-w-md w-full">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-bicc-primary-light flex items-center justify-center px-4 py-10">
+        <div className="admin-panel w-full max-w-md p-6 sm:p-8 shadow-admin-lg">
           <div className="text-center mb-8">
             <div className="w-24 h-24 bg-white rounded-3xl shadow-md border border-blue-100 flex items-center justify-center mx-auto mb-4 overflow-hidden">
               <img src={IMAGES.logo} alt="BICC logo" className="w-16 h-16 object-contain" />
@@ -175,7 +177,7 @@ export default function Admin() {
               <Lock size={14} />
               BICC Admin Portal
             </div>
-            <h1 className="text-2xl font-bold text-[#1F85A8]">{showSetup ? 'Create Account' : 'Welcome back'}</h1>
+            <h1 className="text-2xl font-bold text-bicc-primary">{showSetup ? 'Create Account' : 'Welcome back'}</h1>
             <p className="text-gray-500 text-sm mt-2">{showSetup ? 'Set up your Super Admin account' : 'Sign in to manage website content, users, and live updates.'}</p>
           </div>
 
@@ -183,8 +185,8 @@ export default function Admin() {
             <>
               {loginError && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 mb-6"><AlertCircle className="text-red-500 shrink-0" size={16} /><span className="text-red-600 text-sm">{loginError}</span></div>}
               <form onSubmit={handleLogin} className="space-y-4">
-                <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Email / Username</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="admin@bicc.gm" /></div>
-                <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Password</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="••••••••" /></div>
+                <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Email / Username</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} className="admin-input" placeholder="admin@bicc.gm" /></div>
+                <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Password</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="admin-input" placeholder="••••••••" /></div>
                 <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold hover:from-blue-400 hover:to-blue-600 transition-all">Sign In</button>
               </form>
               <div className="mt-4 pt-4 border-t border-gray-200 text-center">
@@ -196,10 +198,10 @@ export default function Admin() {
               {setupError && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 mb-6"><AlertCircle className="text-red-500 shrink-0" size={16} /><span className="text-red-600 text-sm">{setupError}</span></div>}
               {setupSuccess && <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-3 mb-6"><Check className="text-green-500 shrink-0" size={16} /><span className="text-green-600 text-sm">{setupSuccess}</span></div>}
               <form onSubmit={handleSetup} className="space-y-4">
-                <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Email Address</label><input type="email" value={setupEmail} onChange={e => setSetupEmail(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="admin@bicc.gm" /></div>
-                <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Username</label><input type="text" value={setupUsername} onChange={e => setSetupUsername(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="admin" /></div>
-                <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Password</label><input type="password" value={setupPassword} onChange={e => setSetupPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="••••••••" /></div>
-                <div><label className="block text-sm font-medium text-[#1F85A8] mb-1.5">Confirm Password</label><input type="password" value={setupConfirmPassword} onChange={e => setSetupConfirmPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="••••••••" /></div>
+                <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Email Address</label><input type="email" value={setupEmail} onChange={e => setSetupEmail(e.target.value)} className="admin-input" placeholder="admin@bicc.gm" /></div>
+                <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Username</label><input type="text" value={setupUsername} onChange={e => setSetupUsername(e.target.value)} className="admin-input" placeholder="admin" /></div>
+                <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Password</label><input type="password" value={setupPassword} onChange={e => setSetupPassword(e.target.value)} className="admin-input" placeholder="••••••••" /></div>
+                <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Confirm Password</label><input type="password" value={setupConfirmPassword} onChange={e => setSetupConfirmPassword(e.target.value)} className="admin-input" placeholder="••••••••" /></div>
                 <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold hover:from-blue-400 hover:to-blue-600 transition-all">Create Super Admin Account</button>
               </form>
               <div className="mt-4 pt-4 border-t border-gray-200 text-center">
@@ -250,125 +252,38 @@ export default function Admin() {
       : currentRole === 'Editor'
         ? 'Editor'
         : 'Staff';
-  const quickAccessTabs = tabs.filter(tab => ['dashboard', 'pages', 'media', 'bookings', 'contacts'].includes(tab.key));
-
   return (
-    <div className="pt-20 min-h-screen bg-gradient-to-br from-slate-100 via-white to-blue-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="rounded-3xl border border-blue-100 bg-white/90 shadow-sm backdrop-blur p-4 sm:p-6 lg:p-7 mb-6 sm:mb-8 animate-fade-in-up">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0 flex items-start sm:items-center gap-4">
-              <div className="flex w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-white shadow-md border border-blue-100 items-center justify-center overflow-hidden animate-scale-in shrink-0">
-                <img src={IMAGES.logo} alt="BICC logo" className="w-11 h-11 sm:w-14 sm:h-14 object-contain" />
-              </div>
-              <div className="min-w-0">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-3">
-                  <Lock size={14} />
-                  BICC Admin Portal
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-[#1F85A8] leading-tight">Manage content, media, and operations</h1>
-                <div className="mt-3 flex flex-col gap-2 text-sm text-slate-600">
-                  <span className="font-medium">Welcome back, <span className="text-blue-700">{displayName}</span>.</span>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold shadow-sm ${roleBadgeClass}`}>{roleBadgeLabel}</span>
-                    <span className="inline-flex px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-medium">Unread messages: {unreadCount}</span>
-                    <span className="inline-flex px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium">Pending bookings: {pendingBookings}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col sm:items-end gap-3">
-              <p className="text-sm text-slate-500 max-w-md">The navigation has been tightened for better phone, tablet, and desktop viewing, while keeping every section reachable.</p>
-              <button onClick={handleLogout} className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 rounded-xl text-sm font-medium hover:bg-red-100 transition-all border border-red-200 w-full sm:w-auto"><LogOut size={16} /> Logout</button>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] gap-6 lg:gap-8">
-          <aside className="hidden lg:flex lg:flex-col gap-4 bg-white rounded-3xl p-4 shadow-sm border border-slate-200 sticky top-24 self-start max-h-[calc(100vh-7rem)]">
-            <div className="flex items-center gap-3 rounded-2xl bg-slate-50 border border-slate-200 p-3">
-              <div className="w-12 h-12 rounded-2xl bg-white border border-blue-100 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-                <img src={IMAGES.logo} alt="BICC logo" className="w-8 h-8 object-contain" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#1F85A8] truncate">BICC Admin</p>
-                <p className="text-xs text-slate-500 truncate">Navigation and control panel</p>
-              </div>
-            </div>
-            <nav className="space-y-1 overflow-y-auto pr-1">
-              {tabs.map(tab => (
-                <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${activeTab === tab.key ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-700 hover:bg-slate-50'}`}>
-                  <tab.icon size={18} className="shrink-0" />
-                  <span className="flex-1 text-left">{tab.label}</span>
-                  {tab.key === 'contacts' && unreadCount > 0 && <span className={`text-xs w-5 h-5 rounded-full flex items-center justify-center ${activeTab === tab.key ? 'bg-white text-blue-600' : 'bg-red-500 text-white'}`}>{unreadCount > 9 ? '9+' : unreadCount}</span>}
-                  {tab.key === 'bookings' && pendingBookings > 0 && <span className={`text-xs w-5 h-5 rounded-full flex items-center justify-center ${activeTab === tab.key ? 'bg-white text-blue-600' : 'bg-yellow-500 text-white'}`}>{pendingBookings > 9 ? '9+' : pendingBookings}</span>}
-                </button>
-              ))}
-            </nav>
-          </aside>
-
-          <div className="min-w-0">
-            <div className="lg:hidden mb-4 rounded-3xl bg-white border border-slate-200 shadow-sm p-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-white border border-blue-100 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-                  <img src={IMAGES.logo} alt="BICC logo" className="w-8 h-8 object-contain" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[#1F85A8] truncate">BICC Admin Menu</p>
-                  <p className="text-xs text-slate-500">Choose a section below</p>
-                </div>
-              </div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Current section</label>
-              <select
-                value={activeTab}
-                onChange={(e) => setActiveTab(e.target.value as Tab)}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {tabs.map(tab => (
-                  <option key={tab.key} value={tab.key}>{tab.label}</option>
-                ))}
-              </select>
-              <div className="flex flex-wrap gap-2 mt-4">
-                {quickAccessTabs.map(tab => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                      activeTab === tab.key ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    <tab.icon size={14} />
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-6 min-h-[600px]">
-              {activeTab === 'dashboard' && <DashboardTab />}
-              {activeTab === 'settings' && <ContentManagementTab />}
-              {activeTab === 'media' && <MediaLibraryTab />}
-              {activeTab === 'pages' && <PagesContentTab />}
-              {activeTab === 'events' && <EventsTab />}
-              {activeTab === 'news' && <NewsTab />}
-              {activeTab === 'contacts' && <ContactsTab />}
-              {activeTab === 'bookings' && <BookingsTab />}
-              {activeTab === 'gallery' && <GalleryTab />}
-              {activeTab === 'venues' && <VenuesTab />}
-              {activeTab === 'users' && <UserManagementTab />}
-              {activeTab === 'testimonials' && <TestimonialsTab />}
-              {activeTab === 'partners' && <PartnersTab />}
-              {activeTab === 'downloads' && <DownloadsTab />}
-              {activeTab === 'careers' && <CareersTab />}
-              {activeTab === 'tenders' && <TendersTab />}
-              {activeTab === 'subscribers' && <SubscribersTab />}
-              {activeTab === 'pricing' && <PricingTab />}
-              {activeTab === 'quotations' && <QuotationsTab />}
-          </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <AdminShell
+      activeTab={activeTab}
+      onTabChange={(tab) => setActiveTab(tab as Tab)}
+      tabs={tabs}
+      displayName={displayName}
+      roleBadgeClass={roleBadgeClass}
+      roleBadgeLabel={roleBadgeLabel}
+      unreadCount={unreadCount}
+      pendingBookings={pendingBookings}
+      onLogout={handleLogout}
+    >
+      {activeTab === 'dashboard' && <EnhancedDashboard onTabChange={(tab) => setActiveTab(tab as Tab)} />}
+      {activeTab === 'settings' && <ContentManagementTab />}
+      {activeTab === 'media' && <MediaLibraryTab />}
+      {activeTab === 'pages' && <PagesContentTab />}
+      {activeTab === 'events' && <EventsTab />}
+      {activeTab === 'news' && <NewsTab />}
+      {activeTab === 'contacts' && <ContactsTab />}
+      {activeTab === 'bookings' && <BookingsTab />}
+      {activeTab === 'gallery' && <GalleryTab />}
+      {activeTab === 'venues' && <VenuesTab />}
+      {activeTab === 'users' && <UserManagementTab />}
+      {activeTab === 'testimonials' && <TestimonialsTab />}
+      {activeTab === 'partners' && <PartnersTab />}
+      {activeTab === 'downloads' && <DownloadsTab />}
+      {activeTab === 'careers' && <CareersTab />}
+      {activeTab === 'tenders' && <TendersTab />}
+      {activeTab === 'subscribers' && <SubscribersTab />}
+      {activeTab === 'pricing' && <PricingTab />}
+      {activeTab === 'quotations' && <QuotationsTab />}
+    </AdminShell>
   );
 }
 
@@ -459,18 +374,21 @@ function DashboardTab() {
         {auditLogs.length === 0 ? (
           <p className="text-gray-400 text-sm">No audit entries yet.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-4 max-h-[420px] overflow-y-auto space-y-3">
             {auditLogs.map((entry) => (
-              <div key={entry.id} className="bg-gray-50 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-[#1F85A8]">
-                    {(entry.actorDisplayName || entry.actorUsername || 'Admin')} {entry.action} {entry.targetType}
+              <div key={entry.id} className="bg-gray-50 rounded-xl p-4 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#1F85A8] break-words">
+                    {entry.actorDisplayName || entry.actorUsername || 'Admin'}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    {entry.details?.title || entry.details?.name || entry.details?.username || entry.targetId || 'System activity'}
+                  <p className="text-sm text-gray-700 capitalize">
+                    {entry.action} {formatTargetType(entry.targetType)}
+                  </p>
+                  <p className="text-xs text-gray-500 break-words">
+                    {entry.details?.title || entry.details?.name || entry.details?.username || entry.details?.email || entry.targetId || 'System activity'}
                   </p>
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 shrink-0">
                   {entry.createdAt ? new Date(entry.createdAt).toLocaleString() : 'Unknown time'}
                 </div>
               </div>
@@ -480,6 +398,14 @@ function DashboardTab() {
       </div>
     </div>
   );
+}
+
+function formatTargetType(targetType?: string) {
+  if (!targetType) return 'record';
+  return targetType
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[-_]/g, ' ')
+    .trim();
 }
 
 function EventsTab() {
@@ -747,26 +673,34 @@ function ContactsTab() {
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-[#1F85A8] mb-6">Contact Messages</h2>
+      <h2 className="admin-section-title mb-4 sm:mb-6">Contact Messages</h2>
       {contacts.length === 0 ? (
         <div className="text-center py-20"><MessageSquare className="mx-auto text-gray-300 mb-4" size={48} /><p className="text-gray-400">No messages yet.</p></div>
       ) : (
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div className="space-y-2 max-h-[500px] overflow-y-auto">
+        <div className="grid lg:grid-cols-2 gap-4 lg:gap-6">
+          <div className={`space-y-2 max-h-[500px] overflow-y-auto admin-scrollbar ${selected ? 'max-lg:hidden' : ''}`}>
             {contacts.map(msg => (
               <div key={msg.id} onClick={() => { setSelected(msg); handleRead(msg.id); }}
                 className={`p-4 rounded-xl cursor-pointer transition-all ${selected?.id === msg.id ? 'bg-blue-50 border-2 border-blue-300' : msg.read ? 'bg-gray-50 hover:bg-gray-100' : 'bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500'}`}>
-                <div className="flex items-center justify-between mb-1"><span className="font-semibold text-[#1F85A8] text-sm">{msg.name}</span><span className="text-xs text-gray-400">{new Date(msg.created_at).toLocaleDateString()}</span></div>
+                <div className="flex items-center justify-between mb-1 gap-2"><span className="font-semibold text-bicc-primary text-sm truncate">{msg.name}</span><span className="text-xs text-gray-400 shrink-0">{new Date(msg.created_at).toLocaleDateString()}</span></div>
                 <p className="text-sm font-medium text-gray-700">{msg.subject}</p>
                 <p className="text-xs text-gray-500 line-clamp-1">{msg.message}</p>
               </div>
             ))}
           </div>
           {selected ? (
-            <div className="bg-gray-50 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-bold text-[#1F85A8]">{selected.subject}</h3>
-                <div className="flex gap-2">
+            <div className="bg-gray-50 rounded-xl p-4 sm:p-6 max-lg:min-h-[420px]">
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                className="lg:hidden inline-flex items-center gap-2 text-sm text-bicc-primary font-medium mb-4 hover:underline"
+              >
+                <ArrowLeft size={16} />
+                Back to messages
+              </button>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+                <h3 className="font-bold text-bicc-primary">{selected.subject}</h3>
+                <div className="flex gap-2 shrink-0">
                   <button onClick={handleReply} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm font-medium">
                     <Send size={16} />Reply
                   </button>
@@ -845,6 +779,8 @@ function ContactsTab() {
 function GalleryTab() {
   const [gallery, setGallery] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({ caption: '', category: 'Venue' });
 
   const [form, setForm] = useState({ url: '', caption: '', category: 'Venue', mediaType: 'image' as 'image' | 'video' });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -922,6 +858,27 @@ function GalleryTab() {
       await api.deleteGalleryItem?.(id);
       setGallery(await api.fetchGallery());
     }
+  };
+
+  const handleEditGallery = (item: any) => {
+    setEditingId(item.id);
+    setEditForm({ caption: item.caption || '', category: item.category || 'Venue' });
+  };
+
+  const handleSaveGallery = async (id: number) => {
+    try {
+      await api.updateGalleryItem(id, editForm);
+      setGallery(await api.fetchGallery());
+      setEditingId(null);
+    } catch (err) {
+      console.error('Error saving gallery item:', err);
+      alert('Failed to save changes');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditForm({ caption: '', category: 'Venue' });
   };
 
   return (
@@ -1077,6 +1034,8 @@ function GalleryTab() {
         {gallery.map((item) => {
           const isVideo = item.mediaType === 'video' || isVideoUrl(item.url || '');
           const embedUrl = isVideo && isVideoUrl(item.url || '') ? getYouTubeEmbed(item.url) : null;
+          const isEditing = editingId === item.id;
+          
           return (
             <div key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
               <div className="relative h-40 overflow-hidden bg-black">
@@ -1092,16 +1051,71 @@ function GalleryTab() {
                 {isVideo && (
                   <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-0.5 rounded-full font-medium">🎬 Video</div>
                 )}
-                <button
-                  onClick={() => handleDeleteGallery(item.id)}
-                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 size={14} />
-                </button>
+                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => handleEditGallery(item)}
+                    className="p-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    title="Edit"
+                  >
+                    <Edit size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteGallery(item.id)}
+                    className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    title="Delete"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
               <div className="p-3">
-                <p className="font-semibold text-sm text-[#1F85A8] line-clamp-1">{item.caption || '—'}</p>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full inline-block mt-1">{item.category}</span>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editForm.caption}
+                      onChange={(e) => setEditForm({ ...editForm, caption: e.target.value })}
+                      placeholder="Caption"
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <select
+                      value={editForm.category}
+                      onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option>Venue</option>
+                      <option>Plenary Hall</option>
+                      <option>Banquet</option>
+                      <option>Exterior</option>
+                      <option>VVIP Lounge</option>
+                      <option>Hospitality</option>
+                      <option>Control Room</option>
+                      <option>Events</option>
+                      <option>Tour</option>
+                      <option>VIP</option>
+                      <option>Brand</option>
+                    </select>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSaveGallery(item.id)}
+                        className="flex-1 px-2 py-1 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="flex-1 px-2 py-1 bg-gray-300 text-gray-700 rounded text-xs font-medium hover:bg-gray-400"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="font-semibold text-sm text-[#1F85A8] line-clamp-1">{item.caption || '—'}</p>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full inline-block mt-1">{item.category}</span>
+                  </>
+                )}
               </div>
             </div>
           );
@@ -1316,9 +1330,9 @@ function BookingsTab() {
       ) : view === 'calendar' ? (
         <BookingCalendar bookings={reservedCalendarBookings} statusColor={statusColor} onSelect={(b) => { setSelected(b); setView('list'); }} />
       ) : (
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-4 lg:gap-6">
           {/* List */}
-          <div className="lg:col-span-1 space-y-2 max-h-[600px] overflow-y-auto">
+          <div className={`lg:col-span-1 space-y-2 max-h-[600px] overflow-y-auto admin-scrollbar ${selected ? 'max-lg:hidden' : ''}`}>
             {filteredBookings.length === 0 && (
               <p className="text-sm text-gray-400 text-center py-6">No bookings with status "{statusFilter}".</p>
             )}
@@ -1345,8 +1359,16 @@ function BookingsTab() {
 
           {/* Detail */}
           {selected ? (
-            <div className="lg:col-span-2 bg-gray-50 rounded-xl p-4 sm:p-6 overflow-y-auto max-h-[600px]">
-              <div className="flex items-start justify-between mb-5">
+            <div className="lg:col-span-2 bg-gray-50 rounded-xl p-4 sm:p-6 overflow-y-auto max-h-[600px] max-lg:min-h-[420px]">
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                className="lg:hidden inline-flex items-center gap-2 text-sm text-bicc-primary font-medium mb-4 hover:underline"
+              >
+                <ArrowLeft size={16} />
+                Back to bookings
+              </button>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
                 <div>
                   <h3 className="font-bold text-[#1F85A8] text-lg">{selected.institutionName}</h3>
                   {selected.refNumber && <p className="text-xs font-mono text-blue-500">{selected.refNumber}</p>}

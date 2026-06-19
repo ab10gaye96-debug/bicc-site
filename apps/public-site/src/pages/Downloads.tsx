@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Download, FileText, FolderOpen, Search } from 'lucide-react';
-import { fetchPageContent } from '../api';
+import { usePageContent } from '../hooks/usePageContent';
 import { useApi } from '../hooks/useApi';
 import SEO from '../components/SEO';
 import { IMAGES } from '../images';
@@ -96,7 +96,7 @@ const CATEGORIES = [
 
 export default function Downloads() {
   const { data: dbDownloads } = useApi(fetchDownloads, []);
-  const { data: pageContent } = useApi(() => fetchPageContent('downloadsPage'), []);
+  const { data: pageContent } = usePageContent('downloadsPage');
   const downloads = (dbDownloads && dbDownloads.length > 0)
     ? dbDownloads.filter((item: any) => item.active !== false)
     : FALLBACK_DOWNLOADS;

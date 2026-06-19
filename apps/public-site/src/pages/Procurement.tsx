@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FileText, Clock, Calendar, Download, Search, AlertCircle } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
-import { fetchPageContent } from '../api';
+import { usePageContent } from '../hooks/usePageContent';
 import SEO from '../components/SEO';
 import { IMAGES } from '../images';
 
@@ -73,7 +73,7 @@ const TYPES = ['All', 'Goods', 'Services', 'Works'];
 
 export default function Procurement() {
   const { data: dbTenders } = useApi(fetchTenders, []);
-  const { data: pageContent } = useApi(() => fetchPageContent('procurementPage'), []);
+  const { data: pageContent } = usePageContent('procurementPage');
   const tenders = (dbTenders && dbTenders.length > 0)
     ? dbTenders.filter((item: any) => item.active !== false)
     : FALLBACK_TENDERS;
