@@ -1,72 +1,37 @@
 import { Link } from 'react-router-dom';
-import { Plane, Hotel, Briefcase, Palmtree, ArrowRight, Globe2, Users, Shield, TrendingUp } from 'lucide-react';
-import { IMAGES } from '../images';
+import { ArrowRight, Globe2, Users, Shield, TrendingUp, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO';
+import PageHero from '../components/ui/PageHero';
+import OfficialResourcesGrid from '../components/destination/OfficialResourcesGrid';
+import DestinationImage from '../components/destination/DestinationImage';
+import ExternalSiteLink from '../components/destination/ExternalSiteLink';
+import {
+  DESTINATION_HERO_IMAGE,
+  DESTINATION_SECTIONS,
+  OFFICIAL_RESOURCES,
+} from '../data/destinationData';
 
 export default function DestinationGambia() {
-  const sections = [
-    {
-      title: 'Why The Gambia',
-      description: 'Discover what makes The Gambia the perfect MICE destination',
-      icon: Globe2,
-      path: '/destination/why-gambia',
-      color: 'bg-blue-500',
-    },
-    {
-      title: 'Attractions',
-      description: 'Explore beaches, nature reserves, cultural and historical sites',
-      icon: Palmtree,
-      path: '/destination/attractions',
-      color: 'bg-green-500',
-    },
-    {
-      title: 'Hotels & Accommodation',
-      description: 'Browse partner hotels and accommodation options',
-      icon: Hotel,
-      path: '/destination/hotels',
-      color: 'bg-purple-500',
-    },
-    {
-      title: 'Travel Information',
-      description: 'Visa, airport, currency, health and safety information',
-      icon: Plane,
-      path: '/destination/travel-info',
-      color: 'bg-orange-500',
-    },
-    {
-      title: 'Investment Opportunities',
-      description: 'Conference tourism and business investment resources',
-      icon: Briefcase,
-      path: '/destination/investment',
-      color: 'bg-red-500',
-    },
-  ];
-
   return (
-    <div className="pt-20">
+    <div>
       <SEO
         title="Destination Gambia — MICE Destination Overview"
         description="Discover The Gambia as a premier MICE destination. Explore attractions, hotels, travel info, and investment opportunities."
       />
 
-      {/* Hero */}
-      <section className="relative py-32 bg-gradient-to-br from-[#1F85A8] to-blue-700">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${IMAGES.heroBg})` }} />
-        <div className="absolute inset-0 bg-black/30" />
-        <div className="relative max-w-5xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/30 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
-            <Globe2 size={16} />
-            Gateway to West Africa
-          </div>
-          <h1 className="text-4xl sm:text-6xl font-bold text-white mb-6 leading-tight">
-            Destination <span className="text-blue-300">Gambia</span>
-          </h1>
-          <p className="text-xl text-gray-200 max-w-3xl mx-auto mb-10 leading-relaxed">
-            The Smiling Coast of Africa awaits. Discover why The Gambia is West Africa's premier destination for conferences, meetings, and events.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Gateway to West Africa"
+        title="Destination Gambia"
+        description="The Smiling Coast of Africa awaits. Discover why The Gambia is West Africa's premier destination for conferences, meetings, and events."
+        backgroundImage={DESTINATION_HERO_IMAGE}
+        compact
+      >
+        <ExternalSiteLink
+          href="https://visitthegambia.com/"
+          label="Official tourism site — Visit The Gambia"
+          className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
+        />
+      </PageHero>
 
       {/* Quick Stats */}
       <section className="py-16 bg-white border-b">
@@ -99,29 +64,48 @@ export default function DestinationGambia() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {sections.map((section) => (
-              <Link
+            {DESTINATION_SECTIONS.map((section) => (
+              <div
                 key={section.path}
-                to={section.path}
-                className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
+                className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
               >
-                <div className={`${section.color} p-6 flex items-center justify-center h-32`}>
-                  <section.icon className="text-white" size={48} />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-[#1F85A8] mb-2 group-hover:text-blue-600 transition-colors">
-                    {section.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-4">{section.description}</p>
-                  <div className="inline-flex items-center gap-2 text-blue-600 font-semibold text-sm group-hover:gap-3 transition-all">
-                    Learn More <ArrowRight size={16} />
+                <Link to={section.path} className="block">
+                  <DestinationImage
+                    src={section.image}
+                    alt={section.title}
+                    className="w-full aspect-[16/10] object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                  />
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-[#1F85A8] mb-2 group-hover:text-blue-600 transition-colors">
+                      {section.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-4">{section.description}</p>
+                    <div className="inline-flex items-center gap-2 text-blue-600 font-semibold text-sm group-hover:gap-3 transition-all">
+                      Explore section <ArrowRight size={16} />
+                    </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+                {section.externalUrl && (
+                  <div className="px-6 pb-6 mt-auto pt-0 border-t border-gray-100">
+                    <a
+                      href={section.externalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-blue-600 mt-4 transition-colors"
+                    >
+                      <ExternalLink size={13} />
+                      {section.externalLabel}
+                    </a>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
       </section>
+
+      <OfficialResourcesGrid resources={OFFICIAL_RESOURCES} />
 
       {/* CTA */}
       <section className="py-20 bg-gradient-to-r from-[#1F85A8] to-blue-700 text-white">
@@ -130,12 +114,22 @@ export default function DestinationGambia() {
           <p className="text-xl text-gray-200 mb-10 max-w-2xl mx-auto">
             Plan your event at the Banjul International Convention Centre and discover the warmth of African hospitality.
           </p>
-          <Link
-            to="/booking"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-[#1F85A8] rounded-xl font-bold text-lg hover:bg-gray-100 transition-all shadow-lg"
-          >
-            Book Your Event <ArrowRight size={20} />
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/booking"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#1F85A8] rounded-xl font-bold text-lg hover:bg-gray-100 transition-all shadow-lg"
+            >
+              Book Your Event <ArrowRight size={20} />
+            </Link>
+            <a
+              href="https://visitthegambia.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white text-white rounded-xl font-bold hover:bg-white/10 transition-all"
+            >
+              Visit The Gambia <ExternalLink size={18} />
+            </a>
+          </div>
         </div>
       </section>
     </div>

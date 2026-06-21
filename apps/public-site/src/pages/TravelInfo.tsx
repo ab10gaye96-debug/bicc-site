@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Plane, FileText, DollarSign, Shield, AlertCircle, CheckCircle, ArrowRight, Info } from 'lucide-react';
-import { IMAGES } from '../images';
+import { Plane, FileText, DollarSign, Shield, AlertCircle, CheckCircle, ArrowRight, Info, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO';
+import PageHero from '../components/ui/PageHero';
+import OfficialResourcesGrid from '../components/destination/OfficialResourcesGrid';
+import ExternalSiteLink from '../components/destination/ExternalSiteLink';
+import { OFFICIAL_RESOURCES } from '../data/destinationData';
 
 export default function TravelInfo() {
   const visaInfo = [
@@ -35,30 +38,26 @@ export default function TravelInfo() {
   ];
 
   return (
-    <div className="pt-20">
+    <div>
       <SEO
         title="Travel Information — The Gambia"
         description="Essential travel information for visiting The Gambia: visa requirements, airport info, currency, health, and safety tips."
       />
 
-      {/* Hero */}
-      <section className="relative py-24 bg-gradient-to-br from-orange-600 to-red-600">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${IMAGES.conferenceExterior})` }} />
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative max-w-5xl mx-auto px-4 text-center">
-          <Link to="/destination" className="inline-flex items-center gap-2 text-orange-300 hover:text-white mb-6 transition-colors">
-            <ArrowRight size={16} className="rotate-180" />
-            <span className="text-sm font-medium">Back to Destination Gambia</span>
+      <PageHero
+        eyebrow="Destination Gambia"
+        title="Travel Information"
+        description="Everything you need to know to plan your visit to The Gambia"
+        backgroundImage="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Banjul_International_Airport_%28The_Gambia%29.jpg/1280px-Banjul_International_Airport_%28The_Gambia%29.jpg"
+        compact
+      >
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <Link to="/destination" className="inline-flex items-center gap-2 text-blue-200 hover:text-white text-sm font-medium transition-colors">
+            <ArrowRight size={16} className="rotate-180" /> Back to Destination Gambia
           </Link>
-          <h1 className="text-4xl sm:text-6xl font-bold text-white mb-6 leading-tight">
-            Travel <span className="text-orange-300">Information</span>
-          </h1>
-          <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
-            Everything you need to know to plan your visit to The Gambia
-          </p>
+          <ExternalSiteLink href="https://gambia.gov.gm/immigration-and-visas/" label="Official visa information" className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white" />
         </div>
-      </section>
+      </PageHero>
 
       {/* Visa Requirements */}
       <section className="py-20 bg-white">
@@ -89,12 +88,13 @@ export default function TravelInfo() {
               <Info className="text-blue-600 shrink-0 mt-1" size={20} />
               <div>
                 <h3 className="font-bold text-blue-900 mb-2">Important Notes</h3>
-                <ul className="space-y-2 text-sm text-blue-800">
+                <ul className="space-y-2 text-sm text-blue-800 mb-4">
                   <li>• Passport must be valid for at least 6 months from arrival date</li>
-                  <li>• Visa-on-arrival fee: Approximately $20-$50 USD (varies by nationality)</li>
+                  <li>• Visa-on-arrival fee: Approximately $20–$50 USD (varies by nationality)</li>
                   <li>• Keep a copy of your passport and visa at all times</li>
                   <li>• For official delegations, contact the Ministry of Foreign Affairs for diplomatic arrangements</li>
                 </ul>
+                <ExternalSiteLink href="https://gambia.gov.gm/immigration-and-visas/" label="Official immigration & visa portal" />
               </div>
             </div>
           </div>
@@ -111,6 +111,10 @@ export default function TravelInfo() {
             <div>
               <h2 className="text-3xl font-bold text-[#1F85A8]">Airport Information</h2>
               <p className="text-gray-600">Banjul International Airport (BJL)</p>
+              <a href="https://gcaa.aero/banjul-international-airport/" target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 mt-2">
+                Official GCAA airport site <ExternalLink size={14} />
+              </a>
             </div>
           </div>
 
@@ -283,6 +287,12 @@ export default function TravelInfo() {
           </div>
         </div>
       </section>
+
+      <OfficialResourcesGrid
+        resources={OFFICIAL_RESOURCES.filter((r) => ['Travel', 'Tourism'].includes(r.category))}
+        title="Official Travel Resources"
+        description="Government and aviation authority links for accurate travel information"
+      />
 
       {/* CTA */}
       <section className="py-20 bg-gradient-to-r from-orange-600 to-red-600 text-white">

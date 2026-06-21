@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Shield, Heart, Plane, Building2, Users, Globe2, ArrowRight, CheckCircle } from 'lucide-react';
+import { Shield, Heart, Plane, Building2, Users, Globe2, ArrowRight, CheckCircle, ExternalLink } from 'lucide-react';
 import { IMAGES } from '../images';
 import SEO from '../components/SEO';
+import PageHero from '../components/ui/PageHero';
+import DestinationImage from '../components/destination/DestinationImage';
+import ExternalSiteLink from '../components/destination/ExternalSiteLink';
 
 export default function WhyGambia() {
   const reasons = [
@@ -58,31 +61,34 @@ export default function WhyGambia() {
     { label: 'Annual Tourist Arrivals', value: '200K+' },
   ];
 
+  const reasonImages = [
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Banjul_City%2C_The_Gambia.jpg/800px-Banjul_City%2C_The_Gambia.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Beach_in_Bijilo%2C_Gambia.JPG/800px-Beach_in_Bijilo%2C_Gambia.JPG',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Banjul_International_Airport_%28The_Gambia%29.jpg/800px-Banjul_International_Airport_%28The_Gambia%29.jpg',
+    IMAGES.conferenceHall,
+  ];
+
   return (
-    <div className="pt-20">
+    <div>
       <SEO
         title="Why The Gambia — Premier MICE Destination"
-        description="Discover why The Gambia is West Africa's leading destination for conferences, meetings, and events. Political stability, legendary hospitality, and world-class infrastructure."
+        description="Discover why The Gambia is West Africa's leading destination for conferences, meetings, and events."
       />
 
-      {/* Hero */}
-      <section className="relative py-24 bg-gradient-to-br from-[#1F85A8] to-blue-700">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${IMAGES.conferenceExterior})` }} />
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative max-w-5xl mx-auto px-4 text-center">
-          <Link to="/destination" className="inline-flex items-center gap-2 text-blue-300 hover:text-white mb-6 transition-colors">
-            <ArrowRight size={16} className="rotate-180" />
-            <span className="text-sm font-medium">Back to Destination Gambia</span>
+      <PageHero
+        eyebrow="Destination Gambia"
+        title="Why The Gambia?"
+        description="A premier MICE destination combining political stability, world-class infrastructure, and the warmth of African hospitality."
+        backgroundImage={IMAGES.conferenceExterior}
+        compact
+      >
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <Link to="/destination" className="inline-flex items-center gap-2 text-blue-200 hover:text-white text-sm font-medium transition-colors">
+            <ArrowRight size={16} className="rotate-180" /> Back to Destination Gambia
           </Link>
-          <h1 className="text-4xl sm:text-6xl font-bold text-white mb-6 leading-tight">
-            Why The <span className="text-blue-300">Gambia?</span>
-          </h1>
-          <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
-            A premier MICE destination combining political stability, world-class infrastructure, and the warmth of African hospitality.
-          </p>
+          <ExternalSiteLink href="https://visitthegambia.com/" label="Visit The Gambia" className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white" />
         </div>
-      </section>
+      </PageHero>
 
       {/* Stats Bar */}
       <section className="bg-white border-b">
@@ -125,8 +131,8 @@ export default function WhyGambia() {
                   </ul>
                 </div>
                 <div className={i % 2 === 1 ? 'lg:order-1' : ''}>
-                  <img
-                    src={i === 0 ? IMAGES.conferenceHall : i === 1 ? IMAGES.banquetHall : i === 2 ? IMAGES.conferenceExterior : IMAGES.vvipLounge}
+                  <DestinationImage
+                    src={reasonImages[i]}
                     alt={reason.title}
                     className="rounded-2xl shadow-xl w-full aspect-[4/3] object-cover"
                   />
@@ -190,12 +196,13 @@ export default function WhyGambia() {
             >
               Book an Event <ArrowRight size={20} />
             </Link>
-            <Link
-              to="/contact"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white text-white rounded-xl font-bold hover:bg-white/10 transition-all"
-            >
+            <Link to="/contact" className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white text-white rounded-xl font-bold hover:bg-white/10 transition-all">
               Contact Us
             </Link>
+            <a href="https://visitthegambia.com/" target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/60 text-white rounded-xl font-bold hover:bg-white/10 transition-all">
+              Visit The Gambia <ExternalLink size={18} />
+            </a>
           </div>
         </div>
       </section>

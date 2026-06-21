@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Briefcase, TrendingUp, Building2, Users, Globe2, ArrowRight, CheckCircle, FileText, Phone, Mail } from 'lucide-react';
+import { Briefcase, TrendingUp, Building2, Users, Globe2, ArrowRight, CheckCircle, Phone, Mail, ExternalLink } from 'lucide-react';
 import { IMAGES } from '../images';
 import SEO from '../components/SEO';
+import PageHero from '../components/ui/PageHero';
+import DestinationImage from '../components/destination/DestinationImage';
+import ExternalSiteLink from '../components/destination/ExternalSiteLink';
+import { INVESTMENT_RESOURCES } from '../data/destinationData';
 
 export default function Investment() {
   const sectors = [
@@ -47,37 +51,35 @@ export default function Investment() {
     { title: 'Duty Exemptions', description: 'Import duty relief for capital equipment' },
   ];
 
-  const resources = [
-    { name: 'Gambia Investment and Export Promotion Agency (GIEPA)', description: 'One-stop shop for investors', contact: 'www.giepa.gm', icon: Globe2 },
-    { name: 'Ministry of Tourism & Culture', description: 'Tourism sector development', contact: '+220 446 2491', icon: Phone },
-    { name: 'Gambia Chamber of Commerce', description: 'Business networking and support', contact: 'www.gcc.gm', icon: Building2 },
+  const resources = INVESTMENT_RESOURCES;
+
+  const sectorImages = [
+    'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Senegambia_area%2C_Gambia.jpg/800px-Senegambia_area%2C_Gambia.jpg',
+    'https://www.oicgambia.org/media/nav/conference-center-2.jpg',
   ];
 
   return (
-    <div className="pt-20">
+    <div>
       <SEO
         title="Investment Opportunities in The Gambia"
         description="Explore investment opportunities in The Gambia's growing MICE and tourism sectors."
       />
 
-      {/* Hero */}
-      <section className="relative py-24 bg-gradient-to-br from-blue-600 to-green-600">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${IMAGES.conferenceExterior})` }} />
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative max-w-5xl mx-auto px-4 text-center">
-          <Link to="/destination" className="inline-flex items-center gap-2 text-blue-300 hover:text-white mb-6 transition-colors">
-            <ArrowRight size={16} className="rotate-180" />
-            <span className="text-sm font-medium">Back to Destination Gambia</span>
+      <PageHero
+        eyebrow="Destination Gambia"
+        title="Investment Opportunities"
+        description="Discover business opportunities in The Gambia's expanding MICE and tourism sectors"
+        backgroundImage="https://www.oicgambia.org/media/nav/conference-center-4.jpg"
+        compact
+      >
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <Link to="/destination" className="inline-flex items-center gap-2 text-blue-200 hover:text-white text-sm font-medium transition-colors">
+            <ArrowRight size={16} className="rotate-180" /> Back to Destination Gambia
           </Link>
-          <h1 className="text-4xl sm:text-6xl font-bold text-white mb-6 leading-tight">
-            Investment <span className="text-green-300">Opportunities</span>
-          </h1>
-          <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
-            Discover business opportunities in The Gambia's expanding MICE and tourism sectors
-          </p>
+          <ExternalSiteLink href="https://giepa.gm/" label="GIEPA Official Site" className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white" />
         </div>
-      </section>
+      </PageHero>
 
       {/* Why Invest */}
       <section className="py-20 bg-white">
@@ -140,8 +142,12 @@ export default function Investment() {
                     ))}
                   </ul>
                 </div>
-                <div className={`${i % 2 === 1 ? 'lg:order-1' : ''} bg-gradient-to-br ${i === 0 ? 'from-blue-500 to-blue-600' : i === 1 ? 'from-green-500 to-green-600' : 'from-purple-500 to-purple-600'} rounded-2xl p-12 flex items-center justify-center`}>
-                  <sector.icon className="text-white" size={120} />
+                <div className={`${i % 2 === 1 ? 'lg:order-1' : ''} rounded-2xl overflow-hidden shadow-lg`}>
+                  <DestinationImage
+                    src={sectorImages[i]}
+                    alt={sector.title}
+                    className="w-full aspect-[4/3] object-cover"
+                  />
                 </div>
               </div>
             ))}
@@ -184,17 +190,34 @@ export default function Investment() {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
-            {resources.map((resource, i) => (
-              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
-                <div className="bg-[#1F85A8] p-8 flex items-center justify-center">
-                  <resource.icon className="text-white" size={48} />
+            {resources.map((resource) => (
+              <a
+                key={resource.url}
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all flex flex-col"
+              >
+                <DestinationImage
+                  src={resource.image || IMAGES.conferenceExterior}
+                  alt={resource.name}
+                  className="w-full aspect-[16/9] object-cover"
+                />
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="text-lg font-bold text-[#1F85A8] group-hover:text-blue-700">{resource.name}</h3>
+                    <ExternalLink size={16} className="text-gray-400 group-hover:text-blue-600 shrink-0" />
+                  </div>
+                  <p className="text-gray-600 text-sm mb-4 flex-1">{resource.description}</p>
+                  {resource.phone && <p className="text-sm text-gray-500">{resource.phone}</p>}
+                  {resource.email && (
+                    <p className="text-sm text-blue-600 mt-1">{resource.email}</p>
+                  )}
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 mt-4">
+                    Visit website <ArrowRight size={14} />
+                  </span>
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-[#1F85A8] mb-2">{resource.name}</h3>
-                  <p className="text-gray-600 mb-4">{resource.description}</p>
-                  <div className="text-sm text-blue-600 font-medium">{resource.contact}</div>
-                </div>
-              </div>
+              </a>
             ))}
           </div>
         </div>
