@@ -3,6 +3,7 @@ import { Download, FileText, FolderOpen, Search } from 'lucide-react';
 import { usePageContent } from '../hooks/usePageContent';
 import { useApi } from '../hooks/useApi';
 import SEO from '../components/SEO';
+import HeroBackgroundSlideshow from '../components/ui/HeroBackgroundSlideshow';
 import { IMAGES } from '../images';
 
 // Fetch downloads from Firestore
@@ -120,7 +121,7 @@ export default function Downloads() {
   };
 
   return (
-    <div className="pt-20">
+    <div className="pt-36">
       <SEO
         title="Downloads Centre — BICC Documents & Resources"
         description={pageContent?.hero?.description || 'Download BICC brochures, floor plans, technical specifications, and event planning resources.'}
@@ -128,9 +129,15 @@ export default function Downloads() {
 
       {/* Hero */}
       <section className="relative py-24 bg-[#1F85A8]">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${pageContent?.hero?.backgroundImage || IMAGES.conferenceHall})` }} />
-        <div className="absolute inset-0 bg-black/40" />
+        <HeroBackgroundSlideshow
+          backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.conferenceHall}
+          images={Array.isArray(pageContent?.hero?.backgroundImages) ? pageContent.hero.backgroundImages.filter(Boolean) : []}
+          intervalSeconds={Math.max(1, Number(pageContent?.hero?.slideIntervalSeconds) || 5)}
+          imageClassName="absolute inset-0 bg-cover bg-center opacity-20 motion-safe:animate-ken-burns"
+          showIndicators
+        >
+          <div className="absolute inset-0 bg-black/40" />
+        </HeroBackgroundSlideshow>
         <div className="relative max-w-5xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/30 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
             <FileText size={16} />

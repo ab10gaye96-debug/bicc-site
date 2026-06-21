@@ -6,6 +6,7 @@ import SEO from '../components/SEO';
 import { IMAGES } from '../images';
 import { fetchVacancies } from '../api';
 import { usePageContent } from '../hooks/usePageContent';
+import HeroBackgroundSlideshow from '../components/ui/HeroBackgroundSlideshow';
 
 // Fallback data
 const FALLBACK_VACANCIES = [
@@ -141,7 +142,7 @@ export default function Careers() {
   };
 
   return (
-    <div className="pt-20">
+    <div className="pt-36">
       <SEO
         title="Careers at BICC — Join Our Team"
         description={pageContent?.hero?.description || 'Explore career opportunities at the Banjul International Convention Centre. View current vacancies and apply online.'}
@@ -149,9 +150,15 @@ export default function Careers() {
 
       {/* Hero */}
       <section className="relative py-24 bg-gradient-to-br from-purple-600 to-blue-600">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${pageContent?.hero?.backgroundImage || IMAGES.conferenceHall})` }} />
-        <div className="absolute inset-0 bg-black/40" />
+        <HeroBackgroundSlideshow
+          backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.conferenceHall}
+          images={Array.isArray(pageContent?.hero?.backgroundImages) ? pageContent.hero.backgroundImages.filter(Boolean) : []}
+          intervalSeconds={Math.max(1, Number(pageContent?.hero?.slideIntervalSeconds) || 5)}
+          imageClassName="absolute inset-0 bg-cover bg-center opacity-20 motion-safe:animate-ken-burns"
+          showIndicators
+        >
+          <div className="absolute inset-0 bg-black/40" />
+        </HeroBackgroundSlideshow>
         <div className="relative max-w-5xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/30 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
             <Briefcase size={16} />

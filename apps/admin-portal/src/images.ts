@@ -18,7 +18,7 @@ export const IMAGES = {
   biccSigning: 'https://www.voicegambia.com/wp-content/uploads/2025/11/aa-8.png',
   oicSecretariat: 'https://thepoint.gm/assets/Featured-Articles/OIC-secretariat__ScaleMaxWidthWzcwMF0.jpg',
 
-  // Actual BICC logo asset based on the logo you shared
-  logo: '/images/bicc-logo.jpg',
+  // Admin branding logo
+  logo: '/images/admin-logo.jpg',
 };
 

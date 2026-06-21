@@ -4,6 +4,7 @@ import { usePageContent } from '../hooks/usePageContent';
 import { sendContactConfirmationEmail, sendContactNotificationEmail } from '../emailService';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from 'lucide-react';
 import SEO from '../components/SEO';
+import HeroBackgroundSlideshow from '../components/ui/HeroBackgroundSlideshow';
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
@@ -16,6 +17,8 @@ export default function Contact() {
   const heroTitle = cmsContent?.hero?.title || 'Contact Us';
   const heroDescription = cmsContent?.hero?.description || "Have a question or want to book an event? We'd love to hear from you.";
   const heroBackgroundImage = cmsContent?.hero?.backgroundImage || '/images/vvip-lounge.jpg';
+  const heroBackgroundImages = Array.isArray(cmsContent?.hero?.backgroundImages) ? cmsContent.hero.backgroundImages.filter(Boolean) : [];
+  const heroSlideIntervalSeconds = Math.max(1, Number(cmsContent?.hero?.slideIntervalSeconds) || 5);
   const officeTitle = cmsContent?.office?.title || 'Contact Information';
   const contactItems = [
     { icon: MapPin, title: 'Location', text: cmsContent?.office?.address || 'Sir Dawda Kairaba Jawara International Conference Centre, Bijilo, The Gambia' },
@@ -57,14 +60,20 @@ export default function Contact() {
   };
 
   return (
-    <div className="pt-20">
+    <div className="pt-36">
       <SEO
         title="Contact Us"
         description="Get in touch with the Banjul International Convention Centre. Call us, email us, or fill in the contact form for event inquiries and bookings."
       />
       <section className="relative py-24 bg-[#1F85A8]">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroBackgroundImage})` }} />
-        <div className="absolute inset-0 bg-black/40" />
+        <HeroBackgroundSlideshow
+          backgroundImage={heroBackgroundImage}
+          images={heroBackgroundImages}
+          intervalSeconds={heroSlideIntervalSeconds}
+          showIndicators
+        >
+          <div className="absolute inset-0 bg-black/40" />
+        </HeroBackgroundSlideshow>
         <div className="relative max-w-4xl mx-auto px-4 text-center">
           <span className="text-blue-400 font-semibold text-sm tracking-widest uppercase">{heroEyebrow}</span>
           <h1 className="text-4xl sm:text-5xl font-bold text-white mt-4 mb-6">{heroTitle}</h1>

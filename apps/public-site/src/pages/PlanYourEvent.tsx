@@ -82,7 +82,7 @@ export default function PlanYourEvent() {
   ];
 
   return (
-    <div className="pt-20">
+    <div className="pt-36">
       <SEO
         title="Plan Your Event — BICC Event Planning Guide"
         description="Comprehensive event planning guide with information on catering, A/V services, security, accommodation, and transportation at BICC."

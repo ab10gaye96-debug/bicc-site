@@ -1,10 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 import { Calendar, MapPin, Clock, Filter, X, Users, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { IMAGES } from '../images';
+import { fetchContentSection } from '../api';
 import SEO from '../components/SEO';
 import { SkeletonList } from '../components/Skeleton';
+
+const defaultContent = {
+  hero: {
+    eyebrow: 'Events',
+    title: 'Events at BICC',
+    description: 'Stay informed about the latest conferences, summits, and events hosted at the SDKJ International Conference Centre.',
+    backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-1.jpg',
+  },
+};
 
 function EventModal({ event, onClose }: { event: any; onClose: () => void }) {
   return (
@@ -61,6 +71,19 @@ export default function Events() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [timeFilter, setTimeFilter] = useState<'upcoming' | 'past' | 'all'>('all');
   const [selected, setSelected] = useState<any | null>(null);
+  const [pageContent, setPageContent] = useState(defaultContent);
+
+  useEffect(() => {
+    fetchContentSection('eventsPage')
+      .then(content => {
+        if (content) {
+          setPageContent(content);
+        }
+      })
+      .catch(err => {
+        console.error('Error loading events page content:', err);
+      });
+  }, []);
 
   const allEvents = events;
   const today = new Date();
@@ -91,14 +114,13 @@ export default function Events() {
       {/* Hero */}
       <section className="relative py-20 sm:py-24 bg-[#1F85A8]">
         <div className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${IMAGES.banquetHall})` }} />
+          style={{ backgroundImage: `url(${pageContent.hero?.backgroundImage || IMAGES.banquetHall})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">Events</span>
-          <h1 className="text-3xl sm:text-5xl font-bold text-white mt-4 mb-6">Events at BICC</h1>
+          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">{pageContent.hero?.eyebrow}</span>
+          <h1 className="text-3xl sm:text-5xl font-bold text-white mt-4 mb-6">{pageContent.hero?.title}</h1>
           <p className="text-gray-300 text-base sm:text-lg max-w-3xl mx-auto">
-            Stay informed about the latest conferences, summits, and events hosted at the
-            SDKJ International Conference Centre.
+            {pageContent.hero?.description}
           </p>
         </div>
       </section>

@@ -87,7 +87,7 @@ export default function Search() {
   const newsResults = results.filter(r => r.type === 'news');
 
   return (
-    <div className="pt-20 min-h-screen bg-gray-50">
+    <div className="pt-36 min-h-screen bg-gray-50">
       <SEO title="Search" description="Search events and news at the Banjul International Convention Centre." />
 
       {/* Hero */}

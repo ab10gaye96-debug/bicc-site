@@ -6,35 +6,54 @@ import { Users, Check, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-reac
 import { Link } from 'react-router-dom';
 import { IMAGES } from '../images';
 import SEO from '../components/SEO';
+import HeroBackgroundSlideshow from '../components/ui/HeroBackgroundSlideshow';
 import { SkeletonVenue } from '../components/Skeleton';
 
 function VenueCard({ venue, index }: { venue: any; index: number }) {
-  const [imgIndex, setImgIndex] = useState(0);
-  // Support multiple images if stored as array, otherwise wrap single image
-  const images: string[] = Array.isArray(venue.images) && venue.images.length > 0
-    ? venue.images
-    : [venue.image || IMAGES.conferenceHall];
+  const [mediaIndex, setMediaIndex] = useState(0);
+
+  const mediaItems: { type: 'image' | 'video'; url: string }[] = [
+    ...(Array.isArray(venue.images) ? venue.images : venue.image ? [venue.image] : []).map((url: string) => ({
+      type: 'image' as const,
+      url,
+    })),
+    ...(Array.isArray(venue.videos) ? venue.videos : []).map((url: string) => ({
+      type: 'video' as const,
+      url,
+    })),
+  ];
+
+  const slides = mediaItems.length > 0 ? mediaItems : [{ type: 'image' as const, url: IMAGES.conferenceHall }];
+  const current = slides[mediaIndex];
 
   const prev = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setImgIndex(i => (i - 1 + images.length) % images.length);
+    setMediaIndex((i) => (i - 1 + slides.length) % slides.length);
   };
   const next = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setImgIndex(i => (i + 1) % images.length);
+    setMediaIndex((i) => (i + 1) % slides.length);
   };
 
   return (
     <div className={`grid lg:grid-cols-2 gap-8 lg:gap-12 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
-      {/* Image with mini-gallery */}
       <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
         <div className="relative rounded-2xl overflow-hidden shadow-lg group">
-          <img
-            src={images[imgIndex]}
-            alt={venue.name}
-            className="w-full aspect-[4/3] object-cover transition-all duration-500"
-          />
-          {images.length > 1 && (
+          {current.type === 'video' ? (
+            <video
+              key={current.url}
+              src={current.url}
+              controls
+              className="w-full aspect-[4/3] object-cover bg-black"
+            />
+          ) : (
+            <img
+              src={current.url}
+              alt={venue.name}
+              className="w-full aspect-[4/3] object-cover transition-all duration-500"
+            />
+          )}
+          {slides.length > 1 && (
             <>
               <button onClick={prev}
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100">
@@ -45,9 +64,11 @@ function VenueCard({ venue, index }: { venue: any; index: number }) {
                 <ChevronRight size={18} />
               </button>
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                {images.map((_, i) => (
-                  <button key={i} onClick={e => { e.stopPropagation(); setImgIndex(i); }}
-                    className={`w-2 h-2 rounded-full transition-all ${i === imgIndex ? 'bg-white scale-125' : 'bg-white/50'}`} />
+                {slides.map((slide, i) => (
+                  <button key={i} onClick={e => { e.stopPropagation(); setMediaIndex(i); }}
+                    className={`w-2 h-2 rounded-full transition-all ${i === mediaIndex ? 'bg-white scale-125' : 'bg-white/50'}`}
+                    aria-label={slide.type === 'video' ? 'Video slide' : 'Image slide'}
+                  />
                 ))}
               </div>
             </>
@@ -85,7 +106,7 @@ export default function Venues() {
   const { data: pageContent } = usePageContent('venuesPage');
 
   return (
-    <div className="pt-20">
+    <div className="pt-36">
       <SEO
         title="Venues"
         description="Explore world-class event venues at BICC — from the 1,013-seat Plenary Hall to intimate bilateral rooms. Book your venue today."
@@ -93,9 +114,14 @@ export default function Venues() {
 
       {/* Hero */}
       <section className="relative py-20 sm:py-24 bg-[#1F85A8]">
-        <div className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${pageContent?.hero?.backgroundImage || IMAGES.conferenceHall})` }} />
-        <div className="absolute inset-0 bg-black/40" />
+        <HeroBackgroundSlideshow
+          backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.conferenceHall}
+          images={Array.isArray(pageContent?.hero?.backgroundImages) ? pageContent.hero.backgroundImages.filter(Boolean) : []}
+          intervalSeconds={Math.max(1, Number(pageContent?.hero?.slideIntervalSeconds) || 5)}
+          showIndicators
+        >
+          <div className="absolute inset-0 bg-black/40" />
+        </HeroBackgroundSlideshow>
         <div className="relative max-w-4xl mx-auto px-4 text-center">
           <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">{pageContent?.hero?.eyebrow || 'Our Facilities'}</span>
           <h1 className="text-3xl sm:text-5xl font-bold text-white mt-4 mb-6">{pageContent?.hero?.title || 'World-Class Venues'}</h1>

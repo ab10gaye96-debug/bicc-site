@@ -143,6 +143,8 @@ export default function Gallery() {
         title={pageContent?.hero?.title || 'Photos & Videos'}
         description={pageContent?.hero?.description || 'Explore our world-class facilities, events, and the stunning setting of the SDKJ International Conference Centre.'}
         backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.heroBg}
+        backgroundImages={Array.isArray(pageContent?.hero?.backgroundImages) ? pageContent.hero.backgroundImages.filter(Boolean) : []}
+        slideIntervalSeconds={Math.max(1, Number(pageContent?.hero?.slideIntervalSeconds) || 5)}
         compact
       />
 

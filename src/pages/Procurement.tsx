@@ -1,8 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, Clock, Calendar, Download, Search, AlertCircle } from 'lucide-react';
 import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
+import { fetchContentSection } from '../api';
 import SEO from '../components/SEO';
 import { IMAGES } from '../images';
+
+const defaultContent = {
+  hero: {
+    eyebrow: 'Business Opportunities',
+    title: 'Procurement & Tenders',
+    description: 'Browse open tenders, procurement notices, and business opportunities with BICC',
+    backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+  },
+};
 
 // Fallback data
 const FALLBACK_TENDERS = [
@@ -65,6 +75,19 @@ export default function Procurement() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [typeFilter, setTypeFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [pageContent, setPageContent] = useState(defaultContent);
+
+  useEffect(() => {
+    fetchContentSection('procurementPage')
+      .then(content => {
+        if (content) {
+          setPageContent(content);
+        }
+      })
+      .catch(err => {
+        console.error('Error loading procurement page content:', err);
+      });
+  }, []);
 
   const filtered = tenders.filter((tender: any) => {
     const matchesStatus = statusFilter === 'All' || tender.status === statusFilter;
@@ -89,16 +112,16 @@ export default function Procurement() {
       {/* Hero */}
       <section className="relative py-24 bg-gradient-to-br from-blue-600 to-green-600">
         <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${IMAGES.conferenceHall})` }} />
+          style={{ backgroundImage: `url(${pageContent.hero?.backgroundImage || IMAGES.conferenceHall})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-5xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/30 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
             <FileText size={16} />
-            Business Opportunities
+            {pageContent.hero?.eyebrow}
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">Procurement & Tenders</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">{pageContent.hero?.title}</h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto">
-            Browse open tenders, procurement notices, and business opportunities with BICC
+            {pageContent.hero?.description}
           </p>
         </div>
       </section>

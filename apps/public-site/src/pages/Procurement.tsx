@@ -3,6 +3,7 @@ import { FileText, Clock, Calendar, Download, Search, AlertCircle } from 'lucide
 import { useApi } from '../hooks/useApi';
 import { usePageContent } from '../hooks/usePageContent';
 import SEO from '../components/SEO';
+import HeroBackgroundSlideshow from '../components/ui/HeroBackgroundSlideshow';
 import { IMAGES } from '../images';
 
 // Fetch tenders from Firestore
@@ -102,7 +103,7 @@ export default function Procurement() {
   };
 
   return (
-    <div className="pt-20">
+    <div className="pt-36">
       <SEO
         title="Procurement & Tenders — BICC"
         description={pageContent?.hero?.description || 'View open tenders, closed tenders, and procurement notices from the Banjul International Convention Centre.'}
@@ -110,9 +111,15 @@ export default function Procurement() {
 
       {/* Hero */}
       <section className="relative py-24 bg-gradient-to-br from-blue-600 to-green-600">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${pageContent?.hero?.backgroundImage || IMAGES.conferenceHall})` }} />
-        <div className="absolute inset-0 bg-black/40" />
+        <HeroBackgroundSlideshow
+          backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.conferenceHall}
+          images={Array.isArray(pageContent?.hero?.backgroundImages) ? pageContent.hero.backgroundImages.filter(Boolean) : []}
+          intervalSeconds={Math.max(1, Number(pageContent?.hero?.slideIntervalSeconds) || 5)}
+          imageClassName="absolute inset-0 bg-cover bg-center opacity-20 motion-safe:animate-ken-burns"
+          showIndicators
+        >
+          <div className="absolute inset-0 bg-black/40" />
+        </HeroBackgroundSlideshow>
         <div className="relative max-w-5xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/30 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
             <FileText size={16} />

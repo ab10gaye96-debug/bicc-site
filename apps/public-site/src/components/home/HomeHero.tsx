@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star } from 'lucide-react';
+import HeroBackgroundSlideshow from '../ui/HeroBackgroundSlideshow';
 
 interface HomeHeroProps {
   badge: string;
@@ -9,9 +10,11 @@ interface HomeHeroProps {
   primaryButton: string;
   secondaryButton: string;
   backgroundImage: string;
+  backgroundImages?: string[];
   backgroundVideo?: string;
   videoPoster?: string;
   useVideo: boolean;
+  slideIntervalSeconds?: number;
 }
 
 export default function HomeHero({
@@ -22,9 +25,11 @@ export default function HomeHero({
   primaryButton,
   secondaryButton,
   backgroundImage,
+  backgroundImages,
   backgroundVideo,
   videoPoster,
   useVideo,
+  slideIntervalSeconds = 5,
 }: HomeHeroProps) {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -41,9 +46,11 @@ export default function HomeHero({
             <source src={backgroundVideo} />
           </video>
         ) : (
-          <div
-            className="absolute inset-0 bg-cover bg-center motion-safe:animate-ken-burns"
-            style={{ backgroundImage: `url(${backgroundImage})` }}
+          <HeroBackgroundSlideshow
+            backgroundImage={backgroundImage}
+            images={backgroundImages}
+            intervalSeconds={slideIntervalSeconds}
+            showIndicators
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-900/45 to-slate-950/80" />
@@ -51,7 +58,7 @@ export default function HomeHero({
         <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay pointer-events-none bg-slate-900/20" />
       </div>
 
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-24 pb-28">
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-40 pb-28">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/15 bg-white/10 text-white/90 text-xs sm:text-sm font-medium backdrop-blur-md mb-8 motion-safe:animate-hero-fade motion-safe:[animation-delay:100ms] motion-safe:opacity-0">
           <Star size={14} className="text-bicc-gold shrink-0" />
           {badge}

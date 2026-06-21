@@ -5,6 +5,8 @@ import {
   addDoc,
   deleteDoc,
   updateDoc,
+  setDoc,
+  getDoc,
   doc,
   query,
   where,
@@ -276,19 +278,36 @@ export async function createUser(data: {
   password: string;
   role?: string;
 }): Promise<any> {
+  // Normalize email and username
+  const email = data.email.trim().toLowerCase();
+  const username = data.username.trim().toLowerCase();
+  
   // Create account in Firebase Auth
-  await createUserWithEmailAndPassword(auth, data.email, data.password);
+  const userCredential = await createUserWithEmailAndPassword(auth, email, data.password);
 
-  // Save metadata to Firestore — NO password
+  // Save metadata to Firestore with uid as document ID — NO password
   const userData = {
-    email: data.email,
-    username: data.username,
+    uid: userCredential.user.uid,
+    email,
+    username,
     role: data.role || 'Staff',
+    status: 'active',
     created_at: new Date().toISOString(),
   };
 
-  const docRef = await addDoc(collection(db, 'users'), userData);
-  return { id: docRef.id, ...userData };
+  // Use setDoc with uid as document ID (not addDoc)
+  await setDoc(doc(db, 'users', userCredential.user.uid), userData);
+  
+  // Sync username index for quick lookup
+  await setDoc(doc(db, 'adminUsernames', username), {
+    uid: userCredential.user.uid,
+    username,
+    email,
+    status: 'active',
+    updatedAt: new Date().toISOString(),
+  }, { merge: true });
+
+  return { id: userCredential.user.uid, ...userData };
 }
 
 export async function updateUser(id: string | number, data: any): Promise<void> {
@@ -615,4 +634,20 @@ export async function updateQuotation(id: string | number, data: any): Promise<v
 
 export async function deleteQuotation(id: string | number): Promise<void> {
   await deleteDoc(doc(db, 'quotations', id.toString()));
+}
+
+// ── Page Content Management ────────────────────────────────────────────────────
+
+export async function fetchContentSection(section: string): Promise<any> {
+  try {
+    const snap = await getDoc(doc(db, 'pageContent', section));
+    return snap.exists() ? snap.data() : null;
+  } catch (err) {
+    console.error(`Error fetching content for ${section}:`, err);
+    return null;
+  }
+}
+
+export async function updateContentSection(section: string, data: any): Promise<void> {
+  await setDoc(doc(db, 'pageContent', section), data, { merge: true });
 }

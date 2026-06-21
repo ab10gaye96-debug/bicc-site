@@ -92,7 +92,7 @@ export default function Availability() {
     : '';
 
   return (
-    <div className="pt-20 min-h-screen bg-gray-50">
+    <div className="pt-36 min-h-screen bg-gray-50">
       <SEO
         title="Venue Availability"
         description="Check venue availability at the Banjul International Convention Centre. View booked dates and plan your event."

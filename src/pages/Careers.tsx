@@ -1,10 +1,20 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Briefcase, Clock, MapPin, DollarSign, Users, ArrowRight, Search, Filter } from 'lucide-react';
 import { where } from 'firebase/firestore';
 import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
+import { fetchContentSection } from '../api';
 import SEO from '../components/SEO';
 import { IMAGES } from '../images';
+
+const defaultContent = {
+  hero: {
+    eyebrow: 'Join Our Team',
+    title: 'Careers at BICC',
+    description: "Be part of Africa's premier convention centre team and help shape the future of MICE in The Gambia",
+    backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+  },
+};
 
 // Fallback data
 const FALLBACK_VACANCIES = [
@@ -91,6 +101,19 @@ export default function Careers() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [jobType, setJobType] = useState('All');
+  const [pageContent, setPageContent] = useState(defaultContent);
+
+  useEffect(() => {
+    fetchContentSection('careersPage')
+      .then(content => {
+        if (content) {
+          setPageContent(content);
+        }
+      })
+      .catch(err => {
+        console.error('Error loading careers page content:', err);
+      });
+  }, []);
 
   const filtered = vacancies.filter((job: any) => {
     const matchesType = jobType === 'All' || job.type === jobType;
@@ -109,16 +132,16 @@ export default function Careers() {
       {/* Hero */}
       <section className="relative py-24 bg-gradient-to-br from-purple-600 to-blue-600">
         <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${IMAGES.conferenceHall})` }} />
+          style={{ backgroundImage: `url(${pageContent.hero?.backgroundImage || IMAGES.conferenceHall})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-5xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/30 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
             <Briefcase size={16} />
-            Join Our Team
+            {pageContent.hero?.eyebrow}
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">Careers at BICC</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">{pageContent.hero?.title}</h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto">
-            Be part of Africa's premier convention centre team and help shape the future of MICE in The Gambia
+            {pageContent.hero?.description}
           </p>
         </div>
       </section>

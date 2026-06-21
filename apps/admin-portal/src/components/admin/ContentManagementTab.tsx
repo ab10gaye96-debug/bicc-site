@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, Save, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
 import * as api from '../../api';
+import { ImageListField, MediaField } from './MediaField';
 
 type ContentSection = 'home' | 'footer' | 'navbar' | 'contact';
 
@@ -126,9 +127,13 @@ export default function ContentManagementTab() {
     <div>
       <div className="mb-6">
         <h2 className="admin-section-title mb-2">Content Management</h2>
-        <p className="text-slate-600 text-sm">
-          Edit website text content. Saved changes appear on the live site automatically.
+        <p className="text-slate-600 text-sm mb-3">
+          Edit homepage sections, footer, and navigation. Saved changes appear on the live site automatically.
         </p>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-900">
+          <strong>Not the same as Venues tab:</strong> Home → Venues Preview cards here are static homepage teasers.
+          The <strong>Venues tab</strong> manages the full venue list on /venues. Use <strong>Page Content</strong> for other page banners (About, Events, etc.).
+        </div>
       </div>
 
       {/* Section Selector */}
@@ -235,6 +240,16 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
         onToggle={toggleSection}
       >
         <div className="space-y-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
+            <p className="font-semibold mb-2">How hero image / video works</p>
+            <ul className="list-disc pl-5 space-y-1 text-amber-800">
+              <li><strong>Image mode:</strong> set Hero Media Type to Image and upload or paste a <strong>Background Image URL</strong>.</li>
+              <li><strong>Slideshow:</strong> in Image mode, add multiple images below and choose how many seconds each slide should stay on screen.</li>
+              <li><strong>Video mode:</strong> set Hero Media Type to Video, upload a video to <strong>Background Video URL</strong>, and optionally set a poster image.</li>
+              <li>Upload files here or use the Media Library tab first, then click &quot;Media library&quot; to pick them.</li>
+              <li>Click <strong>Save Changes</strong> at the top of this page when finished.</li>
+            </ul>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Hero Media Type</label>
             <select
@@ -283,24 +298,53 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
             onChange={(v) => updateField('hero.secondaryButton', v)}
             placeholder="Explore Venues"
           />
-          <TextInput
-            label="Background Image URL"
+          <MediaField
+            label="Background Image"
             value={content.hero?.backgroundImage || ''}
             onChange={(v) => updateField('hero.backgroundImage', v)}
-            placeholder="https://example.com/hero.jpg"
+            accept="image"
+            uploadFolder="hero"
+            helpText={content.hero?.mediaType === 'video'
+              ? 'Used as the video poster/thumbnail while the video loads.'
+              : 'Full-screen background image on the homepage hero.'}
           />
-          <TextInput
-            label="Background Video URL"
-            value={content.hero?.backgroundVideo || ''}
-            onChange={(v) => updateField('hero.backgroundVideo', v)}
-            placeholder="https://example.com/hero.mp4"
-          />
-          <TextInput
-            label="Video Poster Image URL"
-            value={content.hero?.videoPoster || ''}
-            onChange={(v) => updateField('hero.videoPoster', v)}
-            placeholder="https://example.com/video-poster.jpg"
-          />
+          {content.hero?.mediaType !== 'video' && (
+            <>
+              <NumberInput
+                label="Slide change every (seconds)"
+                value={content.hero?.slideIntervalSeconds ?? 5}
+                min={1}
+                onChange={(value) => updateField('hero.slideIntervalSeconds', value)}
+              />
+              <ImageListField
+                label="Hero slideshow images"
+                value={content.hero?.backgroundImages || []}
+                onChange={(value) => updateField('hero.backgroundImages', value)}
+                uploadFolder="hero"
+                helpText="Add more than one image to rotate the homepage hero automatically."
+              />
+            </>
+          )}
+          {content.hero?.mediaType === 'video' && (
+            <>
+              <MediaField
+                label="Background Video"
+                value={content.hero?.backgroundVideo || ''}
+                onChange={(v) => updateField('hero.backgroundVideo', v)}
+                accept="video"
+                uploadFolder="hero"
+                helpText="Upload an MP4/WebM file or paste a direct video URL. YouTube links are not supported for autoplay hero."
+              />
+              <MediaField
+                label="Video Poster Image (optional)"
+                value={content.hero?.videoPoster || ''}
+                onChange={(v) => updateField('hero.videoPoster', v)}
+                accept="image"
+                uploadFolder="hero"
+                helpText="Shown before the video plays. Falls back to Background Image if empty."
+              />
+            </>
+          )}
         </div>
       </CollapsibleSection>
 
@@ -506,11 +550,12 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
               rows={2}
               placeholder="Our flagship UN General Assembly-style conference hall"
             />
-            <TextInput
-              label="Card 1 Image URL"
+            <MediaField
+              label="Card 1 Image (homepage preview only)"
               value={content.venues?.cards?.card1?.image || ''}
               onChange={(v) => updateField('venues.cards.card1.image', v)}
-              placeholder="https://example.com/plenary.jpg"
+              accept="image"
+              uploadFolder="venues"
             />
             <TextInput
               label="Card 2 Title"
@@ -531,11 +576,12 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
               rows={2}
               placeholder="Elegant spaces for galas, dinners, and ceremonies"
             />
-            <TextInput
-              label="Card 2 Image URL"
+            <MediaField
+              label="Card 2 Image (homepage preview only)"
               value={content.venues?.cards?.card2?.image || ''}
               onChange={(v) => updateField('venues.cards.card2.image', v)}
-              placeholder="https://example.com/banquet.jpg"
+              accept="image"
+              uploadFolder="venues"
             />
             <TextInput
               label="Card 3 Title"
@@ -556,11 +602,12 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
               rows={2}
               placeholder="Ultra-modern arrival experience at Banjul Airport"
             />
-            <TextInput
-              label="Card 3 Image URL"
+            <MediaField
+              label="Card 3 Image (homepage preview only)"
               value={content.venues?.cards?.card3?.image || ''}
               onChange={(v) => updateField('venues.cards.card3.image', v)}
-              placeholder="https://example.com/lounge.jpg"
+              accept="image"
+              uploadFolder="venues"
             />
           </div>
         </div>
@@ -1007,6 +1054,14 @@ function ContactContentEditor({ content, updateField, expandedSections, toggleSe
         onToggle={toggleSection}
       >
         <div className="space-y-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
+            <p className="font-semibold mb-2">How contact hero slideshow works</p>
+            <ul className="list-disc pl-5 space-y-1 text-amber-800">
+              <li>Set one <strong>Background Image</strong> as the fallback or first image.</li>
+              <li>Add more images below to turn the contact hero into a slideshow.</li>
+              <li>Choose how many seconds each image should show before changing.</li>
+            </ul>
+          </div>
           <TextInput
             label="Hero Eyebrow"
             value={content.hero?.eyebrow || ''}
@@ -1026,11 +1081,26 @@ function ContactContentEditor({ content, updateField, expandedSections, toggleSe
             rows={2}
             placeholder="Get in touch with our team..."
           />
-          <TextInput
-            label="Background Image URL"
+          <MediaField
+            label="Background Image"
             value={content.hero?.backgroundImage || ''}
             onChange={(v) => updateField('hero.backgroundImage', v)}
-            placeholder="https://example.com/contact-hero.jpg"
+            accept="image"
+            uploadFolder="contact"
+            helpText="Main fallback image for the contact hero."
+          />
+          <NumberInput
+            label="Slide change every (seconds)"
+            value={content.hero?.slideIntervalSeconds ?? 5}
+            min={1}
+            onChange={(value) => updateField('hero.slideIntervalSeconds', value)}
+          />
+          <ImageListField
+            label="Hero slideshow images"
+            value={content.hero?.backgroundImages || []}
+            onChange={(value) => updateField('hero.backgroundImages', value)}
+            uploadFolder="contact"
+            helpText="Add multiple contact hero images here."
           />
         </div>
       </CollapsibleSection>
@@ -1320,6 +1390,31 @@ function LinkListEditor({
   );
 }
 
+function NumberInput({
+  label,
+  value,
+  onChange,
+  min = 1,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      <input
+        type="number"
+        min={min}
+        value={value}
+        onChange={(event) => onChange(Math.max(min, parseInt(event.target.value, 10) || min))}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+      />
+    </div>
+  );
+}
+
 function mergeContent(section: ContentSection, data: any | null): any {
   const defaults = getDefaultContent(section);
   if (!data) return cloneContent(defaults);
@@ -1352,6 +1447,8 @@ function getDefaultContent(section: ContentSection): any {
         primaryButton: 'Explore Our Venues',
         secondaryButton: 'Book an Event',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-3.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
         backgroundVideo: '',
         videoPoster: 'https://www.oicgambia.org/media/nav/conference-center-3.jpg',
       },
@@ -1509,6 +1606,8 @@ function getDefaultContent(section: ContentSection): any {
         title: 'Contact Us',
         description: 'Get in touch with our team. We\'re here to help you plan your next event.',
         backgroundImage: 'https://www.oicgambia.org/media/file/6374a439e833eb03aadf97d0e51d72e9f242.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
       },
       office: {
         title: 'Contact Information',

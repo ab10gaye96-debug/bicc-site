@@ -55,6 +55,8 @@ export default function About() {
         title={pageContent?.hero?.title || "Positioning The Gambia as Africa's Leading MICE Destination"}
         description={pageContent?.hero?.description || "Established by the Government of The Gambia to advance the country's Meetings, Incentives, Conferences and Exhibitions industry."}
         backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.heroBg}
+        backgroundImages={Array.isArray(pageContent?.hero?.backgroundImages) ? pageContent.hero.backgroundImages.filter(Boolean) : []}
+        slideIntervalSeconds={Math.max(1, Number(pageContent?.hero?.slideIntervalSeconds) || 5)}
       />
 
       {/* Story */}

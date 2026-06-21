@@ -13,6 +13,7 @@ data/
 # Uploads & environment
 uploads/
 .env
+.env.local
 
 # Firebase cache
 .firebase/
@@ -24,5 +25,6 @@ uploads/
 *.bak
 *_backup.*
 
-# AI assistant skills (if auto-generated)
-.agents/
+# AI assistant skills (Kiro-specific, should be committed for team use)
+# Remove the line below if you want to share skills with your team
+# .agents/

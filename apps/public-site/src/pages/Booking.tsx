@@ -184,6 +184,8 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
         title={pageContent?.hero?.title || 'Book an Event'}
         description={pageContent?.hero?.description || 'Complete the form below to request a venue booking at the Banjul International Convention Centre. Our team will review your request and get back to you promptly.'}
         backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.heroBg}
+        backgroundImages={Array.isArray(pageContent?.hero?.backgroundImages) ? pageContent.hero.backgroundImages.filter(Boolean) : []}
+        slideIntervalSeconds={Math.max(1, Number(pageContent?.hero?.slideIntervalSeconds) || 5)}
         compact
       />
 

@@ -24,6 +24,8 @@ export default function News() {
         title={pageContent?.hero?.title || 'Latest News'}
         description={pageContent?.hero?.description || 'Stay updated with the latest happenings at the Banjul International Convention Centre.'}
         backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.heroBg}
+        backgroundImages={Array.isArray(pageContent?.hero?.backgroundImages) ? pageContent.hero.backgroundImages.filter(Boolean) : []}
+        slideIntervalSeconds={Math.max(1, Number(pageContent?.hero?.slideIntervalSeconds) || 5)}
         compact
       />
       <section className="py-16 bg-gray-50">

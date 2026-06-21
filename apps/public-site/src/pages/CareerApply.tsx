@@ -96,7 +96,7 @@ export default function CareerApply() {
 
   if (submitted) {
     return (
-      <div className="pt-20 min-h-screen bg-gray-50">
+      <div className="pt-36 min-h-screen bg-gray-50">
         <SEO title="Application Submitted — BICC Careers" />
         <section className="py-20">
           <div className="max-w-2xl mx-auto px-4">
@@ -131,7 +131,7 @@ export default function CareerApply() {
   }
 
   return (
-    <div className="pt-20 min-h-screen bg-gray-50">
+    <div className="pt-36 min-h-screen bg-gray-50">
       <SEO title={`Apply for ${job.title} — BICC Careers`} />
 
       {/* Header */}

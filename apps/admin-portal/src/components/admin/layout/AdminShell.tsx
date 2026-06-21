@@ -160,8 +160,8 @@ export default function AdminShell({
               <Menu size={20} />
             </button>
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-white border border-bicc-primary/15 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-                <img src={IMAGES.logo} alt="BICC" className="w-8 h-8 object-contain" />
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white border border-bicc-primary/15 shadow-md flex items-center justify-center overflow-hidden shrink-0 p-1">
+                <img src={IMAGES.logo} alt="BICC" className="w-full h-full object-contain" />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-bicc-primary truncate">BICC Admin</p>

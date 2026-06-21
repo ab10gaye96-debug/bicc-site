@@ -277,6 +277,10 @@ export default function Home() {
   const heroBadge = cmsContent?.hero?.badge || "The Gambia's Premier MICE Destination";
   const heroMediaType = cmsContent?.hero?.mediaType || 'image';
   const heroBackgroundImage = cmsContent?.hero?.backgroundImage || IMAGES.heroBg;
+  const heroBackgroundImages = Array.isArray(cmsContent?.hero?.backgroundImages)
+    ? cmsContent.hero.backgroundImages.filter(Boolean)
+    : [];
+  const heroSlideIntervalSeconds = Math.max(1, Number(cmsContent?.hero?.slideIntervalSeconds) || 5);
   const heroBackgroundVideo = cmsContent?.hero?.backgroundVideo || '';
   const heroVideoPoster = cmsContent?.hero?.videoPoster || heroBackgroundImage;
   const useHeroVideo = heroMediaType === 'video' && Boolean(heroBackgroundVideo);
@@ -335,9 +339,11 @@ export default function Home() {
         primaryButton={heroPrimaryButton}
         secondaryButton={heroSecondaryButton}
         backgroundImage={heroBackgroundImage}
+        backgroundImages={heroBackgroundImages}
         backgroundVideo={heroBackgroundVideo}
         videoPoster={heroVideoPoster}
         useVideo={useHeroVideo}
+        slideIntervalSeconds={heroSlideIntervalSeconds}
       />
 
       <StatsBar cmsStats={cmsContent?.stats} />

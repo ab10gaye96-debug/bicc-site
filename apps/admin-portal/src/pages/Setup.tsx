@@ -40,8 +40,8 @@ export default function Setup() {
       console.log('Creating Firestore document with UID:', uid);
       const userData = {
         uid,
-        email,
-        username,
+        email: email.trim().toLowerCase(),
+        username: username.trim().toLowerCase(),
         role: 'Super Admin',
         status: 'active',
         permissions: ['dashboard', 'settings', 'pages', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues', 'users', 'testimonials', 'partners', 'downloads', 'careers', 'tenders', 'subscribers', 'pricing', 'quotations'],
@@ -51,6 +51,13 @@ export default function Setup() {
 
       // Use UID as document ID to match Firestore rules
       await setDoc(doc(db, 'users', uid), userData);
+      await setDoc(doc(db, 'adminUsernames', userData.username), {
+        uid,
+        username: userData.username,
+        email: userData.email,
+        status: 'active',
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
       console.log('✅ Firestore document created with UID:', uid);
 
       setSuccess(true);

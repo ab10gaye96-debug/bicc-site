@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BookOpenText, Save, RotateCcw } from 'lucide-react';
 import * as api from '../../api';
-import { MediaField } from './MediaField';
+import { ImageListField, MediaField } from './MediaField';
 
 type PageSection =
   | 'aboutPage'
@@ -190,6 +190,12 @@ export default function PagesContentTab() {
               <EditorCard title="Hero Section">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <TextInput label="Eyebrow" value={content.hero?.eyebrow || ''} onChange={(value) => updateField('hero.eyebrow', value)} />
+                  <NumberInput
+                    label="Slide change every (seconds)"
+                    value={content.hero?.slideIntervalSeconds ?? 5}
+                    min={1}
+                    onChange={(value) => updateField('hero.slideIntervalSeconds', value)}
+                  />
                 </div>
                 <MediaField
                   label="Page banner image"
@@ -198,6 +204,13 @@ export default function PagesContentTab() {
                   accept="image"
                   uploadFolder="pages"
                   helpText="Large background image behind the page title. Upload here or pick from Media Library."
+                />
+                <ImageListField
+                  label="Hero slideshow images"
+                  value={content.hero?.backgroundImages || []}
+                  onChange={(value) => updateField('hero.backgroundImages', value)}
+                  uploadFolder="pages"
+                  helpText="Add multiple hero images here. If you add more than one, the hero will rotate through them automatically."
                 />
                 <TextInput label="Hero Title" value={content.hero?.title || ''} onChange={(value) => updateField('hero.title', value)} />
                 <TextArea label="Hero Description" rows={3} value={content.hero?.description || ''} onChange={(value) => updateField('hero.description', value)} />
@@ -232,14 +245,20 @@ export default function PagesContentTab() {
                   </EditorCard>
 
                   <EditorCard title="Board of Directors Section">
-                    <p className="text-xs text-gray-500 -mt-2 mb-2">Add individual board members in the <strong>Team & Board</strong> tab. Edit section headings here.</p>
+                    <p className="text-xs text-gray-500 -mt-2 mb-2">
+                      Add individual board members in the <strong>Team & Board</strong> tab. Their photos can be added there by
+                      uploading/importing an image, choosing one from Media Library, or pasting a direct image link. Edit the section headings here.
+                    </p>
                     <TextInput label="Eyebrow" value={content.boardSection?.eyebrow || ''} onChange={(value) => updateField('boardSection.eyebrow', value)} />
                     <TextInput label="Section Title" value={content.boardSection?.title || ''} onChange={(value) => updateField('boardSection.title', value)} />
                     <TextArea label="Section Description" rows={2} value={content.boardSection?.description || ''} onChange={(value) => updateField('boardSection.description', value)} />
                   </EditorCard>
 
                   <EditorCard title="BICC Team Section">
-                    <p className="text-xs text-gray-500 -mt-2 mb-2">Add individual team members in the <strong>Team & Board</strong> tab. Edit section headings here.</p>
+                    <p className="text-xs text-gray-500 -mt-2 mb-2">
+                      Add individual team members in the <strong>Team & Board</strong> tab. Their photos can be added there by
+                      uploading/importing an image, choosing one from Media Library, or pasting a direct image link. Edit the section headings here.
+                    </p>
                     <TextInput label="Eyebrow" value={content.teamSection?.eyebrow || ''} onChange={(value) => updateField('teamSection.eyebrow', value)} />
                     <TextInput label="Section Title" value={content.teamSection?.title || ''} onChange={(value) => updateField('teamSection.title', value)} />
                     <TextArea label="Section Description" rows={2} value={content.teamSection?.description || ''} onChange={(value) => updateField('teamSection.description', value)} />
@@ -457,6 +476,31 @@ function TextArea({
   );
 }
 
+function NumberInput({
+  label,
+  value,
+  onChange,
+  min = 1,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      <input
+        type="number"
+        min={min}
+        value={value}
+        onChange={(event) => onChange(Math.max(min, parseInt(event.target.value, 10) || min))}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+      />
+    </div>
+  );
+}
+
 function getDefaultContent(section: PageSection) {
   const defaults: Record<PageSection, any> = {
     aboutPage: {
@@ -465,6 +509,8 @@ function getDefaultContent(section: PageSection) {
         title: "Positioning The Gambia as Africa's Leading MICE Destination",
         description: "Established by the Government of The Gambia to advance the country's Meetings, Incentives, Conferences and Exhibitions industry.",
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-3.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
       },
       intro: {
         title: 'Our Story',
@@ -521,6 +567,8 @@ function getDefaultContent(section: PageSection) {
         title: 'World-Class Venues',
         description: 'With the capacity to accommodate over 4,000 guests, the Sir Dawda Kairaba Jawara International Conference Center can host events of any size or shape.',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
       },
       intro: {
         title: 'Venue Capacity Overview',
@@ -539,6 +587,8 @@ function getDefaultContent(section: PageSection) {
         title: 'Events at BICC',
         description: 'Stay informed about the latest conferences, summits, and events hosted at the SDKJ International Conference Centre.',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-1.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
       },
       intro: {
         title: 'Discover What Is Happening',
@@ -556,6 +606,8 @@ function getDefaultContent(section: PageSection) {
         title: 'Book an Event',
         description: 'Complete the form below to request a venue booking at the Banjul International Convention Centre. Our team will review your request and get back to you promptly.',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
       },
       intro: {
         title: 'Booking Form',
@@ -578,6 +630,8 @@ function getDefaultContent(section: PageSection) {
         title: 'Downloads Centre',
         description: 'Access brochures, floor plans, technical specifications, and event planning resources',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
       },
       intro: {
         title: 'Document Library',
@@ -601,6 +655,8 @@ function getDefaultContent(section: PageSection) {
         title: 'Careers at BICC',
         description: "Be part of Africa's premier convention centre team and help shape the future of MICE in The Gambia",
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
       },
       intro: {
         title: 'Why Work at BICC?',
@@ -624,6 +680,8 @@ function getDefaultContent(section: PageSection) {
         title: 'Procurement & Tenders',
         description: 'Browse open tenders, procurement notices, and business opportunities with BICC',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
       },
       intro: {
         title: 'Open Tenders',
@@ -651,6 +709,8 @@ function getDefaultContent(section: PageSection) {
         title: 'Photos & Videos',
         description: 'Explore our world-class facilities, events, and the stunning setting of the SDKJ International Conference Centre.',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-3.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
       },
       intro: { title: '', description: '' },
     },
@@ -660,6 +720,8 @@ function getDefaultContent(section: PageSection) {
         title: 'Latest News',
         description: 'Stay updated with the latest happenings at the Banjul International Convention Centre.',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-3.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
       },
       intro: { title: '', description: '' },
     },
@@ -669,6 +731,8 @@ function getDefaultContent(section: PageSection) {
         title: 'Services & Packages',
         description: 'From intimate boardroom meetings to full-scale international summits — BICC delivers tailored event solutions that reflect excellence and African hospitality.',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
       },
       packages: {
         eyebrow: 'Event Packages',
@@ -709,6 +773,8 @@ function getDefaultContent(section: PageSection) {
         title: 'Hotels & Accommodation',
         description: 'Choose from our partner hotels offering world-class hospitality near the convention centre.',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
       },
       cta: {
         title: 'Need Help with Accommodation?',

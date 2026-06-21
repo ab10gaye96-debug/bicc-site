@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import * as api from '../../api';
+import { getUploadErrorMessage } from './MediaField';
 
 interface MediaItem {
   id: string;
@@ -139,7 +140,7 @@ export default function MediaLibraryTab() {
       showMessage('success', 'Media uploaded successfully.');
     } catch (error) {
       console.error('Error uploading media:', error);
-      showMessage('error', 'Failed to upload one or more files.');
+      showMessage('error', getUploadErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -354,13 +355,14 @@ export default function MediaLibraryTab() {
               <Upload size={16} />
               {saving ? 'Uploading...' : 'Choose Files'}
             </button>
-            <p className="text-sm text-gray-500">
-              Images, videos, PDF, Word, Excel, ZIP and similar files are supported.
-            </p>
+          <p className="text-sm text-gray-500">
+            Images up to 20MB, videos up to 100MB. If upload fails, enable Firebase Storage in the bicc-gambia Firebase Console, or use &quot;Save by Link&quot; to paste a URL.
+          </p>
             <input
               ref={fileInputRef}
               type="file"
               multiple
+              accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip"
               onChange={handleFileChange}
               className="hidden"
             />

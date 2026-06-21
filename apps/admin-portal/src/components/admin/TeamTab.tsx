@@ -20,6 +20,10 @@ const emptyForm = {
   published: true,
 };
 
+function resolveMemberImage(member: any) {
+  return member?.image || member?.imageUrl || member?.photo || member?.photoUrl || member?.avatar || '';
+}
+
 export default function TeamTab() {
   const [members, setMembers] = useState<any[]>([]);
   const [filter, setFilter] = useState<TeamGroup | 'all'>('all');
@@ -56,7 +60,7 @@ export default function TeamTab() {
       name: item.name || '',
       title: item.title || '',
       bio: item.bio || '',
-      image: item.image || '',
+      image: resolveMemberImage(item),
       group: item.group || 'board',
       order: item.order ?? 0,
       published: item.published !== false,
@@ -135,6 +139,9 @@ export default function TeamTab() {
             <p className="text-sm text-blue-800">
               <strong>{editingItem ? 'Edit' : 'Add'} {GROUP_LABELS[form.group]}:</strong>{' '}
               Photo, name, and title appear on the About page. Unpublish to hide someone who has left without deleting their record.
+            </p>
+            <p className="text-xs text-blue-700 mt-2">
+              For the photo, you can upload/import an image, choose one from the Media Library, or paste a direct image link.
             </p>
           </div>
 
@@ -246,8 +253,8 @@ export default function TeamTab() {
           filtered.map((item) => (
             <div key={item.id} className="bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
               <div className="aspect-[4/3] bg-gray-200 relative">
-                {item.image ? (
-                  <img src={item.image} alt={item.name} className="w-full h-full object-cover object-top" />
+                {resolveMemberImage(item) ? (
+                  <img src={resolveMemberImage(item)} alt={item.name} className="w-full h-full object-cover object-top" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
                     {item.group === 'board' ? <Crown size={40} /> : <Users size={40} />}

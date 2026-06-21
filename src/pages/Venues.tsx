@@ -1,10 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
 import { Users, Check, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { IMAGES } from '../images';
+import { fetchContentSection } from '../api';
 import SEO from '../components/SEO';
 import { SkeletonVenue } from '../components/Skeleton';
+
+const defaultContent = {
+  hero: {
+    eyebrow: 'Our Facilities',
+    title: 'World-Class Venues',
+    description: 'With the capacity to accommodate over 4,000 guests, the Sir Dawda Kairaba Jawara International Conference Centre can host events of any size or shape.',
+    backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+  },
+};
 
 function VenueCard({ venue, index }: { venue: any; index: number }) {
   const [imgIndex, setImgIndex] = useState(0);
@@ -80,6 +90,19 @@ function VenueCard({ venue, index }: { venue: any; index: number }) {
 
 export default function Venues() {
   const { data: venues, loading } = useRealtimeCollection<any>('venues', []);
+  const [pageContent, setPageContent] = useState(defaultContent);
+
+  useEffect(() => {
+    fetchContentSection('venuesPage')
+      .then(content => {
+        if (content) {
+          setPageContent(content);
+        }
+      })
+      .catch(err => {
+        console.error('Error loading venues page content:', err);
+      });
+  }, []);
 
   return (
     <div className="pt-20">
@@ -91,14 +114,13 @@ export default function Venues() {
       {/* Hero */}
       <section className="relative py-20 sm:py-24 bg-[#1F85A8]">
         <div className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${IMAGES.conferenceHall})` }} />
+          style={{ backgroundImage: `url(${pageContent.hero?.backgroundImage || IMAGES.conferenceHall})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">Our Facilities</span>
-          <h1 className="text-3xl sm:text-5xl font-bold text-white mt-4 mb-6">World-Class Venues</h1>
+          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">{pageContent.hero?.eyebrow}</span>
+          <h1 className="text-3xl sm:text-5xl font-bold text-white mt-4 mb-6">{pageContent.hero?.title}</h1>
           <p className="text-gray-300 text-base sm:text-lg max-w-3xl mx-auto">
-            With the capacity to accommodate over 4,000 guests, the Sir Dawda Kairaba Jawara International
-            Conference Centre can host events of every scale.
+            {pageContent.hero?.description}
           </p>
         </div>
       </section>

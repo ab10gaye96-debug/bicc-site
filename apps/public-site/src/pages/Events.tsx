@@ -6,6 +6,7 @@ import { Calendar, MapPin, Clock, Filter, X, Users, ArrowRight } from 'lucide-re
 import { Link } from 'react-router-dom';
 import { IMAGES } from '../images';
 import SEO from '../components/SEO';
+import HeroBackgroundSlideshow from '../components/ui/HeroBackgroundSlideshow';
 import { SkeletonList } from '../components/Skeleton';
 
 function EventModal({ event, onClose }: { event: any; onClose: () => void }) {
@@ -85,7 +86,7 @@ export default function Events() {
   const pastCount = allEvents.filter(e => new Date(e.date) < today).length;
 
   return (
-    <div className="pt-20">
+    <div className="pt-36">
       <SEO
         title="Events"
         description="Stay informed about upcoming conferences, summits, exhibitions, and events hosted at the BICC — Banjul International Convention Centre."
@@ -93,9 +94,14 @@ export default function Events() {
 
       {/* Hero */}
       <section className="relative py-20 sm:py-24 bg-[#1F85A8]">
-        <div className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${pageContent?.hero?.backgroundImage || IMAGES.banquetHall})` }} />
-        <div className="absolute inset-0 bg-black/40" />
+        <HeroBackgroundSlideshow
+          backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.banquetHall}
+          images={Array.isArray(pageContent?.hero?.backgroundImages) ? pageContent.hero.backgroundImages.filter(Boolean) : []}
+          intervalSeconds={Math.max(1, Number(pageContent?.hero?.slideIntervalSeconds) || 5)}
+          showIndicators
+        >
+          <div className="absolute inset-0 bg-black/40" />
+        </HeroBackgroundSlideshow>
         <div className="relative max-w-4xl mx-auto px-4 text-center">
           <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">{pageContent?.hero?.eyebrow || 'Events'}</span>
           <h1 className="text-3xl sm:text-5xl font-bold text-white mt-4 mb-6">{pageContent?.hero?.title || 'Events at BICC'}</h1>

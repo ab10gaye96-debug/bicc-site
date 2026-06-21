@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
-import { IMAGES } from '../images';
+import BrandLogo from './BrandLogo';
 import { usePageContent } from '../hooks/usePageContent';
 import {
   DEFAULT_FOOTER_QUICK_LINKS,
@@ -59,13 +59,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-8 xl:gap-10">
           {/* Brand */}
           <div className="xl:col-span-4">
-            <div className="flex items-center gap-3 mb-5">
-              <img src={IMAGES.logo} alt="BICC Logo" className="h-12 w-auto rounded-md bg-white p-1 object-contain" />
-              <div>
-                <h3 className="text-white font-bold text-lg">{brandTitle}</h3>
-                <p className="text-white/70 text-xs">{brandSubtitle}</p>
-              </div>
-            </div>
+            <BrandLogo linkToHome={false} imageClassName="h-16 w-auto max-w-[260px] object-contain" className="mb-5" />
             <p className="text-sm leading-relaxed text-white/75 max-w-md">
               {brandDescription}
             </p>

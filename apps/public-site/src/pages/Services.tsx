@@ -163,6 +163,8 @@ export default function Services() {
         title={pageContent?.hero?.title || 'Services & Packages'}
         description={pageContent?.hero?.description || 'From intimate boardroom meetings to full-scale international summits — BICC delivers tailored event solutions that reflect excellence and African hospitality.'}
         backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.conferenceHall}
+        backgroundImages={Array.isArray(pageContent?.hero?.backgroundImages) ? pageContent.hero.backgroundImages.filter(Boolean) : []}
+        slideIntervalSeconds={Math.max(1, Number(pageContent?.hero?.slideIntervalSeconds) || 5)}
         compact
       />
 

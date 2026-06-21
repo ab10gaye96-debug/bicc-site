@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, Bell, User, LogOut, Sun, Moon, Menu } from 'lucide-react';
+import { Search, Bell, User, LogOut, Sun, Moon } from 'lucide-react';
+import { IMAGES } from '../../../images';
 
 interface AdminHeaderProps {
   userName: string;
@@ -45,8 +46,8 @@ export default function AdminHeader({
       <div className="h-full px-4 lg:px-6 flex items-center justify-between gap-4">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#1F85A8] to-blue-700 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-lg">B</span>
+          <div className="w-10 h-10 bg-white border border-blue-100 shadow-sm rounded-xl flex items-center justify-center overflow-hidden p-1">
+            <img src={IMAGES.logo} alt="BICC logo" className="w-full h-full object-contain" />
           </div>
           <div className="hidden sm:block">
             <h1 className="text-lg font-bold text-[#1F85A8]">BICC Admin</h1>

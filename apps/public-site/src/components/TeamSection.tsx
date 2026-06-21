@@ -36,14 +36,20 @@ const DEFAULTS = {
   },
 };
 
+function resolveMemberImage(member: TeamMember & Record<string, any>) {
+  return member?.image || member?.imageUrl || member?.photo || member?.photoUrl || member?.avatar || '';
+}
+
 function MemberCard({ member, index }: { member: TeamMember; index: number }) {
+  const image = resolveMemberImage(member as TeamMember & Record<string, any>);
+
   return (
     <ScrollReveal delay={index * 80} animation="fade-up">
       <div className="group text-center">
         <div className="relative mx-auto w-40 h-40 sm:w-48 sm:h-48 mb-5">
-          {member.image ? (
+          {image ? (
             <img
-              src={member.image}
+              src={image}
               alt={member.name}
               className="w-full h-full rounded-2xl object-cover object-top shadow-lg ring-4 ring-white group-hover:ring-bicc-gold/40 transition-all duration-300"
             />

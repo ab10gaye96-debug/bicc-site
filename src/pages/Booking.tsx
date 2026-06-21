@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { submitBooking, checkAvailability } from '../api';
+import { submitBooking, checkAvailability, fetchContentSection } from '../api';
 import { sendBookingNotificationEmail, sendBookingConfirmationEmail } from '../emailService';
 import { Building2, Calendar, Users, CheckCircle, Send, ChevronDown, Hash, Printer, AlertTriangle, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
@@ -84,6 +84,20 @@ export default function Booking() {
   const [refNumber, setRefNumber] = useState('');
   const [availability, setAvailability] = useState<{ checking: boolean; conflicts: any[] | null }>({ checking: false, conflicts: null });
   const [errorMessage, setErrorMessage] = useState('');
+  const [pageContent, setPageContent] = useState<any>({
+    hero: {
+      eyebrow: 'Reserve Your Space',
+      title: 'Book an Event',
+      description: 'Complete the form below to request a venue booking at the Banjul International Convention Centre. Our team will review your request and get back to you promptly.',
+      backgroundImage: '/images/conference-hall.jpg',
+    },
+    success: {
+      title: 'Booking Request Submitted!',
+      description: 'Thank you. Our team will review your request and contact you within 1–2 business days to confirm availability and discuss further details.',
+      referenceLabel: 'Your Booking Reference',
+      confirmationText: 'A confirmation email has been sent to your email address. Please quote your reference number in any correspondence.',
+    },
+  });
 
   // Check availability whenever dates or selected venues change.
   useEffect(() => {
@@ -97,6 +111,19 @@ export default function Booking() {
     }, 400);
     return () => { cancelled = true; clearTimeout(handle); };
   }, [form.startDate, form.endDate, form.venues]);
+
+  // Fetch managed page content
+  useEffect(() => {
+    fetchContentSection('bookingPage')
+      .then(content => {
+        if (content) {
+          setPageContent(content);
+        }
+      })
+      .catch(err => {
+        console.error('Error loading booking page content:', err);
+      });
+  }, []);
 
   // If date param changes after mount, update form
   useEffect(() => {
@@ -179,14 +206,13 @@ export default function Booking() {
       {/* Hero */}
       <section className="relative py-24 bg-[#1F85A8]">
         <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: 'url(/images/conference-hall.jpg)' }} />
+          style={{ backgroundImage: `url(${pageContent.hero?.backgroundImage || '/images/conference-hall.jpg'})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">Reserve Your Space</span>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mt-4 mb-6">Book an Event</h1>
+          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">{pageContent.hero?.eyebrow || 'Reserve Your Space'}</span>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mt-4 mb-6">{pageContent.hero?.title || 'Book an Event'}</h1>
           <p className="text-gray-300 text-lg max-w-3xl mx-auto">
-            Complete the form below to request a venue booking at the Banjul International Convention Centre.
-            Our team will review your request and get back to you promptly.
+            {pageContent.hero?.description || 'Complete the form below to request a venue booking at the Banjul International Convention Centre. Our team will review your request and get back to you promptly.'}
           </p>
         </div>
       </section>
@@ -200,20 +226,19 @@ export default function Booking() {
               <div className="w-16 sm:w-20 h-16 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
                 <CheckCircle className="text-green-500" size={40} />
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-[#1F85A8] mb-2 sm:mb-3">Booking Request Submitted!</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-[#1F85A8] mb-2 sm:mb-3">{pageContent.success?.title || 'Booking Request Submitted!'}</h2>
               <p className="text-gray-500 mb-4 sm:mb-6 max-w-lg mx-auto text-sm sm:text-base">
-                Thank you. Our team will review your request and contact you within 1–2 business days
-                to confirm availability and discuss further details.
+                {pageContent.success?.description || 'Thank you. Our team will review your request and contact you within 1–2 business days to confirm availability and discuss further details.'}
               </p>
               <div className="inline-flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl px-4 sm:px-6 py-3 sm:py-4 mb-6 sm:mb-8">
                 <Hash className="text-blue-600 shrink-0" size={20} />
                 <div className="text-left">
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Your Booking Reference</p>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{pageContent.success?.referenceLabel || 'Your Booking Reference'}</p>
                   <p className="text-lg sm:text-xl font-bold text-[#1F85A8] tracking-wider">{refNumber}</p>
                 </div>
               </div>
               <p className="text-xs sm:text-sm text-gray-400 mb-4 sm:mb-6">
-                A confirmation email has been sent to your email address. Please quote your reference number in any correspondence.
+                {pageContent.success?.confirmationText || 'A confirmation email has been sent to your email address. Please quote your reference number in any correspondence.'}
               </p>
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-3 justify-center">
                 <button

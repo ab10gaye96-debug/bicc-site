@@ -117,6 +117,8 @@ export default function Hotels() {
         title={pageContent?.hero?.title || 'Hotels & Accommodation'}
         description={pageContent?.hero?.description || 'Choose from our partner hotels offering world-class hospitality near the convention centre.'}
         backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.banquetHall}
+        backgroundImages={Array.isArray(pageContent?.hero?.backgroundImages) ? pageContent.hero.backgroundImages.filter(Boolean) : []}
+        slideIntervalSeconds={Math.max(1, Number(pageContent?.hero?.slideIntervalSeconds) || 5)}
         compact
       >
         <Link to="/destination" className="inline-flex items-center gap-2 text-blue-200 hover:text-white mt-6 transition-colors text-sm font-medium">

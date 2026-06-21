@@ -1,11 +1,14 @@
 import { ReactNode } from 'react';
 import { cn } from '../../utils/cn';
+import HeroBackgroundSlideshow from './HeroBackgroundSlideshow';
 
 interface PageHeroProps {
   eyebrow: string;
   title: string;
   description?: string;
   backgroundImage: string;
+  backgroundImages?: string[];
+  slideIntervalSeconds?: number;
   children?: ReactNode;
   compact?: boolean;
 }
@@ -15,18 +18,23 @@ export default function PageHero({
   title,
   description,
   backgroundImage,
+  backgroundImages,
+  slideIntervalSeconds = 5,
   children,
   compact = false,
 }: PageHeroProps) {
   return (
-    <section className={cn('relative overflow-hidden pt-20', compact ? 'pb-16 sm:pb-20' : 'pb-24 sm:pb-28')}>
+    <section className={cn('relative overflow-hidden pt-36', compact ? 'pb-16 sm:pb-20' : 'pb-24 sm:pb-28')}>
       <div className="absolute inset-0">
-        <div
-          className="absolute inset-0 bg-cover bg-center motion-safe:animate-ken-burns"
-          style={{ backgroundImage: `url(${backgroundImage})` }}
-        />
+        <HeroBackgroundSlideshow
+          backgroundImage={backgroundImage}
+          images={backgroundImages}
+          intervalSeconds={slideIntervalSeconds}
+          showIndicators
+        >
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/75 via-bicc-primary/55 to-slate-950/85" />
         <div className="absolute inset-0 opacity-[0.07] mix-blend-overlay bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic3VyZmljZUx1bWluYW5jZSIgdmFsdWVzPSIwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAxLjAiLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjYSkiIG9wYWNpdHk9IjAuMDUiLz48L3N2Zz4=')]" />
+        </HeroBackgroundSlideshow>
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 text-center">

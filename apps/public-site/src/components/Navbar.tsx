@@ -15,7 +15,8 @@ import {
   ClipboardCheck,
   type LucideIcon,
 } from 'lucide-react';
-import { IMAGES } from '../images';
+import BrandLogo from './BrandLogo';
+import TopBar from './TopBar';
 import { usePageContent } from '../hooks/usePageContent';
 import {
   DEFAULT_NAV_LINKS,
@@ -56,8 +57,6 @@ export default function Navbar() {
   const venuesDropdown = resolveLinks(cmsContent?.venuesDropdown, DEFAULT_VENUES_DROPDOWN) as NavDropdownLink[];
   const resourcesDropdown = resolveLinks(cmsContent?.resourcesDropdown, DEFAULT_RESOURCES_DROPDOWN) as NavDropdownLink[];
 
-  const brandShortName = cmsContent?.brand?.shortName || 'BICC';
-  const brandFullName = cmsContent?.brand?.fullName || 'Banjul International Convention Centre';
   const venuesMenuLabel = cmsContent?.labels?.venues || 'Venues';
   const resourcesMenuLabel = cmsContent?.labels?.resources || 'Resources';
   const bookButtonText = cmsContent?.bookButton?.text || 'Book an Event';
@@ -110,17 +109,13 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isHome ? 'bg-[#1F85A8]/80 backdrop-blur-md' : 'bg-[#1F85A8] shadow-lg'}`}>
+    <header className="fixed top-0 left-0 right-0 z-50">
+      <TopBar />
+      <nav className={`transition-all duration-300 ${isHome ? 'bg-[#1F85A8]/95 backdrop-blur-md border-b border-white/15' : 'bg-[#1F85A8] shadow-xl shadow-slate-900/15 border-b border-white/10'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <img src={IMAGES.logo} alt="BICC Logo" className="h-12 w-auto rounded-md bg-white p-1 object-contain" />
-            <div>
-              <span className="text-white font-bold text-lg tracking-wide">{brandShortName}</span>
-              <span className="hidden sm:block text-white/80 text-xs tracking-wider">{brandFullName}</span>
-            </div>
-          </Link>
+        <div className="flex items-center justify-between py-2.5 sm:py-3 gap-4">
+          {/* Logo — full BICC mark (same as admin portal) */}
+          <BrandLogo />
 
           {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-1">
@@ -423,6 +418,7 @@ export default function Navbar() {
           </div>
         </div>
       )}
-    </nav>
+      </nav>
+    </header>
   );
 }

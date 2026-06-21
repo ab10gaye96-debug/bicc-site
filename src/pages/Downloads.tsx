@@ -1,8 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Download, FileText, FolderOpen, Search } from 'lucide-react';
 import { useRealtimeCollection } from '../hooks/useRealtimeFirestore';
+import { fetchContentSection } from '../api';
 import SEO from '../components/SEO';
 import { IMAGES } from '../images';
+
+const defaultContent = {
+  hero: {
+    eyebrow: 'Resource Centre',
+    title: 'Downloads Centre',
+    description: 'Access brochures, floor plans, technical specifications, and event planning resources',
+    backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+  },
+};
 
 // Fallback data if Firestore is empty
 const FALLBACK_DOWNLOADS = [
@@ -87,6 +97,19 @@ export default function Downloads() {
 
   const [category, setCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [pageContent, setPageContent] = useState(defaultContent);
+
+  useEffect(() => {
+    fetchContentSection('downloadsPage')
+      .then(content => {
+        if (content) {
+          setPageContent(content);
+        }
+      })
+      .catch(err => {
+        console.error('Error loading downloads page content:', err);
+      });
+  }, []);
 
   const filtered = downloads.filter((doc: any) => {
     const matchesCategory = category === 'All' || doc.category === category;
@@ -107,16 +130,16 @@ export default function Downloads() {
       {/* Hero */}
       <section className="relative py-24 bg-[#1F85A8]">
         <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${IMAGES.conferenceHall})` }} />
+          style={{ backgroundImage: `url(${pageContent.hero?.backgroundImage || IMAGES.conferenceHall})` }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-5xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/30 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
             <FileText size={16} />
-            Resource Centre
+            {pageContent.hero?.eyebrow}
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">Downloads Centre</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">{pageContent.hero?.title}</h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto">
-            Access brochures, floor plans, technical specifications, and event planning resources
+            {pageContent.hero?.description}
           </p>
         </div>
       </section>
