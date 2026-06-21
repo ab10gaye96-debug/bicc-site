@@ -1,21 +1,12 @@
 import { Link } from 'react-router-dom';
-import { Hotel, Star, MapPin, Phone, Mail, Globe, ArrowRight, Wifi, Coffee, Car, Utensils } from 'lucide-react';
+import { Hotel, Star, MapPin, Phone, Mail, Globe, ArrowRight } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
+import { usePageContent } from '../hooks/usePageContent';
+import { fetchHotels } from '../api';
 import { useState } from 'react';
 import SEO from '../components/SEO';
+import PageHero from '../components/ui/PageHero';
 import { IMAGES } from '../images';
-
-// Fetch hotels from Firestore
-async function fetchHotels() {
-  try {
-    const { getDocs, collection } = await import('firebase/firestore');
-    const { db } = await import('../firebase');
-    const snap = await getDocs(collection(db, 'hotels'));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch {
-    return [];
-  }
-}
 
 // Fallback hotels if Firestore is empty
 const FALLBACK_HOTELS = [
@@ -107,37 +98,32 @@ const FALLBACK_HOTELS = [
 
 export default function Hotels() {
   const { data: dbHotels } = useApi(fetchHotels, []);
+  const { data: pageContent } = usePageContent('hotelsPage');
   const hotels = (dbHotels && dbHotels.length > 0) ? dbHotels : FALLBACK_HOTELS;
   const [filter, setFilter] = useState('All');
 
-  const categories = ['All', '5-Star', '4-Star', '3-Star'];
+  const categories = ['All', ...Array.from(new Set(hotels.map((h: any) => h.category).filter(Boolean)))];
   const filtered = filter === 'All' ? hotels : hotels.filter((h: any) => h.category === filter);
 
   return (
-    <div className="pt-20">
+    <div>
       <SEO
         title="Hotels & Accommodation in The Gambia"
         description="Browse partner hotels and accommodation options near the Banjul International Convention Centre."
       />
 
-      {/* Hero */}
-      <section className="relative py-24 bg-gradient-to-br from-purple-600 to-blue-600">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${IMAGES.banquetHall})` }} />
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative max-w-5xl mx-auto px-4 text-center">
-          <Link to="/destination" className="inline-flex items-center gap-2 text-purple-300 hover:text-white mb-6 transition-colors">
-            <ArrowRight size={16} className="rotate-180" />
-            <span className="text-sm font-medium">Back to Destination Gambia</span>
-          </Link>
-          <h1 className="text-4xl sm:text-6xl font-bold text-white mb-6 leading-tight">
-            Hotels & <span className="text-purple-300">Accommodation</span>
-          </h1>
-          <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
-            Choose from our partner hotels offering world-class hospitality near the convention centre.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        eyebrow={pageContent?.hero?.eyebrow || 'Destination Gambia'}
+        title={pageContent?.hero?.title || 'Hotels & Accommodation'}
+        description={pageContent?.hero?.description || 'Choose from our partner hotels offering world-class hospitality near the convention centre.'}
+        backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.banquetHall}
+        compact
+      >
+        <Link to="/destination" className="inline-flex items-center gap-2 text-blue-200 hover:text-white mt-6 transition-colors text-sm font-medium">
+          <ArrowRight size={16} className="rotate-180" />
+          Back to Destination Gambia
+        </Link>
+      </PageHero>
 
       {/* Category Filter */}
       <section className="py-8 bg-white border-b sticky top-20 z-10">
@@ -230,17 +216,17 @@ export default function Hotels() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+      <section className="py-20 bg-gradient-to-r from-[#1F85A8] to-blue-700 text-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6">Need Help with Accommodation?</h2>
-          <p className="text-xl text-gray-200 mb-10 max-w-2xl mx-auto">
-            Our team can assist with group bookings and accommodation arrangements for your event.
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6">{pageContent?.cta?.title || 'Need Help with Accommodation?'}</h2>
+          <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
+            {pageContent?.cta?.description || 'Our team can assist with group bookings and accommodation arrangements for your event.'}
           </p>
           <Link
             to="/contact"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-purple-600 rounded-xl font-bold hover:bg-gray-100 transition-all"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-[#1F85A8] rounded-xl font-bold hover:bg-gray-100 transition-all"
           >
-            Contact Us <ArrowRight size={20} />
+            {pageContent?.cta?.primaryButtonText || 'Contact Us'} <ArrowRight size={20} />
           </Link>
         </div>
       </section>

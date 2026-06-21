@@ -1,9 +1,11 @@
 @echo off
 echo ========================================
-echo Deploying to MAIN site (bicc-gambia)
+echo Deploy PUBLIC site (apps/public-site)
+echo Target: https://bicc-gambia.web.app
 echo ========================================
 echo.
 
+cd /d "%~dp0apps\public-site"
 call npm run build
 if %errorlevel% neq 0 (
     echo Build failed!
@@ -11,12 +13,17 @@ if %errorlevel% neq 0 (
     exit /b %errorlevel%
 )
 
-firebase use default
-firebase deploy --only hosting
+firebase deploy --only hosting,firestore
+if %errorlevel% neq 0 (
+    echo Deploy failed!
+    pause
+    exit /b %errorlevel%
+)
 
 echo.
 echo ========================================
-echo Main site deployed successfully!
-echo URL: https://bicc-gambia.web.app
+echo Public site deployed successfully!
+echo Website: https://bicc-gambia.web.app
+echo Admin:   https://bicc-gambia-admin.web.app
 echo ========================================
 pause

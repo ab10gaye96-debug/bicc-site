@@ -46,7 +46,9 @@ export const ADMIN_TAB_LABELS: Record<string, string> = {
   venues: 'Venues',
   users: 'Users',
   testimonials: 'Testimonials',
+  team: 'Team & Board',
   partners: 'Partners',
+  hotels: 'Hotels',
   downloads: 'Downloads',
   careers: 'Careers',
   tenders: 'Tenders',
@@ -59,15 +61,15 @@ export const ROLE_TAB_PRESETS: Record<string, string[]> = {
   'Super Admin': Object.keys(ADMIN_TAB_LABELS),
   'Manager': [
     'dashboard', 'settings', 'pages', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery', 'venues',
-    'testimonials', 'partners', 'downloads', 'careers', 'tenders', 'subscribers', 'pricing', 'quotations',
+    'testimonials', 'team', 'partners', 'hotels', 'downloads', 'careers', 'tenders', 'subscribers', 'pricing', 'quotations',
   ],
   'Editor': [
     'dashboard', 'settings', 'pages', 'media', 'events', 'news', 'gallery',
-    'downloads', 'careers', 'testimonials', 'partners', 'pricing', 'quotations',
+    'downloads', 'careers', 'testimonials', 'team', 'partners', 'hotels', 'pricing', 'quotations',
   ],
   'Staff': [
     'dashboard', 'settings', 'pages', 'media', 'events', 'news', 'contacts', 'bookings', 'gallery',
-    'downloads', 'careers', 'testimonials', 'partners',
+    'downloads', 'careers', 'testimonials', 'team', 'partners', 'hotels',
   ],
 };
 
@@ -172,36 +174,132 @@ function detectContentTypeFromUrl(url: string): string {
   return 'application/octet-stream';
 }
 
+async function compressImageFile(file: File, maxWidth = 1200, quality = 0.82): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Image compression failed.'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error('Image compression failed.'))),
+          'image/jpeg',
+          quality,
+        );
+      };
+      img.onerror = () => reject(new Error('Invalid image file.'));
+      img.src = (event.target?.result as string) || '';
+    };
+    reader.onerror = () => reject(new Error('Could not read image file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Could not encode image.'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function uploadImageViaFirestore(file: File, folder: string): Promise<UploadedAdminAsset> {
+  const blob = await compressImageFile(file);
+  if (blob.size > 900 * 1024) {
+    throw new Error('Image is too large even after compression. Use a smaller file or paste an image URL.');
+  }
+
+  const dataUrl = await blobToDataUrl(blob);
+  const docRef = await addDoc(collection(db, 'mediaAssets'), {
+    folder,
+    fileName: file.name,
+    contentType: 'image/jpeg',
+    dataUrl,
+    fileSize: blob.size,
+    uploadedAt: new Date().toISOString(),
+    uploadedBy: localStorage.getItem(USERNAME_KEY) || 'admin',
+  });
+
+  const asset: UploadedAdminAsset = {
+    url: dataUrl,
+    fileName: file.name,
+    fileSize: formatReadableFileSize(blob.size),
+    fileType: 'Image',
+    contentType: 'image/jpeg',
+    assetType: 'image',
+    storagePath: `firestore:mediaAssets/${docRef.id}`,
+    sourceType: 'upload',
+    uploadedAt: new Date().toISOString(),
+  };
+
+  await logAdminActivity('upload', 'mediaAssets', docRef.id, {
+    folder,
+    fileName: file.name,
+    fallback: true,
+  });
+
+  return asset;
+}
+
 export async function uploadAdminAsset(file: File, folder: string): Promise<UploadedAdminAsset> {
+  const assetType = detectAssetType(file.name, file.type);
   const safeName = sanitizeFileName(file.name);
   const extension = getFileExtension(safeName);
   const timestamp = Date.now();
   const storagePath = `content/${folder}/${timestamp}-${safeName || `file.${extension || 'bin'}`}`;
   const fileRef = storageRef(storage, storagePath);
 
-  await uploadBytes(fileRef, file);
-  const url = await getDownloadURL(fileRef);
+  try {
+    await uploadBytes(fileRef, file);
+    const url = await getDownloadURL(fileRef);
 
-  const asset: UploadedAdminAsset = {
-    url,
-    fileName: file.name,
-    fileSize: formatReadableFileSize(file.size),
-    fileType: detectFileTypeLabel(file.name, file.type),
-    contentType: file.type || 'application/octet-stream',
-    assetType: detectAssetType(file.name, file.type),
-    storagePath,
-    sourceType: 'upload',
-    uploadedAt: new Date().toISOString(),
-  };
+    const asset: UploadedAdminAsset = {
+      url,
+      fileName: file.name,
+      fileSize: formatReadableFileSize(file.size),
+      fileType: detectFileTypeLabel(file.name, file.type),
+      contentType: file.type || 'application/octet-stream',
+      assetType,
+      storagePath,
+      sourceType: 'upload',
+      uploadedAt: new Date().toISOString(),
+    };
 
-  await logAdminActivity('upload', 'storage', storagePath, {
-    folder,
-    fileName: file.name,
-    fileType: asset.fileType,
-    assetType: asset.assetType,
-  });
+    await logAdminActivity('upload', 'storage', storagePath, {
+      folder,
+      fileName: file.name,
+      fileType: asset.fileType,
+      assetType: asset.assetType,
+    });
 
-  return asset;
+    return asset;
+  } catch (storageError) {
+    if (assetType === 'image') {
+      console.warn('Firebase Storage unavailable, saving image to Firestore:', storageError);
+      return uploadImageViaFirestore(file, folder);
+    }
+
+    throw new Error(
+      assetType === 'video'
+        ? 'Video upload needs Firebase Storage enabled (Firebase Console → bicc-gambia → Storage → Get Started), or paste a direct MP4/WebM URL.'
+        : 'File upload needs Firebase Storage enabled, or paste a direct link to the file.',
+    );
+  }
 }
 
 export function createLinkedAdminAsset(url: string, label?: string): UploadedAdminAsset {
@@ -222,6 +320,18 @@ export function createLinkedAdminAsset(url: string, label?: string): UploadedAdm
 
 export async function deleteStoredAsset(storagePath?: string | null): Promise<void> {
   if (!storagePath) return;
+
+  if (storagePath.startsWith('firestore:mediaAssets/')) {
+    const assetId = storagePath.replace('firestore:mediaAssets/', '');
+    if (assetId) {
+      try {
+        await deleteDoc(doc(db, 'mediaAssets', assetId));
+      } catch (error) {
+        console.error('Failed to delete Firestore media asset:', error);
+      }
+    }
+    return;
+  }
 
   try {
     await deleteObject(storageRef(storage, storagePath));
@@ -798,6 +908,36 @@ export async function deleteTestimonial(id: string | number): Promise<void> {
   await logAdminActivity('delete', 'testimonials', id.toString());
 }
 
+// ── Team Members ──────────────────────────────────────────────────────────────
+
+export type TeamGroup = 'board' | 'team';
+
+export async function fetchTeamMembers(): Promise<any[]> {
+  const snap = await getDocs(collection(db, 'teamMembers'));
+  return snap.docs
+    .map((entry) => ({ id: entry.id, ...entry.data() }))
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+}
+
+export async function createTeamMember(data: any): Promise<any> {
+  const docRef = await addDoc(collection(db, 'teamMembers'), {
+    ...data,
+    order: data.order ?? Date.now(),
+  });
+  await logAdminActivity('create', 'teamMembers', docRef.id, { name: data.name || '', group: data.group || '' });
+  return { id: docRef.id, ...data };
+}
+
+export async function updateTeamMember(id: string | number, data: any): Promise<void> {
+  await updateDoc(doc(db, 'teamMembers', id.toString()), data);
+  await logAdminActivity('update', 'teamMembers', id.toString(), { name: data.name || '', group: data.group || '' });
+}
+
+export async function deleteTeamMember(id: string | number): Promise<void> {
+  await deleteDoc(doc(db, 'teamMembers', id.toString()));
+  await logAdminActivity('delete', 'teamMembers', id.toString());
+}
+
 // ── Partners ──────────────────────────────────────────────────────────────────
 
 export async function fetchPartners(): Promise<any[]> {
@@ -819,6 +959,34 @@ export async function updatePartner(id: string | number, data: any): Promise<voi
 export async function deletePartner(id: string | number): Promise<void> {
   await deleteDoc(doc(db, 'partners', id.toString()));
   await logAdminActivity('delete', 'partners', id.toString());
+}
+
+// ── Hotels ────────────────────────────────────────────────────────────────────
+
+export async function fetchHotels(): Promise<any[]> {
+  const snap = await getDocs(collection(db, 'hotels'));
+  return snap.docs
+    .map((entry) => ({ id: entry.id, ...entry.data() }))
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+}
+
+export async function createHotel(data: any): Promise<any> {
+  const docRef = await addDoc(collection(db, 'hotels'), {
+    ...data,
+    order: data.order ?? Date.now(),
+  });
+  await logAdminActivity('create', 'hotels', docRef.id, { name: data.name || '' });
+  return { id: docRef.id, ...data };
+}
+
+export async function updateHotel(id: string | number, data: any): Promise<void> {
+  await updateDoc(doc(db, 'hotels', id.toString()), data);
+  await logAdminActivity('update', 'hotels', id.toString(), { name: data.name || '' });
+}
+
+export async function deleteHotel(id: string | number): Promise<void> {
+  await deleteDoc(doc(db, 'hotels', id.toString()));
+  await logAdminActivity('delete', 'hotels', id.toString());
 }
 
 // ── Downloads ─────────────────────────────────────────────────────────────────

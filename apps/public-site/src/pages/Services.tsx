@@ -3,6 +3,8 @@ import { ArrowRight, Check, Star, Users, Coffee, Mic2, Camera, Utensils, Wifi, C
 import { useState } from 'react';
 import { IMAGES } from '../images';
 import SEO from '../components/SEO';
+import PageHero from '../components/ui/PageHero';
+import { usePageContent } from '../hooks/usePageContent';
 
 const PACKAGES = [
   {
@@ -146,35 +148,36 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function Services() {
+  const { data: pageContent } = usePageContent('servicesPage');
+  const faqItems = pageContent?.faq?.items?.length ? pageContent.faq.items : FAQS;
+
   return (
-    <div className="pt-20">
+    <div>
       <SEO
         title="Services & Packages"
         description="Explore BICC's event packages — from half-day conferences to full international summits. Tailored solutions for every event at the Sir Dawda Kairaba Jawara International Conference Centre."
       />
 
-      {/* Hero */}
-      <section className="relative py-24 bg-[#1F85A8]">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${IMAGES.conferenceHall})` }} />
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">What We Offer</span>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mt-4 mb-6">Services & Packages</h1>
-          <p className="text-gray-300 text-lg max-w-3xl mx-auto">
-            From intimate boardroom meetings to full-scale international summits — BICC delivers
-            tailored event solutions that reflect excellence and African hospitality.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        eyebrow={pageContent?.hero?.eyebrow || 'What We Offer'}
+        title={pageContent?.hero?.title || 'Services & Packages'}
+        description={pageContent?.hero?.description || 'From intimate boardroom meetings to full-scale international summits — BICC delivers tailored event solutions that reflect excellence and African hospitality.'}
+        backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.conferenceHall}
+        compact
+      />
 
       {/* Packages */}
       <section className="py-16 sm:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">Event Packages</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">Choose Your Package</h2>
+            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">
+              {pageContent?.packages?.eyebrow || 'Event Packages'}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">
+              {pageContent?.packages?.title || 'Choose Your Package'}
+            </h2>
             <p className="text-gray-500 mt-4 max-w-2xl mx-auto">
-              All packages are fully customisable. Contact our events team for a tailored quote.
+              {pageContent?.packages?.description || 'All packages are fully customisable. Contact our events team for a tailored quote.'}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -226,7 +229,7 @@ export default function Services() {
             ))}
           </div>
           <p className="text-center text-sm text-gray-400 mt-8">
-            All packages are subject to availability and final confirmation by BICC. Prices provided upon request.
+            {pageContent?.packages?.footnote || 'All packages are subject to availability and final confirmation by BICC. Prices provided upon request.'}
           </p>
         </div>
       </section>
@@ -235,10 +238,14 @@ export default function Services() {
       <section className="py-16 sm:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">Enhance Your Event</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">Add-On Services</h2>
+            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">
+              {pageContent?.addons?.eyebrow || 'Enhance Your Event'}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">
+              {pageContent?.addons?.title || 'Add-On Services'}
+            </h2>
             <p className="text-gray-500 mt-4 max-w-xl mx-auto">
-              Customise any package with additional services tailored to your event needs.
+              {pageContent?.addons?.description || 'Customise any package with additional services tailored to your event needs.'}
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -261,26 +268,30 @@ export default function Services() {
       <section className="py-16 sm:py-20 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">Got Questions?</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">Frequently Asked Questions</h2>
+            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">
+              {pageContent?.faq?.eyebrow || 'Got Questions?'}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">
+              {pageContent?.faq?.title || 'Frequently Asked Questions'}
+            </h2>
             <p className="text-gray-500 mt-4">
-              Everything event planners need to know before booking with BICC.
+              {pageContent?.faq?.description || 'Everything event planners need to know before booking with BICC.'}
             </p>
           </div>
           <div className="space-y-3">
-            {FAQS.map((faq, i) => (
+            {faqItems.map((faq: { q: string; a: string }, i: number) => (
               <FaqItem key={i} q={faq.q} a={faq.a} />
             ))}
           </div>
           <div className="mt-10 bg-[#1F85A8] rounded-2xl p-8 text-center">
-            <h3 className="text-xl font-bold text-white mb-2">Still have questions?</h3>
-            <p className="text-blue-100 text-sm mb-6">Our events team is happy to help with anything not covered above.</p>
+            <h3 className="text-xl font-bold text-white mb-2">{pageContent?.cta?.title || 'Still have questions?'}</h3>
+            <p className="text-blue-100 text-sm mb-6">{pageContent?.cta?.description || 'Our events team is happy to help with anything not covered above.'}</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link to="/contact" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-[#1F85A8] rounded-xl font-bold hover:bg-gray-100 transition-all">
-                Contact Us
+                {pageContent?.cta?.primaryButtonText || 'Contact Us'}
               </Link>
               <Link to="/booking" className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-white text-white rounded-xl font-bold hover:bg-white/10 transition-all">
-                Submit a Booking Request <ArrowRight size={16} />
+                {pageContent?.cta?.secondaryButtonText || 'Submit a Booking Request'} <ArrowRight size={16} />
               </Link>
             </div>
           </div>

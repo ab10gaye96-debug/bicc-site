@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchGallery } from '../api';
 import { useApi } from '../hooks/useApi';
+import { usePageContent } from '../hooks/usePageContent';
 import { X, ChevronLeft, ChevronRight, ZoomIn, Play } from 'lucide-react';
 import { IMAGES } from '../images';
 import SEO from '../components/SEO';
+import PageHero from '../components/ui/PageHero';
 import { SkeletonGallery } from '../components/Skeleton';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -118,6 +120,7 @@ function Lightbox({ images, index, onClose }: { images: any[]; index: number; on
 // ── Main Gallery page ─────────────────────────────────────────────────────────
 export default function Gallery() {
   const { data: images, loading } = useApi(() => fetchGallery(), []);
+  const { data: pageContent } = usePageContent('galleryPage');
   const [filter, setFilter] = useState('All');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -129,31 +132,32 @@ export default function Gallery() {
   const imageCount = allItems.length - videoCount;
 
   return (
-    <div className="pt-20">
+    <div>
       <SEO
         title="Gallery"
         description="Explore photos and videos of BICC's world-class facilities, events, and the stunning setting of the Sir Dawda Kairaba Jawara International Conference Centre."
       />
 
-      {/* Hero */}
-      <section className="relative py-20 sm:py-24 bg-[#1F85A8]">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${IMAGES.heroBg})` }} />
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">Gallery</span>
-          <h1 className="text-3xl sm:text-5xl font-bold text-white mt-4 mb-6">Photos & Videos</h1>
-          <p className="text-gray-300 text-base sm:text-lg max-w-3xl mx-auto">
-            Explore our world-class facilities, events, and the stunning setting of the SDKJ International Conference Centre.
-          </p>
+      <PageHero
+        eyebrow={pageContent?.hero?.eyebrow || 'Gallery'}
+        title={pageContent?.hero?.title || 'Photos & Videos'}
+        description={pageContent?.hero?.description || 'Explore our world-class facilities, events, and the stunning setting of the SDKJ International Conference Centre.'}
+        backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.heroBg}
+        compact
+      />
+
+      {/* Stats + grid */}
+      <section className="py-12 sm:py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {(imageCount > 0 || videoCount > 0) && (
-            <div className="flex items-center justify-center gap-4 mt-6">
+            <div className="flex items-center justify-center gap-4 mb-8">
               {imageCount > 0 && (
-                <span className="inline-flex items-center gap-1.5 bg-white/10 text-white text-sm px-3 py-1.5 rounded-full">
+                <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-sm px-3 py-1.5 rounded-full">
                   🖼 {imageCount} Photo{imageCount !== 1 ? 's' : ''}
                 </span>
               )}
               {videoCount > 0 && (
-                <span className="inline-flex items-center gap-1.5 bg-white/10 text-white text-sm px-3 py-1.5 rounded-full">
+                <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-sm px-3 py-1.5 rounded-full">
                   🎬 {videoCount} Video{videoCount !== 1 ? 's' : ''}
                 </span>
               )}

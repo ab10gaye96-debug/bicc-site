@@ -5,9 +5,44 @@ import SEO from '../components/SEO';
 import PageHero from '../components/ui/PageHero';
 import SectionHeader from '../components/ui/SectionHeader';
 import ScrollReveal from '../components/motion/ScrollReveal';
+import TeamSection from '../components/TeamSection';
+
+const VALUE_ICONS = [Award, Lightbulb, Globe2, Heart, Shield];
+const FACT_ICONS = [Building2, Users, Globe2, Award];
+
+const DEFAULT_STORY = {
+  paragraph1: "The Banjul International Convention Centre (BICC) was born from The Gambia's ambition to become a premier destination for international events and diplomacy. Originally established as the OIC Secretariat in preparation for the 15th OIC Islamic Summit held in Banjul in May 2024, the organization was officially renamed and restructured as BICC — a limited liability company with a broader mandate.",
+  paragraph2: "BICC manages two landmark facilities: the Sir Dawda Kairaba Jawara International Conference Centre (SDKJ-ICC) — a $50 million, 14,000m² state-of-the-art complex inaugurated by President Adama Barrow in January 2020, and the VVIP Lounge at Banjul International Airport.",
+  paragraph3: "The Conference Centre is named after Sir Dawda Kairaba Jawara, The Gambia's first president and father of the nation, honoring his towering legacy. Nestled in the scenic Bijilo National Park and overlooking the Atlantic Ocean, it stands as the largest conference centre in the sub-region.",
+};
+
+const DEFAULT_VALUES = [
+  { title: 'Excellence', desc: 'Striving for the highest standards in everything we do' },
+  { title: 'Innovation', desc: 'Embracing creative solutions and cutting-edge technology' },
+  { title: 'Sustainability', desc: 'Building a responsible and lasting impact for future generations' },
+  { title: 'Service', desc: 'Going above and beyond with Gambian hospitality' },
+  { title: 'Integrity', desc: 'Operating with transparency, honesty, and accountability' },
+];
+
+const DEFAULT_FACTS = [
+  { value: '$50M', label: 'Investment in the facility' },
+  { value: '51-200', label: 'Dedicated employees' },
+  { value: '2020', label: 'Year inaugurated' },
+  { value: '#1', label: 'Largest in the sub-region' },
+];
 
 export default function About() {
   const { data: pageContent } = usePageContent('aboutPage');
+  const story = pageContent?.story || {};
+  const mission = pageContent?.mission || {};
+  const vision = pageContent?.vision || {};
+  const values = pageContent?.values || {};
+  const facts = pageContent?.facts || {};
+  const boardSection = pageContent?.boardSection || {};
+  const teamSection = pageContent?.teamSection || {};
+
+  const valueItems = values.items?.length ? values.items : DEFAULT_VALUES;
+  const factItems = facts.items?.length ? facts.items : DEFAULT_FACTS;
 
   return (
     <div>
@@ -35,29 +70,26 @@ export default function About() {
                   className="mb-6"
                 />
                 <p className="text-slate-600 leading-relaxed mb-4">
-                  The Banjul International Convention Centre (BICC) was born from The Gambia's ambition to become a premier destination 
-                  for international events and diplomacy. Originally established as the OIC Secretariat in preparation for the 15th OIC 
-                  Islamic Summit held in Banjul in May 2024, the organization was officially renamed and restructured as BICC — a limited 
-                  liability company with a broader mandate.
+                  {story.paragraph1 || DEFAULT_STORY.paragraph1}
                 </p>
                 {pageContent?.intro?.description && (
                   <p className="text-slate-600 leading-relaxed mb-4">{pageContent.intro.description}</p>
                 )}
                 <p className="text-slate-600 leading-relaxed mb-4">
-                  BICC manages two landmark facilities: the Sir Dawda Kairaba Jawara International Conference Centre (SDKJ-ICC) — a $50 million, 
-                  14,000m² state-of-the-art complex inaugurated by President Adama Barrow in January 2020, and the VVIP Lounge at Banjul 
-                  International Airport.
+                  {story.paragraph2 || DEFAULT_STORY.paragraph2}
                 </p>
                 <p className="text-slate-600 leading-relaxed">
-                  The Conference Centre is named after Sir Dawda Kairaba Jawara, The Gambia's first president and father of the nation, 
-                  honoring his towering legacy. Nestled in the scenic Bijilo National Park and overlooking the Atlantic Ocean, it stands as 
-                  the largest conference centre in the sub-region.
+                  {story.paragraph3 || DEFAULT_STORY.paragraph3}
                 </p>
               </div>
             </ScrollReveal>
             <ScrollReveal animation="fade-right" delay={120}>
               <div className="photo-frame mt-8 lg:mt-0">
-                <img src={IMAGES.heroBg} alt="SDKJ Conference Centre" className="rounded-2xl shadow-2xl w-full aspect-[4/3] object-cover motion-safe:animate-image-reveal" />
+                <img
+                  src={story.image || IMAGES.heroBg}
+                  alt="SDKJ Conference Centre"
+                  className="rounded-2xl shadow-2xl w-full aspect-[4/3] object-cover motion-safe:animate-image-reveal"
+                />
               </div>
             </ScrollReveal>
           </div>
@@ -72,51 +104,68 @@ export default function About() {
               <div className="w-12 sm:w-14 h-12 sm:h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
                 <Target className="text-blue-700" size={28} />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-[#1F85A8] mb-4">Our Mission</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-[#1F85A8] mb-4">
+                {mission.title || 'Our Mission'}
+              </h3>
               <p className="text-gray-600 leading-relaxed">
-                To provide comprehensive event management services that ensure every conference, meeting, and ceremony reflects 
-                our core values of Excellence, Innovation, Sustainability, Service, and Integrity. We are committed to delivering 
-                tailored event solutions for summits, conferences, and special events that connect people, ideas, and opportunities.
+                {mission.description || 'To provide comprehensive event management services that ensure every conference, meeting, and ceremony reflects our core values of Excellence, Innovation, Sustainability, Service, and Integrity. We are committed to delivering tailored event solutions for summits, conferences, and special events that connect people, ideas, and opportunities.'}
               </p>
             </div>
             <div className="bg-white rounded-2xl p-6 sm:p-10 shadow-sm">
               <div className="w-12 sm:w-14 h-12 sm:h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
                 <Globe2 className="text-blue-700" size={28} />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-[#1F85A8] mb-4">Our Vision</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-[#1F85A8] mb-4">
+                {vision.title || 'Our Vision'}
+              </h3>
               <p className="text-gray-600 leading-relaxed">
-                To position The Gambia as a leading Meetings, Incentives, Conferences, and Exhibitions (MICE) destination in Africa 
-                and beyond. As a national asset, BICC plays a central role in promoting The Gambia's diplomacy, culture, and economic 
-                growth by hosting world-class events that inspire collaboration and progress.
+                {vision.description || "To position The Gambia as a leading Meetings, Incentives, Conferences, and Exhibitions (MICE) destination in Africa and beyond. As a national asset, BICC plays a central role in promoting The Gambia's diplomacy, culture, and economic growth by hosting world-class events that inspire collaboration and progress."}
               </p>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Board of Directors */}
+      <TeamSection
+        group="board"
+        eyebrow={boardSection.eyebrow}
+        title={boardSection.title}
+        description={boardSection.description}
+      />
+
+      {/* BICC Team */}
+      <TeamSection
+        group="team"
+        eyebrow={teamSection.eyebrow}
+        title={teamSection.title}
+        description={teamSection.description}
+      />
+
       {/* Core Values */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">What Drives Us</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">Our Core Values</h2>
+            <span className="text-blue-700 font-semibold text-sm tracking-widest uppercase">
+              {values.eyebrow || 'What Drives Us'}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#1F85A8] mt-3">
+              {values.title || 'Our Core Values'}
+            </h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            {[
-              { icon: Award, title: 'Excellence', desc: 'Striving for the highest standards in everything we do' },
-              { icon: Lightbulb, title: 'Innovation', desc: 'Embracing creative solutions and cutting-edge technology' },
-              { icon: Globe2, title: 'Sustainability', desc: 'Building a responsible and lasting impact for future generations' },
-              { icon: Heart, title: 'Service', desc: 'Going above and beyond with Gambian hospitality' },
-              { icon: Shield, title: 'Integrity', desc: 'Operating with transparency, honesty, and accountability' },
-            ].map((value, i) => (
-              <div key={i} className="text-center p-6 rounded-2xl bg-gray-50 hover:bg-blue-50 transition-colors">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <value.icon className="text-blue-700" size={24} />
+            {valueItems.map((value: { title: string; desc: string }, i: number) => {
+              const Icon = VALUE_ICONS[i] || Award;
+              return (
+                <div key={i} className="text-center p-6 rounded-2xl bg-gray-50 hover:bg-blue-50 transition-colors">
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <Icon className="text-blue-700" size={24} />
+                  </div>
+                  <h3 className="font-bold text-[#1F85A8] mb-2">{value.title}</h3>
+                  <p className="text-sm text-gray-500">{value.desc}</p>
                 </div>
-                <h3 className="font-bold text-[#1F85A8] mb-2">{value.title}</h3>
-                <p className="text-sm text-gray-500">{value.desc}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -125,25 +174,24 @@ export default function About() {
       <section className="py-20 bg-[#1F85A8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white">Key Facts</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white">
+              {facts.title || 'Key Facts'}
+            </h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { icon: Building2, value: '$50M', label: 'Investment in the facility' },
-              { icon: Users, value: '51-200', label: 'Dedicated employees' },
-              { icon: Globe2, value: '2020', label: 'Year inaugurated' },
-              { icon: Award, value: '#1', label: 'Largest in the sub-region' },
-            ].map((fact, i) => (
-              <div key={i} className="text-center bg-white/5 rounded-2xl p-8 border border-white/10">
-                <fact.icon className="mx-auto text-blue-400 mb-4" size={32} />
-                <div className="text-3xl font-bold text-white mb-2">{fact.value}</div>
-                <div className="text-gray-400">{fact.label}</div>
-              </div>
-            ))}
+            {factItems.map((fact: { value: string; label: string }, i: number) => {
+              const Icon = FACT_ICONS[i] || Building2;
+              return (
+                <div key={i} className="text-center bg-white/5 rounded-2xl p-8 border border-white/10">
+                  <Icon className="mx-auto text-blue-400 mb-4" size={32} />
+                  <div className="text-3xl font-bold text-white mb-2">{fact.value}</div>
+                  <div className="text-gray-400">{fact.label}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
     </div>
   );
 }
-

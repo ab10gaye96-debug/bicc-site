@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit, Star } from 'lucide-react';
 import * as api from '../../api';
+import { MediaField } from './MediaField';
 
 export default function TestimonialsTab() {
   const [testimonials, setTestimonials] = useState<any[]>([]);
@@ -159,15 +160,14 @@ export default function TestimonialsTab() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-[#1F85A8] mb-1">Photo URL (optional)</label>
-            <input
-              value={form.image}
-              onChange={(e) => setForm({ ...form, image: e.target.value })}
-              placeholder="https://example.com/photo.jpg"
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600"
-            />
-          </div>
+          <MediaField
+            label="Photo (optional)"
+            value={form.image}
+            onChange={(url) => setForm({ ...form, image: url })}
+            accept="image"
+            uploadFolder="testimonials"
+            helpText="Client photo shown on the testimonial card."
+          />
 
           <div>
             <label className="flex items-center gap-2 cursor-pointer">

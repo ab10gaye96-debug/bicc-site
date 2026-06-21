@@ -16,6 +16,8 @@ import {
   ChevronLeft, ChevronRight, StickyNote, List, Settings, ArrowLeft,
 } from 'lucide-react';
 import TestimonialsTab from '../components/admin/TestimonialsTab';
+import TeamTab from '../components/admin/TeamTab';
+import HotelsTab from '../components/admin/HotelsTab';
 import PartnersTab from '../components/admin/PartnersTab';
 import DownloadsTab from '../components/admin/DownloadsTab';
 import CareersTab from '../components/admin/CareersTab';
@@ -24,6 +26,8 @@ import SubscribersTab from '../components/admin/SubscribersTab';
 import PricingTab from '../components/admin/PricingTab';
 import QuotationsTab from '../components/admin/QuotationsTab';
 import ContentManagementTab from '../components/admin/ContentManagementTab';
+import VenuesTab from '../components/admin/VenuesTab';
+import { MediaField } from '../components/admin/MediaField';
 import MediaLibraryTab from '../components/admin/MediaLibraryTab';
 import PagesContentTab from '../components/admin/PagesContentTab';
 import UserManagementTab from '../components/admin/UserManagementTab';
@@ -33,7 +37,7 @@ import { IMAGES } from '../images';
 
 type Tab =
   | 'dashboard' | 'events' | 'news' | 'contacts' | 'bookings' | 'gallery' | 'venues' | 'users'
-  | 'testimonials' | 'partners' | 'downloads' | 'careers' | 'tenders' | 'subscribers'
+  | 'testimonials' | 'team' | 'partners' | 'hotels' | 'downloads' | 'careers' | 'tenders' | 'subscribers'
   | 'pricing' | 'quotations' | 'settings' | 'media' | 'pages';
 
 // Image compression utility
@@ -170,8 +174,12 @@ export default function Admin() {
       <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-bicc-primary-light flex items-center justify-center px-4 py-10">
         <div className="admin-panel w-full max-w-md p-6 sm:p-8 shadow-admin-lg">
           <div className="text-center mb-8">
-            <div className="w-24 h-24 bg-white rounded-3xl shadow-md border border-blue-100 flex items-center justify-center mx-auto mb-4 overflow-hidden">
-              <img src={IMAGES.logo} alt="BICC logo" className="w-16 h-16 object-contain" />
+            <div className="mb-8 flex justify-center">
+              <img
+                src={IMAGES.logo}
+                alt="BICC — Banjul International Convention Centre"
+                className="h-20 sm:h-24 w-auto max-w-[280px] object-contain bg-white rounded-2xl px-3 py-2 shadow-xl border border-blue-100"
+              />
             </div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-4">
               <Lock size={14} />
@@ -187,7 +195,7 @@ export default function Admin() {
               <form onSubmit={handleLogin} className="space-y-4">
                 <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Email / Username</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} className="admin-input" placeholder="admin@bicc.gm" /></div>
                 <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Password</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="admin-input" placeholder="••••••••" /></div>
-                <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold hover:from-blue-400 hover:to-blue-600 transition-all">Sign In</button>
+                <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-bicc-primary to-bicc-primary-dark text-white rounded-xl font-bold hover:shadow-lg hover:shadow-bicc-primary/25 transition-all">Sign In</button>
               </form>
               <div className="mt-4 pt-4 border-t border-gray-200 text-center">
                 <button onClick={() => setShowSetup(true)} className="text-blue-600 hover:text-blue-700 text-sm font-medium">Create new account →</button>
@@ -202,7 +210,7 @@ export default function Admin() {
                 <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Username</label><input type="text" value={setupUsername} onChange={e => setSetupUsername(e.target.value)} className="admin-input" placeholder="admin" /></div>
                 <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Password</label><input type="password" value={setupPassword} onChange={e => setSetupPassword(e.target.value)} className="admin-input" placeholder="••••••••" /></div>
                 <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Confirm Password</label><input type="password" value={setupConfirmPassword} onChange={e => setSetupConfirmPassword(e.target.value)} className="admin-input" placeholder="••••••••" /></div>
-                <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold hover:from-blue-400 hover:to-blue-600 transition-all">Create Super Admin Account</button>
+                <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-bicc-primary to-bicc-primary-dark text-white rounded-xl font-bold hover:shadow-lg hover:shadow-bicc-primary/25 transition-all">Create Super Admin Account</button>
               </form>
               <div className="mt-4 pt-4 border-t border-gray-200 text-center">
                 <button onClick={() => setShowSetup(false)} className="text-blue-600 hover:text-blue-700 text-sm font-medium">← Back to Sign In</button>
@@ -231,7 +239,9 @@ export default function Admin() {
     { key: 'careers', label: 'Careers', icon: Briefcase },
     { key: 'tenders', label: 'Tenders', icon: FileSpreadsheet },
     { key: 'testimonials', label: 'Testimonials', icon: Star },
+    { key: 'team', label: 'Team & Board', icon: Users },
     { key: 'partners', label: 'Partners', icon: Handshake },
+    { key: 'hotels', label: 'Hotels', icon: Building2 },
     { key: 'subscribers', label: 'Subscribers', icon: Mail },
     { key: 'users', label: 'Users', icon: Users },
   ];
@@ -276,7 +286,9 @@ export default function Admin() {
       {activeTab === 'venues' && <VenuesTab />}
       {activeTab === 'users' && <UserManagementTab />}
       {activeTab === 'testimonials' && <TestimonialsTab />}
+      {activeTab === 'team' && <TeamTab />}
       {activeTab === 'partners' && <PartnersTab />}
+      {activeTab === 'hotels' && <HotelsTab />}
       {activeTab === 'downloads' && <DownloadsTab />}
       {activeTab === 'careers' && <CareersTab />}
       {activeTab === 'tenders' && <TendersTab />}
@@ -542,19 +554,63 @@ function EventsTab() {
 function NewsTab() {
   const [news, setNews] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: '', excerpt: '', content: '', author: 'BICC Communications', image: '' });
-  const [useCustomImage, setUseCustomImage] = useState(false);
+  const [editingArticle, setEditingArticle] = useState<any | null>(null);
+  const [form, setForm] = useState({ title: '', excerpt: '', content: '', author: 'BICC Communications', image: '', date: '' });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => { api.fetchNews().then(setNews).catch(() => { }); }, []);
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const imageUrl = useCustomImage && form.image ? form.image : '/images/conference-hall.jpg';
-    await api.createNews({ ...form, image: imageUrl, date: new Date().toISOString().split('T')[0] });
-    setNews(await api.fetchNews());
+  const resetForm = () => {
+    setForm({ title: '', excerpt: '', content: '', author: 'BICC Communications', image: '', date: '' });
+    setEditingArticle(null);
     setShowForm(false);
-    setForm({ title: '', excerpt: '', content: '', author: 'BICC Communications', image: '' });
-    setUseCustomImage(false);
+  };
+
+  const handleEdit = (item: any) => {
+    setEditingArticle(item);
+    setForm({
+      title: item.title || '',
+      excerpt: item.excerpt || '',
+      content: item.content || '',
+      author: item.author || 'BICC Communications',
+      image: item.image || '',
+      date: item.date || '',
+    });
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const imageUrl = form.image || '/images/conference-hall.jpg';
+      if (editingArticle) {
+        await api.updateNews(editingArticle.id, {
+          title: form.title,
+          excerpt: form.excerpt,
+          content: form.content,
+          author: form.author,
+          image: imageUrl,
+          date: form.date || editingArticle.date,
+        });
+      } else {
+        await api.createNews({
+          title: form.title,
+          excerpt: form.excerpt,
+          content: form.content,
+          author: form.author,
+          image: imageUrl,
+          date: new Date().toISOString().split('T')[0],
+        });
+      }
+      setNews(await api.fetchNews());
+      resetForm();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save article. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -564,42 +620,41 @@ function NewsTab() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-[#1F85A8]">Manage News</h2>
+        <div>
+          <h2 className="text-xl font-bold text-[#1F85A8]">Manage News</h2>
+          <p className="text-xs text-gray-500 mt-1">Publish and edit news articles on the public website.</p>
+        </div>
         {api.canEdit() && (
-          <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700"><Plus size={16} /> Add Article</button>
+          <button onClick={() => { resetForm(); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700"><Plus size={16} /> Add Article</button>
         )}
       </div>
       {showForm && (
-        <form onSubmit={handleAdd} className="bg-gray-50 rounded-xl p-6 mb-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl p-6 mb-6 space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-blue-800"><strong>How to add news:</strong> Write your article below. The date will be set automatically to today.</p>
+            <p className="text-sm text-blue-800"><strong>{editingArticle ? 'Edit article' : 'New article'}:</strong> Upload a cover image or pick one from the media library.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div><label className="block text-sm font-medium text-[#1F85A8] mb-1">Article Title *</label><input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g., BICC Hosts Regional Summit" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600" /></div>
             <div><label className="block text-sm font-medium text-[#1F85A8] mb-1">Author *</label><input required value={form.author} onChange={e => setForm({ ...form, author: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600" /></div>
           </div>
+          {editingArticle && (
+            <div><label className="block text-sm font-medium text-[#1F85A8] mb-1">Publish Date</label><input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600" /></div>
+          )}
           <div><label className="block text-sm font-medium text-[#1F85A8] mb-1">Short Summary (Excerpt) *</label><input required value={form.excerpt} onChange={e => setForm({ ...form, excerpt: e.target.value })} placeholder="Brief summary that appears on the news page" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600" /></div>
           <div><label className="block text-sm font-medium text-[#1F85A8] mb-1">Full Article Content *</label><textarea required rows={5} value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} placeholder="Write the full article here..." className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600 resize-none" /></div>
 
-          <div className="border-t pt-4">
-            <label className="flex items-center gap-2 mb-3 cursor-pointer">
-              <input type="checkbox" checked={useCustomImage} onChange={e => setUseCustomImage(e.target.checked)} className="w-4 h-4" />
-              <span className="text-sm font-medium text-[#1F85A8]">Use image from another website</span>
-            </label>
-            {useCustomImage ? (
-              <div>
-                <label className="block text-sm font-medium text-[#1F85A8] mb-1">Image URL</label>
-                <input value={form.image} onChange={e => setForm({ ...form, image: e.target.value })} placeholder="Paste image link here (e.g., https://example.com/image.jpg)" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600" />
-                <p className="text-xs text-gray-500 mt-1">💡 Tip: Right-click on any image online → "Copy image address" → Paste here</p>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-600">Default conference hall image will be used</p>
-            )}
-          </div>
+          <MediaField
+            label="Cover image"
+            value={form.image}
+            onChange={(url) => setForm({ ...form, image: url })}
+            accept="image"
+            uploadFolder="news"
+            helpText="This image appears on the news listing and article page."
+          />
 
           <div className="flex gap-3">
-            <button type="submit" className="px-6 py-2 bg-blue-600 text-[#1F85A8] rounded-lg text-sm font-bold hover:bg-blue-400">Publish Article</button>
-            <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Cancel</button>
+            <button type="submit" disabled={saving} className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50">{saving ? 'Saving…' : editingArticle ? 'Update Article' : 'Publish Article'}</button>
+            <button type="button" onClick={resetForm} className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Cancel</button>
           </div>
         </form>
       )}
@@ -614,7 +669,16 @@ function NewsTab() {
                 <h3 className="font-semibold text-[#1F85A8] text-sm line-clamp-1">{item.title}</h3>
                 <div className="flex items-center gap-3 text-xs text-gray-500 mt-1"><span>{item.date}</span><span>{item.author}</span></div>
               </div>
-              <button onClick={() => handleDelete(item.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={16} /></button>
+              <div className="flex items-center gap-2">
+                {api.canEdit() && (
+                  <button onClick={() => handleEdit(item)} className="p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit article">
+                    <Edit size={16} />
+                  </button>
+                )}
+                {api.canDelete() && (
+                  <button onClick={() => handleDelete(item.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete article"><Trash2 size={16} /></button>
+                )}
+              </div>
             </div>
           ))
         )}
@@ -817,20 +881,13 @@ function GalleryTab() {
       let mediaUrl = form.url;
 
       if (selectedFile) {
-        const fileName = `${Date.now()}-${selectedFile.name}`;
-        const folder = isVideoFile(selectedFile) ? 'gallery/videos' : 'gallery';
         let uploadBlob: Blob = selectedFile;
         if (!isVideoFile(selectedFile)) uploadBlob = await compressImage(selectedFile);
-        const uploadFile = new File([uploadBlob], fileName, { type: isVideoFile(selectedFile) ? selectedFile.type : 'image/jpeg' });
-        const fileRef = storageRef(storage, `${folder}/${fileName}`);
-        const uploadTask = uploadBytesResumable(fileRef, uploadFile);
-        mediaUrl = await new Promise((resolve, reject) => {
-          uploadTask.on('state_changed',
-            (snapshot) => setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
-            reject,
-            async () => resolve(await getDownloadURL(uploadTask.snapshot.ref))
-          );
-        }) as string;
+        const uploadFile = new File([uploadBlob], selectedFile.name, {
+          type: isVideoFile(selectedFile) ? selectedFile.type : 'image/jpeg',
+        });
+        const uploaded = await api.uploadAdminAsset(uploadFile, 'gallery');
+        mediaUrl = uploaded.url;
       }
 
       // Auto-detect video type from URL if no file was uploaded
@@ -935,7 +992,7 @@ function GalleryTab() {
               Drag & drop {form.mediaType === 'video' ? 'a video' : 'an image'} here, or click to browse
             </p>
             <p className="text-xs text-gray-400 mb-3">
-              {form.mediaType === 'video' ? 'MP4, MOV, AVI, WEBM — max 100MB' : 'JPG, PNG, WEBP — auto-compressed'}
+              {form.mediaType === 'video' ? 'MP4, MOV, WEBM — max 100MB' : 'JPG, PNG, WEBP — max 20MB, auto-compressed'}
             </p>
             <input
               type="file"
@@ -1767,133 +1824,3 @@ function UsersTab() {
   );
 }
 
-function VenuesTab() {
-  const [venues, setVenues] = useState<any[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
-    name: '',
-    capacity: '',
-    description: '',
-    image: '',
-    features: ''
-  });
-
-  const [useCustomImage, setUseCustomImage] = useState(false);
-
-  useEffect(() => {
-    api.fetchVenues().then(setVenues).catch(() => {});
-  }, []);
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const imageUrl =
-      useCustomImage && form.image
-        ? form.image
-        : '/images/conference-hall.jpg';
-
-    const featuresArray = form.features
-      .split(',')
-      .map(f => f.trim())
-      .filter(Boolean);
-
-    await api.createVenue({
-      ...form,
-      image: imageUrl,
-      features: featuresArray
-    });
-
-    setVenues(await api.fetchVenues());
-    setShowForm(false);
-    setForm({
-      name: '',
-      capacity: '',
-      description: '',
-      image: '',
-      features: ''
-    });
-    setUseCustomImage(false);
-  };
-
-  const handleDelete = async (id: number) => {
-    if (confirm('Delete this venue?')) {
-      await api.deleteVenue(id);
-      setVenues(await api.fetchVenues());
-    }
-  };
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-[#1F85A8]">Manage Venues</h2>
-
-        {api.canEdit() && (
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold"
-          >
-            Add Venue
-          </button>
-        )}
-      </div>
-
-      {showForm && (
-        <form onSubmit={handleAdd} className="bg-gray-50 rounded-xl p-4 sm:p-6 mb-6 space-y-4 border border-gray-200">
-          <input
-            placeholder="Venue Name *"
-            value={form.name}
-            required
-            onChange={e => setForm({ ...form, name: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600"
-          />
-          <input
-            placeholder="Capacity (e.g. 500 guests)"
-            value={form.capacity}
-            onChange={e => setForm({ ...form, capacity: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600"
-          />
-          <textarea
-            placeholder="Description"
-            rows={3}
-            value={form.description}
-            onChange={e => setForm({ ...form, description: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600 resize-none"
-          />
-          <input
-            placeholder="Features (comma separated, e.g. Wi-Fi, Projector, Sound System)"
-            value={form.features}
-            onChange={e => setForm({ ...form, features: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600"
-          />
-          <div className="flex gap-3">
-            <button type="submit" className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">
-              Save Venue
-            </button>
-            <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-
-      <div className="space-y-3">
-        {venues.map(v => (
-          <div key={v.id} className="flex items-center gap-4 bg-gray-50 rounded-xl p-4">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-[#1F85A8] text-sm">{v.name}</h3>
-              <p className="text-xs text-gray-500 mt-0.5">{v.capacity}</p>
-            </div>
-            {api.canEdit() && (
-              <button
-                onClick={() => handleDelete(v.id)}
-                className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}

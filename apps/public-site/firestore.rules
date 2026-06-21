@@ -39,6 +39,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /mediaAssets/{assetId} {
+      allow read: if true;
+      allow write: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
     // Audit logs - Admin only
     match /auditLogs/{logId} {
       allow read, write: if isAdmin();
@@ -111,6 +117,12 @@ service cloud.firestore {
     
     // Partners
     match /partners/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Team Members (Board of Directors & BICC Team)
+    match /teamMembers/{id} {
       allow read: if true;
       allow write: if isAdmin();
     }

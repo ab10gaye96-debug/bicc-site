@@ -1,30 +1,31 @@
 import { useState } from 'react';
 import { fetchNews } from '../api';
 import { useApi } from '../hooks/useApi';
+import { usePageContent } from '../hooks/usePageContent';
 import { Calendar, User, ArrowLeft } from 'lucide-react';
 import SEO from '../components/SEO';
+import PageHero from '../components/ui/PageHero';
 import { SkeletonList } from '../components/Skeleton';
 import { IMAGES } from '../images';
 
 export default function News() {
   const { data: news, loading } = useApi(() => fetchNews(), []);
+  const { data: pageContent } = usePageContent('newsPage');
   const [selected, setSelected] = useState<any | null>(null);
 
   return (
-    <div className="pt-20">
+    <div>
       <SEO
         title="News & Updates"
         description="Stay updated with the latest news, announcements, and happenings at the Banjul International Convention Centre."
       />
-      <section className="relative py-24 bg-[#1F85A8]">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${IMAGES.heroBg})` }} />
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <span className="text-blue-400 font-semibold text-sm tracking-widest uppercase">News & Updates</span>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mt-4 mb-6">Latest News</h1>
-          <p className="text-gray-300 text-lg max-w-3xl mx-auto">Stay updated with the latest happenings at the Banjul International Convention Centre.</p>
-        </div>
-      </section>
+      <PageHero
+        eyebrow={pageContent?.hero?.eyebrow || 'News & Updates'}
+        title={pageContent?.hero?.title || 'Latest News'}
+        description={pageContent?.hero?.description || 'Stay updated with the latest happenings at the Banjul International Convention Centre.'}
+        backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.heroBg}
+        compact
+      />
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {loading ? (
@@ -68,5 +69,3 @@ export default function News() {
     </div>
   );
 }
-
-

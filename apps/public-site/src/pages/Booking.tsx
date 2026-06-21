@@ -1,27 +1,18 @@
 import { useState, useEffect } from 'react';
-import { submitBooking, checkAvailability } from '../api';
+import { submitBooking, checkAvailability, fetchBookableVenues } from '../api';
 import { sendBookingNotificationEmail, sendBookingConfirmationEmail } from '../emailService';
-import { Building2, Calendar, Users, CheckCircle, Send, ChevronDown, Hash, Printer, AlertTriangle, Loader2 } from 'lucide-react';
+import { Building2, Calendar, Users, CheckCircle, Send, ChevronDown, Hash, Printer, AlertTriangle, Loader2, Info } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
+import { usePageContent } from '../hooks/usePageContent';
+import { useApi } from '../hooks/useApi';
+import PageHero from '../components/ui/PageHero';
+import SEO from '../components/SEO';
+import { IMAGES } from '../images';
 
 const EVENT_TYPES = [
   'Conference', 'Workshop', 'Banquet', 'Training', 'Exhibition',
   'Graduation', 'Meeting', 'Seminar', 'Press Conference', 'Product Launch',
   'Wedding Reception', 'Other',
-];
-
-
-
-const VENUES = [
-  { id: 'plenary-hall', name: 'Plenary Hall', capacity: '1,013 seats' },
-  { id: 'banquet-hall-a', name: 'Banquet Hall A', capacity: '500 guests' },
-  { id: 'banquet-hall-b', name: 'Banquet Hall B', capacity: '250 guests' },
-  { id: 'meeting-room-1', name: 'Meeting Room 1', capacity: '50 people' },
-  { id: 'meeting-room-2', name: 'Meeting Room 2', capacity: '50 people' },
-  { id: 'meeting-room-3', name: 'Meeting Room 3', capacity: '50 people' },
-  { id: 'meeting-room-4', name: 'Meeting Room 4', capacity: '50 people' },
-  { id: 'vvip-lounge', name: 'VVIP Lounge', capacity: '100 people' },
-  { id: 'outdoor-space', name: 'Outdoor Space', capacity: 'Flexible' },
 ];
 
 const ENHANCED_SERVICES = [
@@ -77,6 +68,8 @@ function generateRef(): string {
 export default function Booking() {
   const [searchParams] = useSearchParams();
   const prefilledDate = searchParams.get('date') || '';
+  const { data: pageContent } = usePageContent('bookingPage');
+  const { data: venues, loading: venuesLoading } = useApi(() => fetchBookableVenues(), []);
 
   const [form, setForm] = useState({ ...initialForm, startDate: prefilledDate });
   const [submitted, setSubmitted] = useState(false);
@@ -184,21 +177,15 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
   const labelClass = 'block text-xs sm:text-sm font-medium text-[#1F85A8] mb-1.5';
 
   return (
-    <div className="pt-20">
-      {/* Hero */}
-      <section className="relative py-24 bg-[#1F85A8]">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: 'url(/images/conference-hall.jpg)' }} />
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <span className="text-blue-300 font-semibold text-sm tracking-widest uppercase">Reserve Your Space</span>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mt-4 mb-6">Book an Event</h1>
-          <p className="text-gray-300 text-lg max-w-3xl mx-auto">
-            Complete the form below to request a venue booking at the Banjul International Convention Centre.
-            Our team will review your request and get back to you promptly.
-          </p>
-        </div>
-      </section>
+    <div>
+      <SEO title="Book an Event" description="Request a venue booking at the Banjul International Convention Centre." />
+      <PageHero
+        eyebrow={pageContent?.hero?.eyebrow || 'Reserve Your Space'}
+        title={pageContent?.hero?.title || 'Book an Event'}
+        description={pageContent?.hero?.description || 'Complete the form below to request a venue booking at the Banjul International Convention Centre. Our team will review your request and get back to you promptly.'}
+        backgroundImage={pageContent?.hero?.backgroundImage || IMAGES.heroBg}
+        compact
+      />
 
       {/* Form / Success */}
       <section className="py-12 sm:py-20 bg-gray-50">
@@ -209,20 +196,23 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
               <div className="w-16 sm:w-20 h-16 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
                 <CheckCircle className="text-green-500" size={40} />
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-[#1F85A8] mb-2 sm:mb-3">Booking Request Submitted!</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-[#1F85A8] mb-2 sm:mb-3">
+                {pageContent?.success?.title || 'Booking Request Submitted!'}
+              </h2>
               <p className="text-gray-500 mb-4 sm:mb-6 max-w-lg mx-auto text-sm sm:text-base">
-                Thank you. Our team will review your request and contact you within 1–2 business days
-                to confirm availability and discuss further details.
+                {pageContent?.success?.description || 'Thank you. Our team will review your request and contact you within 1–2 business days to confirm availability and discuss further details.'}
               </p>
               <div className="inline-flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl px-4 sm:px-6 py-3 sm:py-4 mb-6 sm:mb-8">
                 <Hash className="text-blue-600 shrink-0" size={20} />
                 <div className="text-left">
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Your Booking Reference</p>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                    {pageContent?.success?.referenceLabel || 'Your Booking Reference'}
+                  </p>
                   <p className="text-lg sm:text-xl font-bold text-[#1F85A8] tracking-wider">{refNumber}</p>
                 </div>
               </div>
               <p className="text-xs sm:text-sm text-gray-400 mb-4 sm:mb-6">
-                A confirmation email has been sent to your email address. Please quote your reference number in any correspondence.
+                {pageContent?.success?.confirmationText || 'A confirmation email has been sent to your email address. Please quote your reference number in any correspondence.'}
               </p>
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-3 justify-center">
                 <button
@@ -241,6 +231,18 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-10">
+
+              {pageContent?.notice?.title && (
+                <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900">
+                  <Info size={20} className="shrink-0 mt-0.5 text-blue-600" />
+                  <div>
+                    <p className="font-semibold">{pageContent.notice.title}</p>
+                    {pageContent.notice.description && (
+                      <p className="mt-1 text-blue-800">{pageContent.notice.description}</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Organisation Information */}
               <div className="bg-white rounded-2xl p-4 sm:p-8 shadow-sm">
@@ -318,7 +320,9 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
                 </div>
                 <p className="text-gray-500 text-sm mb-6 pl-0 sm:pl-13">Select the venue(s) you need for your event. At least one venue is required.</p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {VENUES.map(venue => (
+                  {venuesLoading ? (
+                    <p className="text-sm text-gray-400 col-span-full">Loading venues…</p>
+                  ) : (venues || []).map(venue => (
                     <label key={venue.id}
                       className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                         form.venues.includes(venue.id)

@@ -5,8 +5,6 @@ import {
   getDoc,
   addDoc,
   doc,
-  query,
-  where,
 } from 'firebase/firestore';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -27,6 +25,28 @@ export async function fetchVenues(): Promise<any[]> {
   return snap.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
 }
 
+export const FALLBACK_BOOKABLE_VENUES = [
+  { id: 'plenary-hall', name: 'Plenary Hall', capacity: '1,013 seats' },
+  { id: 'banquet-hall-a', name: 'Banquet Hall A', capacity: '500 guests' },
+  { id: 'banquet-hall-b', name: 'Banquet Hall B', capacity: '250 guests' },
+  { id: 'meeting-room-1', name: 'Meeting Room 1', capacity: '50 people' },
+  { id: 'meeting-room-2', name: 'Meeting Room 2', capacity: '50 people' },
+  { id: 'meeting-room-3', name: 'Meeting Room 3', capacity: '50 people' },
+  { id: 'meeting-room-4', name: 'Meeting Room 4', capacity: '50 people' },
+  { id: 'vvip-lounge', name: 'VVIP Lounge', capacity: '100 people' },
+  { id: 'outdoor-space', name: 'Outdoor Space', capacity: 'Flexible' },
+];
+
+export async function fetchBookableVenues(): Promise<{ id: string; name: string; capacity: string }[]> {
+  const venues = await fetchVenues();
+  if (venues.length === 0) return FALLBACK_BOOKABLE_VENUES;
+  return venues.map((v) => ({
+    id: v.id,
+    name: v.name,
+    capacity: v.capacity || '',
+  }));
+}
+
 // ── Gallery (Read Only) ───────────────────────────────────────────────────────
 
 export async function fetchGallery(): Promise<any[]> {
@@ -40,6 +60,18 @@ export async function fetchNews(): Promise<any[]> {
   const snap = await getDocs(collection(db, 'news'));
   return snap.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
 }
+
+// ── Hotels (Read Only) ────────────────────────────────────────────────────────
+
+export async function fetchHotels(): Promise<any[]> {
+  const snap = await getDocs(collection(db, 'hotels'));
+  return snap.docs
+    .map((entry) => ({ id: entry.id, ...entry.data() }))
+    .filter((h) => h.active !== false)
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+}
+
+// ── Bookable Venues (with fallback) ───────────────────────────────────────────
 
 // ── Downloads (Read Only) ─────────────────────────────────────────────────────
 
@@ -168,7 +200,7 @@ export async function checkAvailability(
 ): Promise<any[]> {
   if (!startDate || !venues.length) return [];
   const snap = await getDocs(collection(db, 'bookings'));
-  const bookings = snap.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
+  const bookings: any[] = snap.docs.map((entry) => ({ id: entry.id, ...(entry.data() as any) }));
   
   return bookings.filter((b) => {
     if (excludeId && b.id === excludeId) return false;
