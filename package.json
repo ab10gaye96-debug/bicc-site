@@ -1,44 +1,16 @@
 {
   "name": "bicc-site",
   "version": "1.0.0",
-  "type": "module",
+  "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "install:all": "npm install --prefix apps/public-site && npm install --prefix apps/admin-portal",
+    "dev:public": "npm run dev --prefix apps/public-site",
+    "dev:admin": "npm run dev --prefix apps/admin-portal",
+    "build:public": "npm run build --prefix apps/public-site",
+    "build:admin": "npm run build --prefix apps/admin-portal",
+    "build": "npm run build:public && npm run build:admin"
   },
   "engines": {
     "node": "20.x"
-  },
-  "dependencies": {
-    "@emailjs/browser": "^4.4.1",
-    "@supabase/supabase-js": "^2.106.1",
-    "bcryptjs": "^2.4.3",
-    "clsx": "^2.1.1",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.6",
-    "express": "^4.21.2",
-    "firebase": "^11.2.0",
-    "firebase-admin": "^13.0.1",
-    "firebase-functions": "^6.2.0",
-    "jsonwebtoken": "^9.0.3",
-    "jspdf": "^2.5.2",
-    "lucide-react": "^1.14.0",
-    "multer": "^2.1.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.31.0",
-    "tailwind-merge": "^3.4.0"
-  },
-  "devDependencies": {
-    "@tailwindcss/vite": "^4.1.17",
-    "@types/node": "^22.10.5",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
-    "tailwindcss": "^4.1.17",
-    "typescript": "^5.9.3",
-    "vite": "^6.2.1",
-    "vite-plugin-singlefile": "^2.3.0"
   }
 }

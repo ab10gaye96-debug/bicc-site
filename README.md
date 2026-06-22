@@ -1,147 +1,157 @@
-# 🏛️ BICC - Banjul International Convention Centre
+# BICC — Banjul International Convention Centre
 
-A full-stack website with admin panel for the Banjul International Convention Centre (BICC), managing the Sir Dawda Kairaba Jawara International Conference Centre in The Gambia.
+Website and admin portal for the Banjul International Convention Centre (BICC), managing the Sir Dawda Kairaba Jawara International Conference Centre in The Gambia.
 
-## 🚀 Quick Start
+## Project structure
 
-### 1. Install Dependencies
-```bash
-npm install
-```
+This repo contains **two separate apps** that share the same Firebase project (`bicc-gambia`):
 
-### 2. Run Development Server
-```bash
-npm run dev
-```
+| App | Folder | URL (production) |
+|-----|--------|------------------|
+| Public website | `apps/public-site` | https://bicc-gambia.web.app |
+| Admin portal | `apps/admin-portal` | https://bicc-gambia-admin.web.app |
 
-The site will be available at **http://localhost:5173**
+> **Note:** The root `src/` folder is legacy and no longer used. Always work in `apps/public-site` or `apps/admin-portal`.
 
 ---
 
-## 📋 Available Commands
+## Quick start
+
+### 1. Install dependencies (each app separately)
+
+```bash
+cd apps/public-site && npm install
+cd ../admin-portal && npm install
+```
+
+Or from the repo root:
+
+```bash
+npm run install:all
+```
+
+### 2. Run development servers
+
+**Public site** (http://localhost:5173):
+
+```bash
+npm run dev:public
+```
+
+**Admin portal** (http://localhost:5173):
+
+```bash
+npm run dev:admin
+```
+
+---
+
+## Available commands (from repo root)
 
 | Command | Description |
 |---------|-------------|
-| `npm install` | Install all dependencies |
-| `npm run dev` | Start Vite dev server (http://localhost:5173) |
-| `npm run build` | Build for production (outputs to dist/) |
-| `npm run preview` | Preview production build locally |
+| `npm run install:all` | Install deps for both apps |
+| `npm run dev:public` | Start public site dev server |
+| `npm run dev:admin` | Start admin portal dev server |
+| `npm run build:public` | Build public site |
+| `npm run build:admin` | Build admin portal |
+| `npm run build` | Build both apps |
 
 ---
 
-## 🔧 Tech Stack
+## Tech stack
 
-- **Frontend:** React 18 + TypeScript + Vite
+- **Frontend:** React 18 + TypeScript + Vite 6
 - **Styling:** Tailwind CSS 4
 - **Routing:** React Router DOM
-- **Backend:** Firebase (Firestore + Authentication + Storage)
+- **Backend:** Firebase (Firestore, Auth, Storage) — client-side
+- **Email:** EmailJS
 - **Deployment:** Firebase Hosting
-- **Email:** EmailJS for notifications
 
 ---
 
-## 🔐 Admin Panel
+## Admin portal
 
-Access the admin panel at `/admin`
+Production URL: **https://bicc-gambia-admin.web.app**
 
-**Default credentials:**
-- **Username:** `admin`
-- **Password:** `bicc2025`
+### First-time setup
 
-### Admin Features:
-- 📊 **Dashboard** — Overview stats & unread messages
-- 📅 **Events** — Create, edit, delete events
-- 📰 **News** — Publish and manage news articles
-- 💬 **Messages** — Read and manage contact form submissions
-- 🖼️ **Gallery** — Add/remove gallery images
-- 🏢 **Venues** — View venue information
+1. Visit `/setup` on the admin portal **once** to create the first Super Admin account.
+2. After setup completes, `/setup` is permanently disabled.
+3. Additional users are created by a Super Admin from the **Users** tab.
 
----
+### Admin features
 
-## 🗄️ Database
-
-The app uses **SQLite** (via `better-sqlite3`) for persistent data storage.
-
-- **Database file:** `data/bicc.db`
-- **Auto-created** on first run with seed data
-- **Uploaded files:** stored in `uploads/` directory
-
-### Tables:
-- `admin_users` — Admin authentication (bcrypt-hashed passwords)
-- `events` — Conference events & summits
-- `venues` — Venue information & features
-- `gallery` — Photo gallery images
-- `news` — News articles
-- `contacts` — Contact form submissions
-- `site_settings` — Key-value site configuration
+- Dashboard, content management, page editor, media library
+- Events, news, bookings, venues, gallery
+- Team & board, partners, hotels
+- Careers, tenders, downloads, pricing, quotations
+- Contact messages, newsletter subscribers
+- Role-based user management (Super Admin, Manager, Staff, Editor)
 
 ---
 
-## 🏗️ Architecture
+## Database
+
+All data is stored in **Firebase Firestore**. There is no SQLite or Express server.
+
+Key collections: `events`, `news`, `bookings`, `venues`, `gallery`, `contacts`, `teamMembers`, `hotels`, `users`, `pageContent`, `siteSettings`, `mediaLibrary`
+
+Security rules are in each app's `firestore.rules` file.
+
+---
+
+## Environment variables
+
+Copy `.env.example` to `.env` in each app folder (`apps/public-site` and `apps/admin-portal`).
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_FIREBASE_API_KEY` | Firebase API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
+| `VITE_FIREBASE_APP_ID` | Firebase app ID |
+| `VITE_EMAILJS_SERVICE_ID` | EmailJS service ID |
+| `VITE_EMAILJS_TEMPLATE_ID` | EmailJS template ID |
+| `VITE_EMAILJS_PUBLIC_KEY` | EmailJS public key |
+
+Defaults are baked in for local development if `.env` is not set.
+
+---
+
+## Deployment
+
+Use the batch scripts from the repo root:
+
+| Script | What it deploys |
+|--------|-----------------|
+| `deploy-main.bat` | Public site (hosting + firestore + storage) |
+| `deploy-admin.bat` | Admin portal (if present) |
+| `deploy-both.bat` | Both apps |
+| `deploy-firestore-rules.bat` | Firestore rules only |
+
+### After deploying security rule updates
+
+If you already have a Super Admin account, create this document in Firebase Console so `/setup` stays closed:
 
 ```
-├── server/           # Express.js backend
-│   ├── index.js      # API routes & server
-│   ├── db.js         # SQLite database setup & seeding
-│   └── start.js      # Production launcher
-├── src/              # React frontend
-│   ├── api.ts        # API client (fetch wrapper)
-│   ├── hooks/        # Custom React hooks
-│   ├── pages/        # Page components
-│   ├── components/   # Shared components
-│   └── images.ts     # Image path constants
-├── public/images/    # Static images
-├── data/             # SQLite database (auto-created)
-├── uploads/          # User-uploaded files (auto-created)
-└── dist/             # Built frontend (after npm run build)
+Collection: system
+Document ID: setup
+Fields: { complete: true }
 ```
 
 ---
 
-## 🌍 API Endpoints
+## Production checklist
 
-### Public
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/events` | List all events |
-| GET | `/api/venues` | List all venues |
-| GET | `/api/gallery` | List gallery images |
-| GET | `/api/news` | List news articles |
-| POST | `/api/contacts` | Submit contact form |
-
-### Admin (requires JWT token)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/login` | Login & get JWT |
-| GET | `/api/auth/verify` | Verify token |
-| POST | `/api/auth/change-password` | Change password |
-| GET | `/api/dashboard` | Dashboard stats |
-| POST/PUT/DELETE | `/api/events/:id` | Manage events |
-| POST/PUT/DELETE | `/api/news/:id` | Manage news |
-| POST/DELETE | `/api/gallery/:id` | Manage gallery |
-| GET/PATCH/DELETE | `/api/contacts/:id` | Manage messages |
-| POST | `/api/upload` | Upload images |
+1. Deploy both apps with `deploy-both.bat`
+2. Confirm `/setup` is closed (create `system/setup` doc if needed)
+3. Create admin users only through the Users tab
+4. Set strong passwords for all admin accounts
+5. Optionally move Firebase/EmailJS keys to `.env` files
 
 ---
 
-## 🔧 Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3001` | Server port |
-| `JWT_SECRET` | (built-in) | JWT signing secret — **change in production!** |
-
----
-
-## 📝 Production Deployment Checklist
-
-1. ✅ Change the default admin password after first login
-2. ✅ Set a strong `JWT_SECRET` environment variable
-3. ✅ Run `npm run build` before starting the server
-4. ✅ Use a process manager like PM2 for auto-restart
-5. ✅ Set up a reverse proxy (nginx) for HTTPS
-6. ✅ Back up `data/bicc.db` regularly
-
----
-
-Built with ❤️ for the Banjul International Convention Centre, The Gambia 🇬🇲
+Built for the Banjul International Convention Centre, The Gambia

@@ -12,10 +12,10 @@ interface SectionConfig {
 }
 
 const SECTIONS: SectionConfig[] = [
-  { id: 'home', label: 'Home Page', description: 'Hero section, stats, about preview, CTA' },
+  { id: 'home', label: 'Home Page', description: 'Hero video/slideshow, stats, testimonials & partners headings' },
   { id: 'footer', label: 'Footer', description: 'Brand info, links, contact, social, facilities' },
-  { id: 'navbar', label: 'Navigation Menu', description: 'Menu links, dropdowns, brand, and buttons' },
-  { id: 'contact', label: 'Contact Page', description: 'Contact information and office details' },
+  { id: 'navbar', label: 'Navigation Menu', description: 'About dropdown, venues, resources, and main links' },
+  { id: 'contact', label: 'Contact Page', description: 'Contact hero slideshow and office details' },
 ];
 
 export default function ContentManagementTab() {
@@ -245,7 +245,7 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
             <ul className="list-disc pl-5 space-y-1 text-amber-800">
               <li><strong>Image mode:</strong> set Hero Media Type to Image and upload or paste a <strong>Background Image URL</strong>.</li>
               <li><strong>Slideshow:</strong> in Image mode, add multiple images below and choose how many seconds each slide should stay on screen.</li>
-              <li><strong>Video mode:</strong> set Hero Media Type to Video, upload a video to <strong>Background Video URL</strong>, and optionally set a poster image.</li>
+              <li><strong>Video mode:</strong> set Hero Media Type to Video — supports MP4/WebM uploads, direct URLs, YouTube, and Vimeo.</li>
               <li>Upload files here or use the Media Library tab first, then click &quot;Media library&quot; to pick them.</li>
               <li>Click <strong>Save Changes</strong> at the top of this page when finished.</li>
             </ul>
@@ -333,7 +333,7 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
                 onChange={(v) => updateField('hero.backgroundVideo', v)}
                 accept="video"
                 uploadFolder="hero"
-                helpText="Upload an MP4/WebM file or paste a direct video URL. YouTube links are not supported for autoplay hero."
+                helpText="Upload MP4/WebM, paste a direct video URL, or use a YouTube/Vimeo link for background video."
               />
               <MediaField
                 label="Video Poster Image (optional)"
@@ -481,6 +481,13 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
             onChange={(v) => updateField('about.image', v)}
             placeholder="https://example.com/about-preview.jpg"
           />
+          <ImageListField
+            label="Preview Slideshow Images"
+            value={content.about?.images || []}
+            onChange={(value) => updateField('about.images', value)}
+            uploadFolder="home"
+            helpText="Add more than one image to turn the homepage About preview into a slideshow."
+          />
           <div className="grid sm:grid-cols-2 gap-4">
             <TextInput
               label="Image Badge Value"
@@ -557,6 +564,13 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
               accept="image"
               uploadFolder="venues"
             />
+            <ImageListField
+              label="Card 1 Slideshow Images"
+              value={content.venues?.cards?.card1?.images || []}
+              onChange={(value) => updateField('venues.cards.card1.images', value)}
+              uploadFolder="venues"
+              helpText="Add more than one image to rotate this homepage venue card automatically."
+            />
             <TextInput
               label="Card 2 Title"
               value={content.venues?.cards?.card2?.name || ''}
@@ -583,6 +597,13 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
               accept="image"
               uploadFolder="venues"
             />
+            <ImageListField
+              label="Card 2 Slideshow Images"
+              value={content.venues?.cards?.card2?.images || []}
+              onChange={(value) => updateField('venues.cards.card2.images', value)}
+              uploadFolder="venues"
+              helpText="Add more than one image to rotate this homepage venue card automatically."
+            />
             <TextInput
               label="Card 3 Title"
               value={content.venues?.cards?.card3?.name || ''}
@@ -608,6 +629,13 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
               onChange={(v) => updateField('venues.cards.card3.image', v)}
               accept="image"
               uploadFolder="venues"
+            />
+            <ImageListField
+              label="Card 3 Slideshow Images"
+              value={content.venues?.cards?.card3?.images || []}
+              onChange={(value) => updateField('venues.cards.card3.images', value)}
+              uploadFolder="venues"
+              helpText="Add more than one image to rotate this homepage venue card automatically."
             />
           </div>
         </div>
@@ -646,6 +674,36 @@ function HomeContentEditor({ content, updateField, expandedSections, toggleSecti
             placeholder="https://example.com/cta-background.jpg"
           />
         </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Testimonials Section (Homepage)"
+        id="testimonials"
+        expanded={expandedSections.includes('testimonials')}
+        onToggle={toggleSection}
+      >
+        <p className="text-xs text-gray-500 mb-4">
+          Edit individual testimonial quotes in the <strong>Testimonials</strong> tab. Control the section heading and scroll speed here.
+        </p>
+        <TextInput label="Eyebrow" value={content.testimonials?.eyebrow || ''} onChange={(v) => updateField('testimonials.eyebrow', v)} placeholder="Client Testimonials" />
+        <TextInput label="Section Title" value={content.testimonials?.title || ''} onChange={(v) => updateField('testimonials.title', v)} placeholder="What Our Clients Say" />
+        <TextArea label="Description" value={content.testimonials?.description || ''} onChange={(v) => updateField('testimonials.description', v)} rows={2} />
+        <NumberInput label="Auto-scroll duration (seconds)" value={content.testimonials?.scrollSeconds ?? 40} min={10} onChange={(value) => updateField('testimonials.scrollSeconds', value)} />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Partners Section (Homepage)"
+        id="partners"
+        expanded={expandedSections.includes('partners')}
+        onToggle={toggleSection}
+      >
+        <p className="text-xs text-gray-500 mb-4">
+          Add partner logos in the <strong>Partners</strong> tab. Logos scroll automatically on the homepage.
+        </p>
+        <TextInput label="Eyebrow" value={content.partners?.eyebrow || ''} onChange={(v) => updateField('partners.eyebrow', v)} placeholder="Our Network" />
+        <TextInput label="Section Title" value={content.partners?.title || ''} onChange={(v) => updateField('partners.title', v)} placeholder="Strategic Partners" />
+        <TextArea label="Description" value={content.partners?.description || ''} onChange={(v) => updateField('partners.description', v)} rows={2} />
+        <TextInput label="CTA Text" value={content.partners?.ctaText || ''} onChange={(v) => updateField('partners.ctaText', v)} placeholder="Interested in partnering with BICC?" />
       </CollapsibleSection>
     </div>
   );
@@ -920,7 +978,7 @@ function NavbarContentEditor({ content, updateField, addListItem, removeListItem
         onToggle={toggleSection}
       >
         <p className="text-xs text-gray-500 mb-4">
-          Order matters: links 1–2 appear before Venues, links 3–5 between dropdowns, and the rest after Resources.
+          Link 1 is Home. Events, Gallery, News, and Contact follow the dropdown menus.
         </p>
         <LinkListEditor
           links={content.navLinks || []}
@@ -929,6 +987,27 @@ function NavbarContentEditor({ content, updateField, addListItem, removeListItem
           addListItem={addListItem}
           removeListItem={removeListItem}
           newItemTemplate={{ name: 'New Link', path: '/' }}
+        />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="About Dropdown"
+        id="aboutDropdown"
+        expanded={expandedSections.includes('aboutDropdown')}
+        onToggle={toggleSection}
+      >
+        <p className="text-xs text-gray-500 mb-4">
+          Links under the <strong>About</strong> menu — Board Members, Our Team, and About BICC overview.
+        </p>
+        <LinkListEditor
+          links={content.aboutDropdown || []}
+          basePath="aboutDropdown"
+          updateField={updateField}
+          addListItem={addListItem}
+          removeListItem={removeListItem}
+          newItemTemplate={{ name: 'New Item', path: '/', desc: 'Short description', icon: 'Users' }}
+          showDescription
+          showIcon
         />
       </CollapsibleSection>
 
@@ -997,6 +1076,12 @@ function NavbarContentEditor({ content, updateField, addListItem, removeListItem
         onToggle={toggleSection}
       >
         <div className="grid sm:grid-cols-2 gap-4">
+          <TextInput
+            label="About Menu Label"
+            value={content.labels?.about || ''}
+            onChange={(v) => updateField('labels.about', v)}
+            placeholder="About"
+          />
           <TextInput
             label="Venues Menu Label"
             value={content.labels?.venues || ''}
@@ -1422,7 +1507,7 @@ function mergeContent(section: ContentSection, data: any | null): any {
   const merged = cloneContent({ ...defaults, ...data });
   const arrayFields: Partial<Record<ContentSection, string[]>> = {
     footer: ['quickLinks', 'resourceLinks'],
-    navbar: ['navLinks', 'venuesDropdown', 'resourcesDropdown'],
+    navbar: ['navLinks', 'aboutDropdown', 'venuesDropdown', 'resourcesDropdown'],
   };
 
   for (const field of arrayFields[section] || []) {
@@ -1472,6 +1557,7 @@ function getDefaultContent(section: ContentSection): any {
           value4: 'Sustainability',
         },
         image: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+        images: [],
         imageStat: {
           value: '14,000',
           label: 'm² of Event Space',
@@ -1488,18 +1574,21 @@ function getDefaultContent(section: ContentSection): any {
             capacity: '1,013 seats',
             description: 'Our flagship UN General Assembly-style conference hall',
             image: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+            images: [],
           },
           card2: {
             name: 'Banquet Halls',
             capacity: '500 guests',
             description: 'Elegant spaces for galas, dinners, and ceremonies',
             image: 'https://www.oicgambia.org/media/nav/conference-center-1.jpg',
+            images: [],
           },
           card3: {
             name: 'VVIP Airport Lounge',
             capacity: 'Exclusive',
             description: 'Ultra-modern arrival experience at Banjul Airport',
             image: 'https://www.oicgambia.org/media/file/6374a439e833eb03aadf97d0e51d72e9f242.jpg',
+            images: [],
           },
         },
       },
@@ -1508,6 +1597,18 @@ function getDefaultContent(section: ContentSection): any {
         description: "Let BICC deliver a world-class experience. From conferences to galas, we provide comprehensive event management that reflects excellence, innovation, and The Gambia's legendary hospitality.",
         buttonText: 'Book an Event',
         backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-1.jpg',
+      },
+      testimonials: {
+        eyebrow: 'Client Testimonials',
+        title: 'What Our Clients Say',
+        description: 'Hear from organizations and dignitaries who have experienced excellence at BICC.',
+        scrollSeconds: 40,
+      },
+      partners: {
+        eyebrow: 'Our Network',
+        title: 'Strategic Partners',
+        description: 'Trusted by leading organizations, governments, and international institutions.',
+        ctaText: 'Interested in partnering with BICC?',
       },
     },
     footer: {
@@ -1571,11 +1672,15 @@ function getDefaultContent(section: ContentSection): any {
     navbar: {
       navLinks: [
         { name: 'Home', path: '/' },
-        { name: 'About', path: '/about' },
         { name: 'Events', path: '/events' },
         { name: 'Gallery', path: '/gallery' },
         { name: 'News', path: '/news' },
         { name: 'Contact', path: '/contact' },
+      ],
+      aboutDropdown: [
+        { name: 'About BICC', path: '/about', icon: 'Building2', desc: 'Our story, mission & vision' },
+        { name: 'Board Members', path: '/board-members', icon: 'Users', desc: 'Governance & leadership' },
+        { name: 'Our Team', path: '/our-team', icon: 'Users', desc: 'Management & staff' },
       ],
       venuesDropdown: [
         { name: 'Our Venues', path: '/venues', icon: 'Building2', desc: 'Explore all event spaces' },
@@ -1594,6 +1699,7 @@ function getDefaultContent(section: ContentSection): any {
         fullName: 'Banjul International Convention Centre',
       },
       labels: {
+        about: 'About',
         venues: 'Venues',
         resources: 'Resources',
       },

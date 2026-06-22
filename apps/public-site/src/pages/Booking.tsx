@@ -75,18 +75,18 @@ export default function Booking() {
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [refNumber, setRefNumber] = useState('');
-  const [availability, setAvailability] = useState<{ checking: boolean; conflicts: any[] | null }>({ checking: false, conflicts: null });
+  const [availability, setAvailability] = useState<{ checking: boolean; conflicts: any[] | null; error: string | null }>({ checking: false, conflicts: null, error: null });
   const hasBlockingConflicts = (availability.conflicts?.length || 0) > 0;
 
   // Check availability whenever dates or selected venues change.
   useEffect(() => {
-    if (!form.startDate || !form.venues.length) { setAvailability({ checking: false, conflicts: null }); return; }
+    if (!form.startDate || !form.venues.length) { setAvailability({ checking: false, conflicts: null, error: null }); return; }
     let cancelled = false;
-    setAvailability(prev => ({ ...prev, checking: true }));
+    setAvailability(prev => ({ ...prev, checking: true, error: null }));
     const handle = setTimeout(() => {
       checkAvailability(form.startDate, form.endDate || form.startDate, form.venues, form.startTime, form.endTime)
-        .then(conflicts => { if (!cancelled) setAvailability({ checking: false, conflicts }); })
-        .catch(() => { if (!cancelled) setAvailability({ checking: false, conflicts: null }); });
+        .then(conflicts => { if (!cancelled) setAvailability({ checking: false, conflicts, error: null }); })
+        .catch(() => { if (!cancelled) setAvailability({ checking: false, conflicts: null, error: 'Unable to check availability. Please try again.' }); });
     }, 400);
     return () => { cancelled = true; clearTimeout(handle); };
   }, [form.startDate, form.endDate, form.startTime, form.endTime, form.venues]);
@@ -160,17 +160,16 @@ export default function Booking() {
         sendBookingConfirmationEmail(emailData),
       ]);
 
-     setRefNumber(ref);
-setSubmitted(true);
-setForm(initialForm);
-window.scrollTo({ top: 0, behavior: 'smooth' });
-
-} catch (error) {
-  console.error('Booking Error:', error);
-  alert(String(error));
-} finally {
-  setSending(false);
-}
+      setRefNumber(ref);
+      setSubmitted(true);
+      setForm(initialForm);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+      console.error('Booking Error:', error);
+      alert(String(error));
+    } finally {
+      setSending(false);
+    }
   };
   const inputClass =
     'w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all text-sm';
@@ -400,6 +399,11 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
                           ))}
                         </div>
                       </div>
+                    ) : availability.error ? (
+                      <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
+                        <AlertTriangle size={18} className="shrink-0" />
+                        {availability.error}
+                      </div>
                     ) : availability.conflicts && availability.conflicts.length === 0 ? (
                       <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700">
                         <CheckCircle size={18} className="shrink-0" /> These dates appear to be available.
@@ -505,7 +509,7 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
 
               {/* Submit */}
               <div className="flex flex-col gap-4">
-                <button type="submit" disabled={sending || hasBlockingConflicts}
+                <button type="submit" disabled={sending || hasBlockingConflicts || !!availability.error}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold hover:from-blue-500 hover:to-blue-600 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 text-base">
                   <Send size={18} />
                   {sending ? 'Submitting...' : 'Submit Booking Request'}

@@ -1,18 +1,17 @@
 // Quick utility to promote a user to Super Admin
 // Run with: node promote-to-admin.js YOUR_EMAIL@bicc.gm
+// NOTE: Uses bicc-gambia project — must match apps/admin-portal/src/firebase.ts
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 
-// Your Firebase config (copy from src/firebase.ts)
 const firebaseConfig = {
-  apiKey: "AIzaSyBV0TuHM6kCl2vyJ2L5I30XifjrMbBv-lE",
-  authDomain: "bicc-gm.firebaseapp.com",
-  projectId: "bicc-gm",
-  storageBucket: "bicc-gm.firebasestorage.app",
+  apiKey: "AIzaSyBGgiAIAJbV16KnyKxznpYKStJzpsFvQZ4",
+  authDomain: "bicc-gambia.firebaseapp.com",
+  projectId: "bicc-gambia",
+  storageBucket: "bicc-gambia.appspot.com",
   messagingSenderId: "527408002651",
   appId: "1:527408002651:web:6eb3c5f5e9e07ebde5f0bc",
-  measurementId: "G-BVGB4C27NJ"
 };
 
 const app = initializeApp(firebaseConfig);

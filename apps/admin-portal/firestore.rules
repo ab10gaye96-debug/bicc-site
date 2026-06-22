@@ -20,6 +20,18 @@ service cloud.firestore {
              exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Super Admin';
     }
+
+    // True only during one-time first Super Admin setup
+    function isInitialSetup() {
+      return isSignedIn() && !exists(/databases/$(database)/documents/system/setup);
+    }
+    
+    // One-time setup gate
+    match /system/{docId} {
+      allow read: if docId == 'setup';
+      allow create: if docId == 'setup' && isSignedIn() && !exists(/databases/$(database)/documents/system/setup);
+      allow update, delete: if isSuperAdmin();
+    }
     
     // Page Content - Public read, Admin write
     match /pageContent/{section} {
@@ -54,7 +66,7 @@ service cloud.firestore {
     // Username lookup for admin login
     match /adminUsernames/{username} {
       allow read: if true;
-      allow create: if isSuperAdmin() || (isSignedIn() && request.resource.data.uid == request.auth.uid);
+      allow create: if isSuperAdmin() || (isInitialSetup() && request.resource.data.uid == request.auth.uid);
       allow update: if isSuperAdmin() || (isSignedIn() &&
         resource.data.uid == request.auth.uid &&
         request.resource.data.uid == request.auth.uid);
@@ -69,7 +81,11 @@ service cloud.firestore {
         resource.data.email == request.auth.token.email ||
         isSuperAdmin()
       );
-      allow create: if isSuperAdmin() || (isSignedIn() && userId == request.auth.uid);
+      allow create: if isSuperAdmin() || (
+        isInitialSetup() &&
+        userId == request.auth.uid &&
+        request.resource.data.role == 'Super Admin'
+      );
       allow update, delete: if isSuperAdmin(); // Only Super Admin can delete/modify others
     }
     
@@ -97,9 +113,9 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    // Bookings
+    // Bookings — public read for availability calendar; admin manages updates
     match /bookings/{bookingId} {
-      allow read: if isAdmin();
+      allow read: if true;
       allow create: if true;
       allow update, delete: if isAdmin();
     }

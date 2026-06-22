@@ -5,6 +5,8 @@ import { ImageListField, MediaField } from './MediaField';
 
 type PageSection =
   | 'aboutPage'
+  | 'boardPage'
+  | 'teamPage'
   | 'venuesPage'
   | 'eventsPage'
   | 'bookingPage'
@@ -23,7 +25,9 @@ interface SectionConfig {
 }
 
 const SECTIONS: SectionConfig[] = [
-  { id: 'aboutPage', label: 'About Page', description: 'About hero, story, mission, values, team section titles' },
+  { id: 'aboutPage', label: 'About Page', description: 'About overview — story, mission, values (no team listings)' },
+  { id: 'boardPage', label: 'Board Members Page', description: 'Hero banner and headings for /board-members' },
+  { id: 'teamPage', label: 'Our Team Page', description: 'Hero banner and headings for /our-team' },
   { id: 'venuesPage', label: 'Venues Page', description: 'Venue hero, capacity overview, and CTA section' },
   { id: 'eventsPage', label: 'Events Page', description: 'Events hero and filter/search copy' },
   { id: 'bookingPage', label: 'Booking Page', description: 'Booking hero and success-state messages' },
@@ -216,13 +220,24 @@ export default function PagesContentTab() {
                 <TextArea label="Hero Description" rows={3} value={content.hero?.description || ''} onChange={(value) => updateField('hero.description', value)} />
               </EditorCard>
 
-              <EditorCard title="Intro Section">
-                <TextInput label="Intro Title" value={content.intro?.title || ''} onChange={(value) => updateField('intro.title', value)} />
-                <TextArea label="Intro Description" rows={3} value={content.intro?.description || ''} onChange={(value) => updateField('intro.description', value)} />
-              </EditorCard>
+              {(activeSection === 'boardPage' || activeSection === 'teamPage') && (
+                <EditorCard title="Team Listing Section">
+                  <p className="text-xs text-gray-500 -mt-2 mb-3">
+                    Add people and photos in <strong>Team & Board</strong> tab.
+                    {activeSection === 'boardPage' ? ' Set each member\'s group to Board.' : ' Set each member\'s group to Team.'}
+                  </p>
+                  <TextInput label="Eyebrow" value={content.section?.eyebrow || ''} onChange={(value) => updateField('section.eyebrow', value)} />
+                  <TextInput label="Section Title" value={content.section?.title || ''} onChange={(value) => updateField('section.title', value)} />
+                  <TextArea label="Section Description" rows={2} value={content.section?.description || ''} onChange={(value) => updateField('section.description', value)} />
+                </EditorCard>
+              )}
 
               {activeSection === 'aboutPage' && (
                 <>
+                  <EditorCard title="Intro Section">
+                    <TextInput label="Intro Title" value={content.intro?.title || ''} onChange={(value) => updateField('intro.title', value)} />
+                    <TextArea label="Intro Description" rows={3} value={content.intro?.description || ''} onChange={(value) => updateField('intro.description', value)} />
+                  </EditorCard>
                   <EditorCard title="Story Section">
                     <MediaField
                       label="Story Image"
@@ -231,6 +246,13 @@ export default function PagesContentTab() {
                       accept="image"
                       uploadFolder="pages"
                       helpText="Photo shown beside the Our Story text on the About page."
+                    />
+                    <ImageListField
+                      label="Story slideshow images"
+                      value={content.story?.images || []}
+                      onChange={(value) => updateField('story.images', value)}
+                      uploadFolder="pages"
+                      helpText="Add multiple About page story images here to rotate them automatically."
                     />
                     <TextArea label="Story Paragraph 1" rows={4} value={content.story?.paragraph1 || ''} onChange={(value) => updateField('story.paragraph1', value)} />
                     <TextArea label="Story Paragraph 2" rows={3} value={content.story?.paragraph2 || ''} onChange={(value) => updateField('story.paragraph2', value)} />
@@ -242,26 +264,6 @@ export default function PagesContentTab() {
                     <TextArea label="Mission Description" rows={4} value={content.mission?.description || ''} onChange={(value) => updateField('mission.description', value)} />
                     <TextInput label="Vision Title" value={content.vision?.title || ''} onChange={(value) => updateField('vision.title', value)} />
                     <TextArea label="Vision Description" rows={4} value={content.vision?.description || ''} onChange={(value) => updateField('vision.description', value)} />
-                  </EditorCard>
-
-                  <EditorCard title="Board of Directors Section">
-                    <p className="text-xs text-gray-500 -mt-2 mb-2">
-                      Add individual board members in the <strong>Team & Board</strong> tab. Their photos can be added there by
-                      uploading/importing an image, choosing one from Media Library, or pasting a direct image link. Edit the section headings here.
-                    </p>
-                    <TextInput label="Eyebrow" value={content.boardSection?.eyebrow || ''} onChange={(value) => updateField('boardSection.eyebrow', value)} />
-                    <TextInput label="Section Title" value={content.boardSection?.title || ''} onChange={(value) => updateField('boardSection.title', value)} />
-                    <TextArea label="Section Description" rows={2} value={content.boardSection?.description || ''} onChange={(value) => updateField('boardSection.description', value)} />
-                  </EditorCard>
-
-                  <EditorCard title="BICC Team Section">
-                    <p className="text-xs text-gray-500 -mt-2 mb-2">
-                      Add individual team members in the <strong>Team & Board</strong> tab. Their photos can be added there by
-                      uploading/importing an image, choosing one from Media Library, or pasting a direct image link. Edit the section headings here.
-                    </p>
-                    <TextInput label="Eyebrow" value={content.teamSection?.eyebrow || ''} onChange={(value) => updateField('teamSection.eyebrow', value)} />
-                    <TextInput label="Section Title" value={content.teamSection?.title || ''} onChange={(value) => updateField('teamSection.title', value)} />
-                    <TextArea label="Section Description" rows={2} value={content.teamSection?.description || ''} onChange={(value) => updateField('teamSection.description', value)} />
                   </EditorCard>
 
                   <EditorCard title="Core Values">
@@ -518,6 +520,7 @@ function getDefaultContent(section: PageSection) {
       },
       story: {
         image: 'https://www.oicgambia.org/media/nav/conference-center-3.jpg',
+        images: [],
         paragraph1: "The Banjul International Convention Centre (BICC) was born from The Gambia's ambition to become a premier destination for international events and diplomacy. Originally established as the OIC Secretariat in preparation for the 15th OIC Islamic Summit held in Banjul in May 2024, the organization was officially renamed and restructured as BICC — a limited liability company with a broader mandate.",
         paragraph2: 'BICC manages two landmark facilities: the Sir Dawda Kairaba Jawara International Conference Centre (SDKJ-ICC) — a $50 million, 14,000m² state-of-the-art complex inaugurated by President Adama Barrow in January 2020, and the VVIP Lounge at Banjul International Airport.',
         paragraph3: "The Conference Centre is named after Sir Dawda Kairaba Jawara, The Gambia's first president and father of the nation, honoring his towering legacy. Nestled in the scenic Bijilo National Park and overlooking the Atlantic Ocean, it stands as the largest conference centre in the sub-region.",
@@ -559,6 +562,36 @@ function getDefaultContent(section: PageSection) {
           { value: '2020', label: 'Year inaugurated' },
           { value: '#1', label: 'Largest in the sub-region' },
         ],
+      },
+    },
+    boardPage: {
+      hero: {
+        eyebrow: 'Governance',
+        title: 'Board of Directors',
+        description: 'The leadership guiding BICC\'s strategic direction and commitment to excellence.',
+        backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-3.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
+      },
+      section: {
+        eyebrow: 'Board',
+        title: 'Our Board Members',
+        description: 'Distinguished leaders providing governance and strategic oversight for BICC.',
+      },
+    },
+    teamPage: {
+      hero: {
+        eyebrow: 'Our People',
+        title: 'Management Team',
+        description: 'The dedicated professionals delivering world-class events and experiences every day.',
+        backgroundImage: 'https://www.oicgambia.org/media/nav/conference-center-8.jpg',
+        backgroundImages: [],
+        slideIntervalSeconds: 5,
+      },
+      section: {
+        eyebrow: 'Management',
+        title: 'Our Team',
+        description: 'Experienced professionals committed to operational excellence at BICC.',
       },
     },
     venuesPage: {

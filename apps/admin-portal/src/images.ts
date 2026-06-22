@@ -19,6 +19,6 @@ export const IMAGES = {
   oicSecretariat: 'https://thepoint.gm/assets/Featured-Articles/OIC-secretariat__ScaleMaxWidthWzcwMF0.jpg',
 
   // Admin branding logo
-  logo: '/images/admin-logo.jpg',
+  logo: '/images/bicc-logo.svg',
 };
 

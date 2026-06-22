@@ -13,6 +13,7 @@ import {
   Briefcase,
   FileText,
   ClipboardCheck,
+  Users,
   type LucideIcon,
 } from 'lucide-react';
 import BrandLogo from './BrandLogo';
@@ -20,6 +21,7 @@ import TopBar from './TopBar';
 import { usePageContent } from '../hooks/usePageContent';
 import {
   DEFAULT_NAV_LINKS,
+  DEFAULT_ABOUT_DROPDOWN,
   DEFAULT_VENUES_DROPDOWN,
   DEFAULT_RESOURCES_DROPDOWN,
   resolveLinks,
@@ -35,6 +37,7 @@ const NAV_ICON_MAP: Record<string, LucideIcon> = {
   Briefcase,
   FileText,
   ClipboardCheck,
+  Users,
 };
 
 function getDropdownIcon(iconName?: string): LucideIcon {
@@ -53,11 +56,16 @@ export default function Navbar() {
   const isHome = location.pathname === '/';
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const [showAboutMenu, setShowAboutMenu] = useState(false);
+  const [showMobileAbout, setShowMobileAbout] = useState(false);
+  const aboutRef = useRef<HTMLDivElement>(null);
   const navLinks = resolveLinks(cmsContent?.navLinks, DEFAULT_NAV_LINKS);
+  const aboutDropdown = resolveLinks(cmsContent?.aboutDropdown, DEFAULT_ABOUT_DROPDOWN) as NavDropdownLink[];
   const venuesDropdown = resolveLinks(cmsContent?.venuesDropdown, DEFAULT_VENUES_DROPDOWN) as NavDropdownLink[];
   const resourcesDropdown = resolveLinks(cmsContent?.resourcesDropdown, DEFAULT_RESOURCES_DROPDOWN) as NavDropdownLink[];
 
   const venuesMenuLabel = cmsContent?.labels?.venues || 'Venues';
+  const aboutMenuLabel = cmsContent?.labels?.about || 'About';
   const resourcesMenuLabel = cmsContent?.labels?.resources || 'Resources';
   const bookButtonText = cmsContent?.bookButton?.text || 'Book an Event';
   const searchPlaceholder = cmsContent?.search?.placeholder || 'Search...';
@@ -68,6 +76,9 @@ export default function Navbar() {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowVenuesMenu(false);
       }
+      if (aboutRef.current && !aboutRef.current.contains(e.target as Node)) {
+        setShowAboutMenu(false);
+      }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -76,6 +87,7 @@ export default function Navbar() {
   // Close dropdown on route change
   useEffect(() => {
     setShowVenuesMenu(false);
+    setShowAboutMenu(false);
     setIsOpen(false);
   }, [location.pathname]);
 
@@ -88,8 +100,15 @@ export default function Navbar() {
     }
   };
 
+  const aboutPaths = aboutDropdown.map((item) => item.path);
+  const homeLink = navLinks.find((l) => l.path === '/') || DEFAULT_NAV_LINKS[0];
+  const contactLink = navLinks.find((l) => l.path === '/contact') || DEFAULT_NAV_LINKS[DEFAULT_NAV_LINKS.length - 1];
+  const middleNavLinks = navLinks.filter(
+    (l) => l.path !== '/' && l.path !== '/contact' && !aboutPaths.includes(l.path),
+  );
   const venuesPaths = venuesDropdown.map((item) => item.path);
   const resourcesPaths = resourcesDropdown.map((item) => item.path);
+  const isAboutActive = aboutPaths.includes(location.pathname);
   const isVenuesActive = venuesPaths.includes(location.pathname);
   const isResourcesActive = resourcesPaths.some((path) => location.pathname.startsWith(path));
 
@@ -119,20 +138,60 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-1">
-            {/* Home & About */}
-            {navLinks.slice(0, 2).map((link) => (
+            {/* Home */}
+            {homeLink && (
               <Link
-                key={link.path}
-                to={link.path}
+                key={homeLink.path}
+                to={homeLink.path}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  location.pathname === link.path
+                  location.pathname === homeLink.path
                     ? 'text-white bg-white/20'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                {link.name}
+                {homeLink.name}
               </Link>
-            ))}
+            )}
+
+            {/* About dropdown */}
+            <div className="relative" ref={aboutRef}>
+              <button
+                onClick={() => setShowAboutMenu((v) => !v)}
+                className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isAboutActive || showAboutMenu
+                    ? 'text-white bg-white/20'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {aboutMenuLabel}
+                <ChevronDown size={14} className={`transition-transform duration-200 ${showAboutMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showAboutMenu && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
+                  {aboutDropdown.map((item) => {
+                    const Icon = getDropdownIcon(item.icon);
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-start gap-3 px-4 py-3.5 hover:bg-blue-50 transition-colors ${
+                          location.pathname === item.path ? 'bg-blue-50' : ''
+                        }`}
+                      >
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+                          <Icon size={15} className="text-blue-700" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-[#1F85A8]">{item.name}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             {/* Venues dropdown */}
             <div className="relative" ref={dropdownRef}>
@@ -175,7 +234,7 @@ export default function Navbar() {
             </div>
 
             {/* Events, Gallery, News links */}
-            {navLinks.slice(2, 5).map((link) => (
+            {middleNavLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
@@ -230,19 +289,19 @@ export default function Navbar() {
             </div>
 
             {/* Contact link */}
-            {navLinks.slice(5).map((link) => (
+            {contactLink && (
               <Link
-                key={link.path}
-                to={link.path}
+                key={contactLink.path}
+                to={contactLink.path}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  location.pathname === link.path
+                  location.pathname === contactLink.path
                     ? 'text-white bg-white/20'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                {link.name}
+                {contactLink.name}
               </Link>
-            ))}
+            )}
 
             {/* Search icon */}
             <button onClick={() => setShowSearch(s => !s)}
@@ -299,20 +358,51 @@ export default function Navbar() {
       {isOpen && (
         <div className="lg:hidden bg-[#1F85A8]/95 backdrop-blur-lg border-t border-white/10">
           <div className="px-4 py-4 space-y-1">
-            {navLinks.slice(0, 2).map((link) => (
+            {homeLink && (
               <Link
-                key={link.path}
-                to={link.path}
+                key={homeLink.path}
+                to={homeLink.path}
                 onClick={() => setIsOpen(false)}
                 className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                  location.pathname === link.path
+                  location.pathname === homeLink.path
                     ? 'text-white bg-white/20'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                {link.name}
+                {homeLink.name}
               </Link>
-            ))}
+            )}
+
+            {/* Mobile About accordion */}
+            <div>
+              <button
+                onClick={() => setShowMobileAbout((v) => !v)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  isAboutActive ? 'text-white bg-white/20' : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {aboutMenuLabel}
+                <ChevronDown size={14} className={`transition-transform duration-200 ${showMobileAbout ? 'rotate-180' : ''}`} />
+              </button>
+              {showMobileAbout && (
+                <div className="ml-4 mt-1 space-y-1 border-l-2 border-white/20 pl-4">
+                  {aboutDropdown.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setIsOpen(false)}
+                      className={`block px-3 py-2 rounded-lg text-sm transition-all ${
+                        location.pathname === item.path
+                          ? 'text-white bg-white/20'
+                          : 'text-gray-300 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Mobile Venues accordion */}
             <div>
@@ -346,7 +436,7 @@ export default function Navbar() {
             </div>
 
             {/* Events, Gallery, News */}
-            {navLinks.slice(2, 5).map((link) => (
+            {middleNavLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
@@ -393,20 +483,20 @@ export default function Navbar() {
             </div>
 
             {/* Contact */}
-            {navLinks.slice(5).map((link) => (
+            {contactLink && (
               <Link
-                key={link.path}
-                to={link.path}
+                key={contactLink.path}
+                to={contactLink.path}
                 onClick={() => setIsOpen(false)}
                 className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                  location.pathname === link.path
+                  location.pathname === contactLink.path
                     ? 'text-white bg-white/20'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                {link.name}
+                {contactLink.name}
               </Link>
-            ))}
+            )}
 
             <Link
               to="/booking"

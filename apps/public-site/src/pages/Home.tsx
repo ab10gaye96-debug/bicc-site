@@ -9,6 +9,7 @@ import TestimonialsSection from '../components/TestimonialsSection';
 import PartnersSection from '../components/PartnersSection';
 import NewsletterForm from '../components/NewsletterForm';
 import HomeHero from '../components/home/HomeHero';
+import ImageSlideshow from '../components/ui/ImageSlideshow';
 import SectionHeader from '../components/ui/SectionHeader';
 import ScrollReveal from '../components/motion/ScrollReveal';
 import { useEffect, useRef, useState } from 'react';
@@ -303,6 +304,9 @@ export default function Home() {
     { icon: Award, text: cmsContent?.about?.values?.value4 || 'Sustainability' },
   ].filter((value) => value.text);
   const aboutImage = cmsContent?.about?.image || IMAGES.conferenceHall;
+  const aboutImages = Array.isArray(cmsContent?.about?.images)
+    ? cmsContent.about.images.filter(Boolean)
+    : [];
   const aboutImageStatValue = cmsContent?.about?.imageStat?.value || '14,000';
   const aboutImageStatLabel = cmsContent?.about?.imageStat?.label || 'm² of Event Space';
 
@@ -317,6 +321,7 @@ export default function Home() {
   ].map((card, index) => ({
     ...card,
     image: card?.image || [IMAGES.conferenceHall, IMAGES.banquetHall, IMAGES.vvipLounge][index],
+    images: Array.isArray(card?.images) ? card.images.filter(Boolean) : [],
   }));
 
   const ctaTitle = cmsContent?.cta?.title || 'Ready to Host Your Next Event?';
@@ -385,10 +390,14 @@ export default function Home() {
             </div>
             <ScrollReveal animation="fade-right" delay={150}>
               <div className="relative mt-8 lg:mt-0 photo-frame">
-                <img
+                <ImageSlideshow
                   src={aboutImage}
+                  images={aboutImages}
                   alt="Conference Centre"
-                  className="rounded-2xl shadow-2xl w-full aspect-[4/3] object-cover motion-safe:animate-image-reveal"
+                  intervalSeconds={4.5}
+                  showIndicators={aboutImages.length > 0}
+                  containerClassName="relative overflow-hidden rounded-2xl shadow-2xl w-full aspect-[4/3]"
+                  imageClassName="w-full h-full object-cover motion-safe:animate-image-reveal"
                 />
                 <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-gradient-to-br from-bicc-primary to-bicc-primary-dark text-white rounded-xl p-4 sm:p-6 shadow-xl border border-white/10">
                   <div className="font-display text-2xl sm:text-3xl font-semibold">{aboutImageStatValue}</div>
@@ -409,7 +418,15 @@ export default function Home() {
               <ScrollReveal key={i} delay={i * 120} animation="fade-up">
                 <div className="group elegant-card h-full">
                   <div className="relative image-reveal-wrap">
-                    <img src={venue.image} alt={venue.name} className="w-full aspect-[3/2] object-cover" />
+                    <ImageSlideshow
+                      src={venue.image}
+                      images={venue.images}
+                      alt={venue.name}
+                      intervalSeconds={4.5}
+                      showIndicators={venue.images.length > 0}
+                      containerClassName="relative w-full aspect-[3/2] overflow-hidden"
+                      imageClassName="w-full h-full object-cover"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 to-transparent opacity-0 group-hover:opacity-100 motion-safe:transition-opacity motion-safe:duration-500" />
                     <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-bicc-primary text-xs px-3 py-1.5 rounded-full font-semibold tracking-wide">
                       {venue.capacity}
@@ -497,8 +514,18 @@ export default function Home() {
         </div>
       </section>
 
-      <TestimonialsSection />
-      <PartnersSection />
+      <TestimonialsSection
+        eyebrow={cmsContent?.testimonials?.eyebrow}
+        title={cmsContent?.testimonials?.title}
+        description={cmsContent?.testimonials?.description}
+        scrollSeconds={Math.max(10, Number(cmsContent?.testimonials?.scrollSeconds) || 40)}
+      />
+      <PartnersSection
+        eyebrow={cmsContent?.partners?.eyebrow}
+        title={cmsContent?.partners?.title}
+        description={cmsContent?.partners?.description}
+        ctaText={cmsContent?.partners?.ctaText}
+      />
       <NewsletterForm />
 
       {/* CTA */}

@@ -86,7 +86,7 @@ service firebase.storage {
     }
 
     match /resumes/{fileName} {
-      allow read: if true;
+      allow read: if isAdmin();
       allow create: if isValidImageSize() || isValidVideoSize();
       allow update, delete: if isAdmin();
     }

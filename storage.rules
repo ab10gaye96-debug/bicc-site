@@ -79,9 +79,9 @@ service firebase.storage {
       allow delete: if isAdmin();
     }
 
-    // Career application resumes
+    // Career application resumes — applicants upload; only admins can read
     match /resumes/{fileName} {
-      allow read: if true;
+      allow read: if isAdmin();
       allow create: if isValidSize();
       allow update, delete: if isAdmin();
     }

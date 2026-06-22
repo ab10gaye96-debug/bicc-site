@@ -88,13 +88,6 @@ const isUpcoming = (dateString: string): boolean => {
 
 export default function Admin() {
   const [loggedIn, setLoggedIn] = useState(api.isAdminLoggedIn());
-  const [showSetup, setShowSetup] = useState(false);
-  const [setupEmail, setSetupEmail] = useState('');
-  const [setupUsername, setSetupUsername] = useState('');
-  const [setupPassword, setSetupPassword] = useState('');
-  const [setupConfirmPassword, setSetupConfirmPassword] = useState('');
-  const [setupError, setSetupError] = useState('');
-  const [setupSuccess, setSetupSuccess] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -126,47 +119,6 @@ export default function Admin() {
     else setLoginError('Login failed. Use your email and password first if your username was created before today, then username login will work after that.');
   };
 
-  const handleSetup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSetupError('');
-    setSetupSuccess('');
-
-    if (!setupEmail || !setupUsername || !setupPassword || !setupConfirmPassword) {
-      setSetupError('All fields are required');
-      return;
-    }
-
-    if (setupPassword !== setupConfirmPassword) {
-      setSetupError('Passwords do not match');
-      return;
-    }
-
-    if (setupPassword.length < 8) {
-      setSetupError('Password must be at least 8 characters');
-      return;
-    }
-
-    try {
-      await api.createAdminUser({
-        email: setupEmail,
-        username: setupUsername,
-        password: setupPassword,
-        role: 'Super Admin',
-        status: 'active'
-      });
-      setSetupSuccess('Super Admin account created! You can now log in.');
-      setTimeout(() => {
-        setShowSetup(false);
-        setSetupEmail('');
-        setSetupUsername('');
-        setSetupPassword('');
-        setSetupConfirmPassword('');
-      }, 2000);
-    } catch (err: any) {
-      setSetupError(err.message || 'Failed to create account');
-    }
-  };
-
   const handleLogout = () => { api.logoutAdmin(); setLoggedIn(false); };
 
   if (!loggedIn) {
@@ -185,38 +137,16 @@ export default function Admin() {
               <Lock size={14} />
               BICC Admin Portal
             </div>
-            <h1 className="text-2xl font-bold text-bicc-primary">{showSetup ? 'Create Account' : 'Welcome back'}</h1>
-            <p className="text-gray-500 text-sm mt-2">{showSetup ? 'Set up your Super Admin account' : 'Sign in to manage website content, users, and live updates.'}</p>
+            <h1 className="text-2xl font-bold text-bicc-primary">Welcome back</h1>
+            <p className="text-gray-500 text-sm mt-2">Sign in to manage website content, users, and live updates.</p>
           </div>
 
-          {!showSetup ? (
-            <>
-              {loginError && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 mb-6"><AlertCircle className="text-red-500 shrink-0" size={16} /><span className="text-red-600 text-sm">{loginError}</span></div>}
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Email / Username</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} className="admin-input" placeholder="admin@bicc.gm" /></div>
-                <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Password</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="admin-input" placeholder="••••••••" /></div>
-                <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-bicc-primary to-bicc-primary-dark text-white rounded-xl font-bold hover:shadow-lg hover:shadow-bicc-primary/25 transition-all">Sign In</button>
-              </form>
-              <div className="mt-4 pt-4 border-t border-gray-200 text-center">
-                <button onClick={() => setShowSetup(true)} className="text-blue-600 hover:text-blue-700 text-sm font-medium">Create new account →</button>
-              </div>
-            </>
-          ) : (
-            <>
-              {setupError && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 mb-6"><AlertCircle className="text-red-500 shrink-0" size={16} /><span className="text-red-600 text-sm">{setupError}</span></div>}
-              {setupSuccess && <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-3 mb-6"><Check className="text-green-500 shrink-0" size={16} /><span className="text-green-600 text-sm">{setupSuccess}</span></div>}
-              <form onSubmit={handleSetup} className="space-y-4">
-                <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Email Address</label><input type="email" value={setupEmail} onChange={e => setSetupEmail(e.target.value)} className="admin-input" placeholder="admin@bicc.gm" /></div>
-                <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Username</label><input type="text" value={setupUsername} onChange={e => setSetupUsername(e.target.value)} className="admin-input" placeholder="admin" /></div>
-                <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Password</label><input type="password" value={setupPassword} onChange={e => setSetupPassword(e.target.value)} className="admin-input" placeholder="••••••••" /></div>
-                <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Confirm Password</label><input type="password" value={setupConfirmPassword} onChange={e => setSetupConfirmPassword(e.target.value)} className="admin-input" placeholder="••••••••" /></div>
-                <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-bicc-primary to-bicc-primary-dark text-white rounded-xl font-bold hover:shadow-lg hover:shadow-bicc-primary/25 transition-all">Create Super Admin Account</button>
-              </form>
-              <div className="mt-4 pt-4 border-t border-gray-200 text-center">
-                <button onClick={() => setShowSetup(false)} className="text-blue-600 hover:text-blue-700 text-sm font-medium">← Back to Sign In</button>
-              </div>
-            </>
-          )}
+          {loginError && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 mb-6"><AlertCircle className="text-red-500 shrink-0" size={16} /><span className="text-red-600 text-sm">{loginError}</span></div>}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Email / Username</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} className="admin-input" placeholder="admin@bicc.gm" /></div>
+            <div><label className="block text-sm font-medium text-bicc-primary mb-1.5">Password</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="admin-input" placeholder="••••••••" /></div>
+            <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-bicc-primary to-bicc-primary-dark text-white rounded-xl font-bold hover:shadow-lg hover:shadow-bicc-primary/25 transition-all">Sign In</button>
+          </form>
         </div>
       </div>
     );
@@ -224,7 +154,7 @@ export default function Admin() {
 
   const allTabs: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { key: 'settings', label: 'Content', icon: Settings },
+    { key: 'settings', label: 'Homepage & Nav', icon: Settings },
     { key: 'pages', label: 'Page Content', icon: StickyNote },
     { key: 'media', label: 'Media Library', icon: Image },
     { key: 'events', label: 'Events', icon: Calendar },

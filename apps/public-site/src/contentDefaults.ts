@@ -10,11 +10,16 @@ export interface NavDropdownLink extends NavLink {
 
 export const DEFAULT_NAV_LINKS: NavLink[] = [
   { name: 'Home', path: '/' },
-  { name: 'About', path: '/about' },
   { name: 'Events', path: '/events' },
   { name: 'Gallery', path: '/gallery' },
   { name: 'News', path: '/news' },
   { name: 'Contact', path: '/contact' },
+];
+
+export const DEFAULT_ABOUT_DROPDOWN: NavDropdownLink[] = [
+  { name: 'About BICC', path: '/about', icon: 'Building2', desc: 'Our story, mission & vision' },
+  { name: 'Board Members', path: '/board-members', icon: 'Users', desc: 'Governance & leadership' },
+  { name: 'Our Team', path: '/our-team', icon: 'Users', desc: 'Management & staff' },
 ];
 
 export const DEFAULT_VENUES_DROPDOWN: NavDropdownLink[] = [

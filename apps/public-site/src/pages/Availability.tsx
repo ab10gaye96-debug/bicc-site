@@ -17,7 +17,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function Availability() {
-  const { data: bookings } = useApi(() => fetchBookings(), []);
+  const { data: bookings, loading, error } = useApi(() => fetchBookings(), []);
   const navigate = useNavigate();
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
@@ -113,6 +113,16 @@ export default function Availability() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Legend */}
+          {loading && (
+            <div className="mb-8 bg-white rounded-2xl p-4 shadow-sm text-center text-gray-500 text-sm">
+              Loading availability...
+            </div>
+          )}
+          {error && (
+            <div className="mb-8 bg-red-50 border border-red-200 rounded-2xl p-4 text-center text-red-600 text-sm">
+              Unable to load availability. Please refresh the page or try again later.
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-4 mb-8 bg-white rounded-2xl p-4 shadow-sm">
             <span className="text-sm font-semibold text-gray-600">Legend:</span>
             <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-sm text-gray-600">Available</span></div>

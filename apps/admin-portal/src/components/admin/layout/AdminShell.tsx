@@ -33,11 +33,11 @@ interface AdminShellProps {
 
 const NAV_GROUPS: { label: string; keys: string[] }[] = [
   { label: 'Overview', keys: ['dashboard'] },
-  { label: 'Content', keys: ['settings', 'pages', 'media'] },
-  { label: 'Events & Venues', keys: ['events', 'bookings', 'venues', 'gallery'] },
-  { label: 'Communications', keys: ['news', 'contacts', 'subscribers'] },
-  { label: 'Business', keys: ['quotations', 'pricing', 'downloads', 'careers', 'tenders'] },
-  { label: 'Website', keys: ['testimonials', 'partners'] },
+  { label: 'Website Content', keys: ['settings', 'pages', 'media'] },
+  { label: 'Team & Partners', keys: ['team', 'partners', 'testimonials', 'hotels'] },
+  { label: 'Events & Bookings', keys: ['events', 'bookings', 'venues', 'gallery'] },
+  { label: 'News & Messages', keys: ['news', 'contacts', 'subscribers'] },
+  { label: 'Documents & Business', keys: ['quotations', 'pricing', 'downloads', 'careers', 'tenders'] },
   { label: 'Administration', keys: ['users'] },
 ];
 

@@ -5,6 +5,8 @@ import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
 import About from './pages/About';
+import BoardMembers from './pages/BoardMembers';
+import OurTeam from './pages/OurTeam';
 import Venues from './pages/Venues';
 import Events from './pages/Events';
 import Gallery from './pages/Gallery';
@@ -56,6 +58,8 @@ export default function App() {
               {/* Main Pages */}
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
+              <Route path="/board-members" element={<BoardMembers />} />
+              <Route path="/our-team" element={<OurTeam />} />
               <Route path="/venues" element={<Venues />} />
               <Route path="/events" element={<Events />} />
               <Route path="/gallery" element={<Gallery />} />
