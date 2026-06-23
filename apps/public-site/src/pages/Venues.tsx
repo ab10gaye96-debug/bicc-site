@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { fetchVenues } from '../api';
+import { useEffect, useState } from 'react';
+import { fetchVenues, fetchVenueCapacity } from '../api';
 import { usePageContent } from '../hooks/usePageContent';
 import { useApi } from '../hooks/useApi';
 import { Users, Check, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -11,6 +11,7 @@ import { SkeletonVenue } from '../components/Skeleton';
 
 function VenueCard({ venue, index }: { venue: any; index: number }) {
   const [mediaIndex, setMediaIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const mediaItems: { type: 'image' | 'video'; url: string }[] = [
     ...(Array.isArray(venue.images) ? venue.images : venue.image ? [venue.image] : []).map((url: string) => ({
@@ -25,6 +26,21 @@ function VenueCard({ venue, index }: { venue: any; index: number }) {
 
   const slides = mediaItems.length > 0 ? mediaItems : [{ type: 'image' as const, url: IMAGES.conferenceHall }];
   const current = slides[mediaIndex];
+  const shouldAutoSlide = slides.length > 1 && slides.every((slide) => slide.type === 'image') && !isPaused;
+
+  useEffect(() => {
+    setMediaIndex(0);
+  }, [venue?.id, slides.length]);
+
+  useEffect(() => {
+    if (!shouldAutoSlide) return;
+
+    const intervalId = window.setInterval(() => {
+      setMediaIndex((i) => (i + 1) % slides.length);
+    }, 5000);
+
+    return () => window.clearInterval(intervalId);
+  }, [shouldAutoSlide, slides.length]);
 
   const prev = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -38,7 +54,11 @@ function VenueCard({ venue, index }: { venue: any; index: number }) {
   return (
     <div className={`grid lg:grid-cols-2 gap-8 lg:gap-12 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
       <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
-        <div className="relative rounded-2xl overflow-hidden shadow-lg group">
+        <div
+          className="relative rounded-2xl overflow-hidden shadow-lg group"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
           {current.type === 'video' ? (
             <video
               key={current.url}
@@ -50,23 +70,23 @@ function VenueCard({ venue, index }: { venue: any; index: number }) {
             <img
               src={current.url}
               alt={venue.name}
-              className="w-full aspect-[4/3] object-cover transition-all duration-500"
+              className="w-full aspect-[4/3] object-cover transition-all duration-700 ease-in-out"
             />
           )}
           {slides.length > 1 && (
             <>
               <button onClick={prev}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100">
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 backdrop-blur-sm">
                 <ChevronLeft size={18} />
               </button>
               <button onClick={next}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100">
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 backdrop-blur-sm">
                 <ChevronRight size={18} />
               </button>
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/30 px-2.5 py-1.5 rounded-full backdrop-blur-sm">
                 {slides.map((slide, i) => (
                   <button key={i} onClick={e => { e.stopPropagation(); setMediaIndex(i); }}
-                    className={`w-2 h-2 rounded-full transition-all ${i === mediaIndex ? 'bg-white scale-125' : 'bg-white/50'}`}
+                    className={`rounded-full transition-all duration-300 ${i === mediaIndex ? 'w-5 h-2 bg-white shadow-sm' : 'w-2 h-2 bg-white/50 hover:bg-white/80'}`}
                     aria-label={slide.type === 'video' ? 'Video slide' : 'Image slide'}
                   />
                 ))}
@@ -104,6 +124,7 @@ function VenueCard({ venue, index }: { venue: any; index: number }) {
 export default function Venues() {
   const { data: venues, loading } = useApi(() => fetchVenues(), []);
   const { data: pageContent } = usePageContent('venuesPage');
+  const { data: capacityTable } = useApi(() => fetchVenueCapacity(), []);
 
   return (
     <div className="pt-36">
@@ -167,15 +188,7 @@ export default function Venues() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {[
-                    { space: 'Plenary Hall', capacity: '1,013 seats' },
-                    { space: 'Banquet Hall A', capacity: '500 guests' },
-                    { space: 'Banquet Hall B', capacity: '250 guests' },
-                    { space: '4 Thematic Rooms', capacity: '200 each' },
-                    { space: '11 Bilateral Rooms', capacity: '25 each' },
-                    { space: '4 Press Rooms', capacity: '40 each' },
-                    { space: 'Cafeteria', capacity: '40 guests' },
-                  ].map((row, i) => (
+                  {(capacityTable || []).map((row, i) => (
                     <tr key={i} className="hover:bg-blue-50 transition-colors">
                       <td className="px-4 sm:px-6 py-4 text-sm font-medium text-[#1F85A8]">{row.space}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm text-right text-gray-600">{row.capacity}</td>

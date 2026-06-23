@@ -32,6 +32,13 @@ const DISPLAY_NAME_KEY = 'bicc_display_name';
 const PERMISSIONS_KEY = 'bicc_user_permissions';
 const USERNAME_INDEX_COLLECTION = 'adminUsernames';
 const AUDIT_LOGS_COLLECTION = 'auditLogs';
+const LOGIN_ATTEMPTS_KEY = 'bicc_login_attempts';
+const SESSION_TIMEOUT_KEY = 'bicc_session_timeout';
+
+// Rate limiting configuration
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 export const ADMIN_TAB_LABELS: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -353,6 +360,119 @@ function clearAdminStorage() {
   localStorage.removeItem(ROLE_KEY);
   localStorage.removeItem(DISPLAY_NAME_KEY);
   localStorage.removeItem(PERMISSIONS_KEY);
+  localStorage.removeItem(LOGIN_ATTEMPTS_KEY);
+  localStorage.removeItem(SESSION_TIMEOUT_KEY);
+}
+
+// ── Security Functions ─────────────────────────────────────────────────────────────
+
+/**
+ * Validate password strength
+ * Requirements: At least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
+ */
+function validatePasswordStrength(password: string): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters long');
+  }
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+  if (!/[0-9]/.test(password)) {
+    errors.push('Password must contain at least one number');
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    errors.push('Password must contain at least one special character (!@#$%^&*(),.?":{}|<>)');
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Check if user is locked out due to too many failed login attempts
+ */
+function isAccountLocked(): boolean {
+  const attemptsData = localStorage.getItem(LOGIN_ATTEMPTS_KEY);
+  if (!attemptsData) return false;
+  
+  const { attempts, lastAttemptTime } = JSON.parse(attemptsData);
+  const timeSinceLastAttempt = Date.now() - lastAttemptTime;
+  
+  // Reset if lockout period has expired
+  if (timeSinceLastAttempt > LOCKOUT_DURATION_MS) {
+    localStorage.removeItem(LOGIN_ATTEMPTS_KEY);
+    return false;
+  }
+  
+  return attempts >= MAX_LOGIN_ATTEMPTS;
+}
+
+/**
+ * Record a failed login attempt
+ */
+function recordFailedLogin(): { remainingAttempts: number; locked: boolean } {
+  const attemptsData = localStorage.getItem(LOGIN_ATTEMPTS_KEY);
+  let attempts = 0;
+  let lastAttemptTime = Date.now();
+  
+  if (attemptsData) {
+    const parsed = JSON.parse(attemptsData);
+    const timeSinceLastAttempt = Date.now() - parsed.lastAttemptTime;
+    
+    // Reset if lockout period has expired
+    if (timeSinceLastAttempt > LOCKOUT_DURATION_MS) {
+      attempts = 0;
+    } else {
+      attempts = parsed.attempts;
+    }
+  }
+  
+  attempts++;
+  localStorage.setItem(LOGIN_ATTEMPTS_KEY, JSON.stringify({ attempts, lastAttemptTime }));
+  
+  const remainingAttempts = MAX_LOGIN_ATTEMPTS - attempts;
+  const locked = attempts >= MAX_LOGIN_ATTEMPTS;
+  
+  return { remainingAttempts, locked };
+}
+
+/**
+ * Clear failed login attempts on successful login
+ */
+function clearLoginAttempts(): void {
+  localStorage.removeItem(LOGIN_ATTEMPTS_KEY);
+}
+
+/**
+ * Set session timeout
+ */
+function setSessionTimeout(): void {
+  const timeout = Date.now() + SESSION_TIMEOUT_MS;
+  localStorage.setItem(SESSION_TIMEOUT_KEY, timeout.toString());
+}
+
+/**
+ * Check if session is still valid
+ */
+function isSessionValid(): boolean {
+  const timeout = localStorage.getItem(SESSION_TIMEOUT_KEY);
+  if (!timeout) return false;
+  
+  return Date.now() < parseInt(timeout);
+}
+
+/**
+ * Extend session timeout
+ */
+function extendSession(): void {
+  setSessionTimeout();
 }
 
 function normalisePermissions(permissions: unknown, fallbackRole: string): string[] {
@@ -402,19 +522,39 @@ async function deleteUsernameIndex(username?: string) {
 /**
  * Login with email OR username.
  * After login, fetches the user's role from Firestore and saves it to localStorage.
+ * Includes rate limiting and session management.
  */
 export async function loginAdmin(
   emailOrUsername: string,
   password: string
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: string; remainingAttempts?: number; locked?: boolean }> {
   try {
+    // Check if account is locked
+    if (isAccountLocked()) {
+      return {
+        success: false,
+        error: 'Account temporarily locked due to too many failed attempts. Please try again in 15 minutes.',
+        locked: true,
+      };
+    }
+
     const trimmedIdentity = emailOrUsername.trim();
     let email = trimmedIdentity;
 
     // Support username login by looking up email in Firestore
     if (!trimmedIdentity.includes('@')) {
       const usernameSnap = await getDoc(doc(db, USERNAME_INDEX_COLLECTION, normaliseUsername(trimmedIdentity)));
-      if (!usernameSnap.exists()) return false;
+      if (!usernameSnap.exists()) {
+        const { remainingAttempts, locked } = recordFailedLogin();
+        return {
+          success: false,
+          error: locked 
+            ? 'Account temporarily locked due to too many failed attempts. Please try again in 15 minutes.'
+            : `Invalid credentials. ${remainingAttempts} attempts remaining.`,
+          remainingAttempts,
+          locked,
+        };
+      }
       email = usernameSnap.data().email;
     }
 
@@ -450,13 +590,24 @@ export async function loginAdmin(
     if (!userData) {
       await signOut(auth);
       clearAdminStorage();
-      return false;
+      const { remainingAttempts, locked } = recordFailedLogin();
+      return {
+        success: false,
+        error: locked 
+          ? 'Account temporarily locked due to too many failed attempts. Please try again in 15 minutes.'
+          : `Invalid credentials. ${remainingAttempts} attempts remaining.`,
+        remainingAttempts,
+        locked,
+      };
     }
 
     if (userData.status === 'inactive') {
       await signOut(auth);
       clearAdminStorage();
-      return false;
+      return {
+        success: false,
+        error: 'This account has been deactivated. Please contact the administrator.',
+      };
     }
 
     const safeUserData = {
@@ -474,6 +625,10 @@ export async function loginAdmin(
     }, { merge: true });
     await syncUsernameIndex(safeUserData);
 
+    // Clear login attempts and set session timeout on successful login
+    clearLoginAttempts();
+    setSessionTimeout();
+
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(USERNAME_KEY, safeUserData.username || safeUserData.email || '');
     localStorage.setItem(ROLE_KEY, safeUserData.role);
@@ -486,11 +641,33 @@ export async function loginAdmin(
       role: safeUserData.role,
     });
 
-    return true;
-  } catch (error) {
+    return { success: true };
+  } catch (error: any) {
     console.error(error);
     clearAdminStorage();
-    return false;
+    
+    // Record failed login attempt
+    const { remainingAttempts, locked } = recordFailedLogin();
+    
+    let errorMessage = 'Login failed. Please check your credentials.';
+    if (error.code === 'auth/invalid-credential') {
+      errorMessage = locked 
+        ? 'Account temporarily locked due to too many failed attempts. Please try again in 15 minutes.'
+        : `Invalid email or password. ${remainingAttempts} attempts remaining.`;
+    } else if (error.code === 'auth/user-not-found') {
+      errorMessage = locked 
+        ? 'Account temporarily locked due to too many failed attempts. Please try again in 15 minutes.'
+        : `Invalid email or password. ${remainingAttempts} attempts remaining.`;
+    } else if (error.code === 'auth/too-many-requests') {
+      errorMessage = 'Too many login attempts. Please try again later.';
+    }
+    
+    return {
+      success: false,
+      error: errorMessage,
+      remainingAttempts,
+      locked,
+    };
   }
 }
 
@@ -936,6 +1113,33 @@ export async function updateTeamMember(id: string | number, data: any): Promise<
 export async function deleteTeamMember(id: string | number): Promise<void> {
   await deleteDoc(doc(db, 'teamMembers', id.toString()));
   await logAdminActivity('delete', 'teamMembers', id.toString());
+}
+
+// ── Venue Capacity Overview ─────────────────────────────────────────────────────
+
+export async function fetchVenueCapacity(): Promise<any[]> {
+  const docRef = doc(db, 'pageContent', 'venuesPage');
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    return data.capacityTable || [];
+  }
+  // Return default capacity data if not found
+  return [
+    { space: 'Plenary Hall', capacity: '1,013 seats' },
+    { space: 'Banquet Hall A', capacity: '500 guests' },
+    { space: 'Banquet Hall B', capacity: '250 guests' },
+    { space: '4 Thematic Rooms', capacity: '200 each' },
+    { space: '11 Bilateral Rooms', capacity: '25 each' },
+    { space: '4 Press Rooms', capacity: '40 each' },
+    { space: 'Cafeteria', capacity: '40 guests' },
+  ];
+}
+
+export async function updateVenueCapacity(capacityTable: any[]): Promise<void> {
+  const docRef = doc(db, 'pageContent', 'venuesPage');
+  await setDoc(docRef, { capacityTable }, { merge: true });
+  await logAdminActivity('update', 'pageContent', 'venuesPage', { capacityTable: 'updated' });
 }
 
 // ── Partners ──────────────────────────────────────────────────────────────────

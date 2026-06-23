@@ -308,9 +308,50 @@ export async function fetchPageContent(section: string): Promise<any> {
 }
 
 /**
+ * Fetch venue capacity table from pageContent
+ */
+export async function fetchVenueCapacity(): Promise<any[]> {
+  try {
+    const data = await fetchPageContent('venuesPage');
+    if (data?.capacityTable && Array.isArray(data.capacityTable)) {
+      return data.capacityTable;
+    }
+    // Return default capacity data if not found
+    return [
+      { space: 'Plenary Hall', capacity: '1,013 seats' },
+      { space: 'Banquet Hall A', capacity: '500 guests' },
+      { space: 'Banquet Hall B', capacity: '250 guests' },
+      { space: '4 Thematic Rooms', capacity: '200 each' },
+      { space: '11 Bilateral Rooms', capacity: '25 each' },
+      { space: '4 Press Rooms', capacity: '40 each' },
+      { space: 'Cafeteria', capacity: '40 guests' },
+    ];
+  } catch (error) {
+    console.error('Error fetching venue capacity:', error);
+    return [
+      { space: 'Plenary Hall', capacity: '1,013 seats' },
+      { space: 'Banquet Hall A', capacity: '500 guests' },
+      { space: 'Banquet Hall B', capacity: '250 guests' },
+      { space: '4 Thematic Rooms', capacity: '200 each' },
+      { space: '11 Bilateral Rooms', capacity: '25 each' },
+      { space: '4 Press Rooms', capacity: '40 each' },
+      { space: 'Cafeteria', capacity: '40 guests' },
+    ];
+  }
+}
+
+/**
  * Convenience functions for specific sections
  */
 export const fetchHomeContent = () => fetchPageContent('home');
 export const fetchFooterContent = () => fetchPageContent('footer');
 export const fetchNavbarContent = () => fetchPageContent('navbar');
 export const fetchContactContent = () => fetchPageContent('contact');
+
+
+// ── Team & Board Members (Read Only) ──────────────────────────────────────────
+
+export async function fetchTeamMembers(): Promise<any[]> {
+  const snap = await getDocs(collection(db, 'teamMembers'));
+  return snap.docs.map((entry) => ({ id: entry.id, ...entry.data() })).sort((a, b) => (a.order || 0) - (b.order || 0));
+}
