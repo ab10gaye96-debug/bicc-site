@@ -703,9 +703,18 @@ export function getCurrentUserDisplayName(): string {
 export function getCurrentUserPermissions(): string[] {
   try {
     const parsed = JSON.parse(localStorage.getItem(PERMISSIONS_KEY) || '[]');
-    return normalisePermissions(parsed, getCurrentUserRole());
+    const permissions = normalisePermissions(parsed, getCurrentUserRole());
+    // Ensure 'team' is always included for all roles
+    if (!permissions.includes('team')) {
+      permissions.push('team');
+    }
+    return permissions;
   } catch {
-    return ROLE_TAB_PRESETS[getCurrentUserRole()] || ROLE_TAB_PRESETS.Staff;
+    const defaultPermissions = ROLE_TAB_PRESETS[getCurrentUserRole()] || ROLE_TAB_PRESETS.Staff;
+    if (!defaultPermissions.includes('team')) {
+      defaultPermissions.push('team');
+    }
+    return defaultPermissions;
   }
 }
 
