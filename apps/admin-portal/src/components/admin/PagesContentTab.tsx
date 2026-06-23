@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BookOpenText, Save, RotateCcw } from 'lucide-react';
+import { BookOpenText, Save, RotateCcw, Info, Sparkles, Image as ImageIcon, Layers } from 'lucide-react';
 import * as api from '../../api';
 import { ImageListField, MediaField } from './MediaField';
 
@@ -112,14 +112,31 @@ export default function PagesContentTab() {
     <div className="space-y-6">
       <div>
         <h2 className="admin-section-title mb-2">Page Content Studio</h2>
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900">
-        <p className="font-semibold mb-2">Where to edit images on the website</p>
-        <ul className="list-disc pl-5 space-y-1 text-blue-800">
-          <li><strong>Team & Board tab</strong> — photos, names, and titles for Board of Directors and BICC Team on the About page.</li>
-          <li><strong>Page Content (here)</strong> — banner/hero image at the top of each page (About, Venues, Events, etc.).</li>
-          <li><strong>Content tab → Home Page</strong> — homepage hero, homepage sections, footer, and menu.</li>
-          <li><strong>Venues tab</strong> — individual venue cards on the /venues listing (photos + videos per venue). Not the same as homepage preview cards.</li>
-        </ul>
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-5 text-sm">
+          <div className="flex items-start gap-3 mb-3">
+            <Info size={20} className="text-blue-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-blue-900 mb-2">Where to edit images on the website</p>
+              <ul className="space-y-1.5 text-blue-800">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-1">•</span>
+                  <span><strong>Team & Board tab</strong> — photos, names, and titles for Board of Directors and BICC Team on the About page.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-1">•</span>
+                  <span><strong>Page Content (here)</strong> — banner/hero image at the top of each page (About, Venues, Events, etc.).</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-1">•</span>
+                  <span><strong>Homepage & Nav tab</strong> — homepage hero, homepage sections, footer, and menu.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-1">•</span>
+                  <span><strong>Venues tab</strong> — individual venue cards on the /venues listing (photos + videos per venue).</span>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -191,6 +208,32 @@ export default function PagesContentTab() {
             <div className="text-center py-12 text-gray-400">Loading page content...</div>
           ) : (
             <div className="space-y-6">
+              {/* Hero Section Guide */}
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl p-5">
+                <div className="flex items-start gap-3 mb-4">
+                  <Sparkles size={20} className="text-indigo-600 shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-bold text-indigo-900 mb-2">Understanding Hero Slideshows</h3>
+                    <div className="grid sm:grid-cols-2 gap-4 text-sm text-indigo-800">
+                      <div className="bg-white rounded-lg p-3 border border-indigo-100">
+                        <p className="font-semibold mb-2 flex items-center gap-2">
+                          <ImageIcon size={16} className="text-indigo-600" />
+                          Single Banner Image
+                        </p>
+                        <p className="text-indigo-700">Use "Page banner image" for a static hero that doesn't rotate. This is the fallback if no slideshow images are added.</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-indigo-100">
+                        <p className="font-semibold mb-2 flex items-center gap-2">
+                          <Layers size={16} className="text-indigo-600" />
+                          Slideshow Mode
+                        </p>
+                        <p className="text-indigo-700">Add images to "Hero slideshow images" to enable automatic rotation. Set the interval in seconds below.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <EditorCard title="Hero Section">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <TextInput label="Eyebrow" value={content.hero?.eyebrow || ''} onChange={(value) => updateField('hero.eyebrow', value)} />
@@ -199,6 +242,7 @@ export default function PagesContentTab() {
                     value={content.hero?.slideIntervalSeconds ?? 5}
                     min={1}
                     onChange={(value) => updateField('hero.slideIntervalSeconds', value)}
+                    helpText="How fast slideshow images rotate (e.g., 5 = every 5 seconds)"
                   />
                 </div>
                 <MediaField
@@ -207,14 +251,14 @@ export default function PagesContentTab() {
                   onChange={(value) => updateField('hero.backgroundImage', value)}
                   accept="image"
                   uploadFolder="pages"
-                  helpText="Large background image behind the page title. Upload here or pick from Media Library."
+                  helpText="Large background image behind the page title. Upload here or pick from Media Library. This is used as a fallback if no slideshow images are added."
                 />
                 <ImageListField
                   label="Hero slideshow images"
                   value={content.hero?.backgroundImages || []}
                   onChange={(value) => updateField('hero.backgroundImages', value)}
                   uploadFolder="pages"
-                  helpText="Add multiple hero images here. If you add more than one, the hero will rotate through them automatically."
+                  helpText="Add multiple hero images here. If you add more than one, the hero will rotate through them automatically based on the interval you set above. Click 'Add slideshow image' to add more slides."
                 />
                 <TextInput label="Hero Title" value={content.hero?.title || ''} onChange={(value) => updateField('hero.title', value)} />
                 <TextArea label="Hero Description" rows={3} value={content.hero?.description || ''} onChange={(value) => updateField('hero.description', value)} />
@@ -483,11 +527,13 @@ function NumberInput({
   value,
   onChange,
   min = 1,
+  helpText,
 }: {
   label: string;
   value: number;
   onChange: (value: number) => void;
   min?: number;
+  helpText?: string;
 }) {
   return (
     <div>
@@ -499,6 +545,7 @@ function NumberInput({
         onChange={(event) => onChange(Math.max(min, parseInt(event.target.value, 10) || min))}
         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
       />
+      {helpText && <p className="text-xs text-gray-500 mt-1">{helpText}</p>}
     </div>
   );
 }
