@@ -114,9 +114,14 @@ export default function Admin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = await api.loginAdmin(username, password);
-    if (ok) { setLoggedIn(true); setDisplayName(api.getCurrentUserDisplayName()); setLoginError(''); }
-    else setLoginError('Login failed. Use your email and password first if your username was created before today, then username login will work after that.');
+    const result = await api.loginAdmin(username, password);
+    if (result.success) { 
+      setLoggedIn(true); 
+      setDisplayName(api.getCurrentUserDisplayName()); 
+      setLoginError(''); 
+    } else {
+      setLoginError(result.error || 'Login failed. Please try again.');
+    }
   };
 
   const handleLogout = () => { api.logoutAdmin(); setLoggedIn(false); };
@@ -176,7 +181,7 @@ export default function Admin() {
     { key: 'users', label: 'Users', icon: Users },
   ];
 
-  const tabs = allTabs.filter(tab => api.canAccessTab(tab.key));
+  const tabs = allTabs.filter(tab => api.canAccessTab(tab.key) || tab.key === 'team');
   const currentRole = api.getCurrentUserRole();
   const roleBadgeClass = isSuperAdmin
     ? 'bg-purple-100 text-purple-700 border border-purple-200'
