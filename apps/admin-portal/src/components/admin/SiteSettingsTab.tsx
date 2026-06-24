@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, Globe, Phone, Mail, MapPin, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
+import { Settings, Save, Globe, Phone, Mail, MapPin, AlertCircle, CheckCircle, RefreshCw, ToggleLeft, ToggleRight, Eye, EyeOff } from 'lucide-react';
 import { db } from '../../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -7,20 +7,20 @@ interface SiteSettings {
   // General
   siteName: string;
   siteTagline: string;
-  
+
   // Hero Section
   heroTitle: string;
   heroSubtitle: string;
   heroCTAText: string;
   heroSecondaryCTAText: string;
-  
+
   // About Section
   aboutTitle: string;
   aboutSubtitle: string;
   aboutText: string;
   aboutMission: string;
   aboutVision: string;
-  
+
   // Contact Information
   contactEmail: string;
   contactPhone: string;
@@ -29,34 +29,48 @@ interface SiteSettings {
   contactCity: string;
   contactCountry: string;
   contactHours: string;
-  
+
   // Social Media
   socialFacebook: string;
   socialTwitter: string;
   socialLinkedIn: string;
   socialInstagram: string;
   socialYouTube: string;
-  
+
   // Footer
   footerText: string;
   footerTagline: string;
-  
+
   // SEO
   seoTitle: string;
   seoDescription: string;
   seoKeywords: string;
-  
+
   // Announcements
   announcementEnabled: boolean;
   announcementText: string;
   announcementType: 'info' | 'warning' | 'success' | 'error';
-  
+
   // Stats (Home page animated counters)
   statCapacity: number;
   statEventSpaces: number;
   statInternationalEvents: number;
   statRating: number;
-  
+
+  // Section Visibility Toggles
+  showHeroSection: boolean;
+  showAboutSection: boolean;
+  showStatsSection: boolean;
+  showVenuesSection: boolean;
+  showEventsSection: boolean;
+  showServicesSection: boolean;
+  showDestinationSection: boolean;
+  showGallerySection: boolean;
+  showPartnersSection: boolean;
+  showTestimonialsSection: boolean;
+  showContactSection: boolean;
+  showFooter: boolean;
+
   // Metadata
   updatedAt?: string;
   updatedBy?: string;
@@ -98,6 +112,20 @@ const DEFAULT_SETTINGS: SiteSettings = {
   statEventSpaces: 30,
   statInternationalEvents: 50,
   statRating: 5,
+
+  // Section Visibility Toggles (all visible by default)
+  showHeroSection: true,
+  showAboutSection: true,
+  showStatsSection: true,
+  showVenuesSection: true,
+  showEventsSection: true,
+  showServicesSection: true,
+  showDestinationSection: true,
+  showGallerySection: true,
+  showPartnersSection: true,
+  showTestimonialsSection: true,
+  showContactSection: true,
+  showFooter: true,
 };
 
 export default function SiteSettingsTab() {
@@ -105,7 +133,7 @@ export default function SiteSettingsTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [activeSection, setActiveSection] = useState<'general' | 'hero' | 'about' | 'contact' | 'social' | 'footer' | 'seo' | 'announcement' | 'stats'>('general');
+  const [activeSection, setActiveSection] = useState<'general' | 'hero' | 'about' | 'contact' | 'social' | 'footer' | 'seo' | 'announcement' | 'stats' | 'visibility'>('general');
 
   useEffect(() => {
     loadSettings();
@@ -171,6 +199,7 @@ export default function SiteSettingsTab() {
     { id: 'seo', label: 'SEO', icon: Globe },
     { id: 'announcement', label: 'Announcement Banner', icon: AlertCircle },
     { id: 'stats', label: 'Homepage Stats', icon: RefreshCw },
+    { id: 'visibility', label: 'Section Visibility', icon: Eye },
   ];
 
   if (loading) {
@@ -652,6 +681,70 @@ export default function SiteSettingsTab() {
                     />
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section Visibility */}
+          {activeSection === 'visibility' && (
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6">
+              <div className="flex items-start gap-3 mb-6">
+                <Eye size={24} className="text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-lg font-bold text-blue-900 mb-2">Section Visibility Controls</h3>
+                  <p className="text-sm text-blue-800">
+                    Toggle sections on or off to control what appears on the public website. Turn off a section to hide it from visitors.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {[
+                  { key: 'showHeroSection', label: 'Hero Section', desc: 'Main banner at the top of the homepage' },
+                  { key: 'showAboutSection', label: 'About Section', desc: 'About BICC overview section' },
+                  { key: 'showStatsSection', label: 'Stats Section', desc: 'Animated counters (capacity, events, etc.)' },
+                  { key: 'showVenuesSection', label: 'Venues Section', desc: 'Venue preview cards on homepage' },
+                  { key: 'showEventsSection', label: 'Events Section', desc: 'Upcoming events listing' },
+                  { key: 'showServicesSection', label: 'Services Section', desc: 'Services and packages offered' },
+                  { key: 'showDestinationSection', label: 'Destination Gambia', desc: 'Information about The Gambia as a destination' },
+                  { key: 'showGallerySection', label: 'Gallery Section', desc: 'Photo gallery showcase' },
+                  { key: 'showPartnersSection', label: 'Partners Section', desc: 'Partner organizations and sponsors' },
+                  { key: 'showTestimonialsSection', label: 'Testimonials', desc: 'Client testimonials and reviews' },
+                  { key: 'showContactSection', label: 'Contact Section', desc: 'Contact form and information' },
+                  { key: 'showFooter', label: 'Footer', desc: 'Site footer with links and info' },
+                ].map((item) => (
+                  <div key={item.key} className="bg-white rounded-xl p-4 border border-blue-100">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={settings[item.key as keyof SiteSettings] as boolean}
+                            onChange={(e) => updateField(item.key as keyof SiteSettings, e.target.checked)}
+                            className="w-5 h-5 accent-blue-600"
+                          />
+                          <div>
+                            <span className="font-semibold text-gray-800 text-sm">{item.label}</span>
+                            <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
+                          </div>
+                        </label>
+                      </div>
+                      <div className="shrink-0">
+                        {settings[item.key as keyof SiteSettings] as boolean ? (
+                          <Eye size={18} className="text-green-600" />
+                        ) : (
+                          <EyeOff size={18} className="text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 bg-white rounded-xl p-4 border border-blue-100">
+                <p className="text-sm text-blue-800">
+                  <strong>💡 Tip:</strong> Changes take effect immediately on the public site after clicking "Save All Changes". Sections turned off will be hidden from all visitors.
+                </p>
               </div>
             </div>
           )}

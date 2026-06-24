@@ -11,6 +11,66 @@ import {
 // PUBLIC API - Read-only data fetching + form submissions
 // ────────────────────────────────────────────────────────────────────────────
 
+// ── Site Settings (Read Only) ────────────────────────────────────────────────
+
+export interface SiteSettings {
+  showHeroSection: boolean;
+  showAboutSection: boolean;
+  showStatsSection: boolean;
+  showVenuesSection: boolean;
+  showEventsSection: boolean;
+  showServicesSection: boolean;
+  showDestinationSection: boolean;
+  showGallerySection: boolean;
+  showPartnersSection: boolean;
+  showTestimonialsSection: boolean;
+  showContactSection: boolean;
+  showFooter: boolean;
+}
+
+const DEFAULT_VISIBILITY: SiteSettings = {
+  showHeroSection: true,
+  showAboutSection: true,
+  showStatsSection: true,
+  showVenuesSection: true,
+  showEventsSection: true,
+  showServicesSection: true,
+  showDestinationSection: true,
+  showGallerySection: true,
+  showPartnersSection: true,
+  showTestimonialsSection: true,
+  showContactSection: true,
+  showFooter: true,
+};
+
+export async function fetchSiteSettings(): Promise<SiteSettings> {
+  try {
+    const docRef = doc(db, 'siteSettings', 'general');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      return {
+        showHeroSection: data.showHeroSection ?? true,
+        showAboutSection: data.showAboutSection ?? true,
+        showStatsSection: data.showStatsSection ?? true,
+        showVenuesSection: data.showVenuesSection ?? true,
+        showEventsSection: data.showEventsSection ?? true,
+        showServicesSection: data.showServicesSection ?? true,
+        showDestinationSection: data.showDestinationSection ?? true,
+        showGallerySection: data.showGallerySection ?? true,
+        showPartnersSection: data.showPartnersSection ?? true,
+        showTestimonialsSection: data.showTestimonialsSection ?? true,
+        showContactSection: data.showContactSection ?? true,
+        showFooter: data.showFooter ?? true,
+      };
+    }
+    return DEFAULT_VISIBILITY;
+  } catch (error) {
+    console.error('Error fetching site settings:', error);
+    return DEFAULT_VISIBILITY;
+  }
+}
+
 // ── Events (Read Only) ────────────────────────────────────────────────────────
 
 export async function fetchEvents(): Promise<any[]> {
