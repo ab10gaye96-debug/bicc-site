@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Users, Building2, Globe2, Star, Calendar, MapPin, Award, Shield, Play, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fetchEvents, fetchNews, fetchGallery } from '../api';
+import { fetchEvents, fetchNews, fetchGallery, fetchSiteSettings, type SiteSettings } from '../api';
 import { usePageContent } from '../hooks/usePageContent';
 import { useApi } from '../hooks/useApi';
 import { IMAGES } from '../images';
@@ -265,6 +265,7 @@ export default function Home() {
   const { data: events } = useApi(() => fetchEvents(), []);
   const { data: news } = useApi(() => fetchNews(), []);
   const { data: cmsContent } = usePageContent('home');
+  const { data: siteSettings } = useApi(() => fetchSiteSettings(), []);
 
   const displayEvents = (events || []).slice(0, 3);
   const displayNews = (news || []).slice(0, 3);
@@ -336,24 +337,27 @@ export default function Home() {
         description="The Gambia's premier MICE destination. World-class venues for conferences, summits, banquets, and events at the Sir Dawda Kairaba Jawara International Conference Centre."
       />
 
-      <HomeHero
-        badge={heroBadge}
-        title={heroTitle}
-        subtitle={heroSubtitle}
-        description={heroDescription}
-        primaryButton={heroPrimaryButton}
-        secondaryButton={heroSecondaryButton}
-        backgroundImage={heroBackgroundImage}
-        backgroundImages={heroBackgroundImages}
-        backgroundVideo={heroBackgroundVideo}
-        videoPoster={heroVideoPoster}
-        useVideo={useHeroVideo}
-        slideIntervalSeconds={heroSlideIntervalSeconds}
-      />
+      {siteSettings?.showHeroSection !== false && (
+        <HomeHero
+          badge={heroBadge}
+          title={heroTitle}
+          subtitle={heroSubtitle}
+          description={heroDescription}
+          primaryButton={heroPrimaryButton}
+          secondaryButton={heroSecondaryButton}
+          backgroundImage={heroBackgroundImage}
+          backgroundImages={heroBackgroundImages}
+          backgroundVideo={heroBackgroundVideo}
+          videoPoster={heroVideoPoster}
+          useVideo={useHeroVideo}
+          slideIntervalSeconds={heroSlideIntervalSeconds}
+        />
+      )}
 
-      <StatsBar cmsStats={cmsContent?.stats} />
+      {siteSettings?.showStatsSection !== false && <StatsBar cmsStats={cmsContent?.stats} />}
 
       {/* About Preview */}
+      {siteSettings?.showAboutSection !== false && (
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -408,8 +412,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Venues Preview */}
+      {siteSettings?.showVenuesSection !== false && (
       <section className="py-20 sm:py-28 bg-stone-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader eyebrow={venuesEyebrow} title={venuesTitle} description={venuesDescription} />
@@ -447,10 +453,12 @@ export default function Home() {
           </ScrollReveal>
         </div>
       </section>
+      )}
 
-      <VirtualTour />
+      {siteSettings?.showGallerySection !== false && <VirtualTour />}
 
       {/* Upcoming Events */}
+      {siteSettings?.showEventsSection !== false && (
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader eyebrow="What's Coming" title="Upcoming Events" />
@@ -483,6 +491,7 @@ export default function Home() {
           </ScrollReveal>
         </div>
       </section>
+      )}
 
       {/* Latest News */}
       <section className="py-20 sm:py-28 bg-stone-50">
@@ -514,21 +523,26 @@ export default function Home() {
         </div>
       </section>
 
-      <TestimonialsSection
-        eyebrow={cmsContent?.testimonials?.eyebrow}
-        title={cmsContent?.testimonials?.title}
-        description={cmsContent?.testimonials?.description}
-        scrollSeconds={Math.max(10, Number(cmsContent?.testimonials?.scrollSeconds) || 40)}
-      />
-      <PartnersSection
-        eyebrow={cmsContent?.partners?.eyebrow}
-        title={cmsContent?.partners?.title}
-        description={cmsContent?.partners?.description}
-        ctaText={cmsContent?.partners?.ctaText}
-      />
+      {siteSettings?.showTestimonialsSection !== false && (
+        <TestimonialsSection
+          eyebrow={cmsContent?.testimonials?.eyebrow}
+          title={cmsContent?.testimonials?.title}
+          description={cmsContent?.testimonials?.description}
+          scrollSeconds={Math.max(10, Number(cmsContent?.testimonials?.scrollSeconds) || 40)}
+        />
+      )}
+      {siteSettings?.showPartnersSection !== false && (
+        <PartnersSection
+          eyebrow={cmsContent?.partners?.eyebrow}
+          title={cmsContent?.partners?.title}
+          description={cmsContent?.partners?.description}
+          ctaText={cmsContent?.partners?.ctaText}
+        />
+      )}
       <NewsletterForm />
 
       {/* CTA */}
+      {siteSettings?.showServicesSection !== false && (
       <section className="relative py-24 sm:py-32 overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center motion-safe:animate-ken-burns"
@@ -548,6 +562,7 @@ export default function Home() {
           </Link>
         </ScrollReveal>
       </section>
+      )}
     </div>
   );
 }
