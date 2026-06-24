@@ -411,16 +411,92 @@ function EventsTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-[#1F85A8]">Manage Events</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-[#1F85A8]">Manage Events</h2>
+          <p className="text-sm text-gray-500 mt-1">Add upcoming events shown on the Events page.</p>
+        </div>
         {api.canEdit() && (
           <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700"><Plus size={16} /> Add Event</button>
         )}
       </div>
+
+      {/* Quick Start Guide */}
+      {events.length === 0 && (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 mb-6">
+          <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+            <Calendar size={20} className="text-blue-600" />
+            Quick Start Guide: Adding Events
+          </h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-lg p-4 border border-blue-100">
+              <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                <span className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                Event Details
+              </h4>
+              <ul className="text-sm text-gray-700 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span><strong>Title:</strong> e.g., "ECOWAS Summit 2026"</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span><strong>Category:</strong> Conference, Summit, Exhibition, Gala, Workshop</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span><strong>Date & Time:</strong> When the event takes place</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span><strong>Location:</strong> e.g., "Plenary Hall"</span>
+                </li>
+              </ul>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-blue-100">
+              <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                <span className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                Description & Image
+              </h4>
+              <ul className="text-sm text-gray-700 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span><strong>Description:</strong> What the event is about</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span><strong>Default image:</strong> Conference hall photo used automatically</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span><strong>Custom image:</strong> Check the box to paste a URL from another site</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-4 text-center">
+            <p className="text-sm text-blue-700 font-medium">
+              Ready? Click "Add Event" above to get started! 👆
+            </p>
+          </div>
+        </div>
+      )}
+
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl p-6 mb-6 space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-blue-800"><strong>{editingEvent ? 'Edit Event:' : 'Add Event:'}</strong> {editingEvent ? 'Update the event details below.' : 'Fill in the details below. For images, you can use our default images or paste a link from another website.'}</p>
+        <form onSubmit={handleSubmit} className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 mb-6 space-y-5 border-2 border-blue-200 shadow-lg">
+          <div className="bg-white border-2 border-blue-300 rounded-xl p-4">
+            <h3 className="text-base font-bold text-blue-900 mb-3 flex items-center gap-2">
+              <Calendar size={20} className="text-blue-600" />
+              {editingEvent ? 'Editing' : 'Adding'} Event
+            </h3>
+            <div className="space-y-2 text-sm">
+              <p className="text-blue-800">
+                <strong>What you're adding:</strong> This event will appear on the <strong>Events page</strong> with its date, location, and description in a professional card layout.
+              </p>
+              <p className="text-blue-700">
+                <strong>Image options:</strong> Use the default conference hall image, or check "Use image from another website" to paste a custom image URL.
+              </p>
+            </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div><label className="block text-sm font-medium text-[#1F85A8] mb-1">Event Title *</label><input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g., ECOWAS Summit 2026" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-600" /></div>
