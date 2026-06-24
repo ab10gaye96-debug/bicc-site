@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Edit, Plus, Trash2, Table } from 'lucide-react';
+import { Edit, Plus, Trash2, Table, Building2, Info, Sparkles, Image as ImageIcon, Film } from 'lucide-react';
 import * as api from '../../api';
 import { MediaListField } from './MediaField';
 
@@ -178,10 +178,10 @@ export default function VenuesTab() {
     <div className="space-y-8">
       {/* Venue Management */}
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl font-bold text-[#1F85A8]">Manage Venues</h2>
-            <p className="text-xs text-gray-500 mt-1">Add venues with photos and videos shown on the public Venues page.</p>
+            <p className="text-sm text-gray-500 mt-1">Add venues with photos and videos shown on the public Venues page.</p>
           </div>
           {api.canEdit() && (
             <button
@@ -197,12 +197,105 @@ export default function VenuesTab() {
           )}
         </div>
 
-        {showForm && (
-          <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl p-4 sm:p-6 mb-6 space-y-4 border border-gray-200">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-800">
-                <strong>{editingVenue ? 'Edit venue' : 'New venue'}:</strong> Upload images and optional videos. The first image is the cover photo on the website.
+        {/* Quick Start Guide */}
+        {venues.length === 0 && (
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 mb-6">
+            <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+              <Building2 size={20} className="text-blue-600" />
+              Quick Start Guide: Adding Venues
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-lg p-4 border border-blue-100">
+                <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                  <span className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                  Prepare Your Photos
+                </h4>
+                <ul className="text-sm text-gray-700 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span><strong>High-quality venue photos</strong> showing the space clearly</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span><strong>Landscape orientation</strong> works best (e.g., 1200x800px)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span><strong>Good lighting</strong> with the venue well-lit</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span><strong>JPG or PNG</strong> format, under 20MB file size</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-blue-100">
+                <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                  <span className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                  Fill in Venue Details
+                </h4>
+                <ul className="text-sm text-gray-700 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span><strong>Venue Name:</strong> e.g., "Plenary Hall"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span><strong>Capacity:</strong> e.g., "1,013 seats" or "500 guests"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span><strong>Description:</strong> What makes this venue special</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span><strong>Features:</strong> Comma-separated (e.g., "WiFi, Projector, AC")</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div className="mt-4 bg-white rounded-lg p-4 border border-blue-100">
+              <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                <span className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+                Add Photos & Videos
+              </h4>
+              <div className="grid sm:grid-cols-2 gap-3 text-sm text-gray-700">
+                <div className="flex items-start gap-2">
+                  <ImageIcon size={16} className="text-blue-600 mt-0.5" />
+                  <span>Click <strong>Add image</strong> to upload venue photos. First image is the cover.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Film size={16} className="text-blue-600 mt-0.5" />
+                  <span>Click <strong>Add video</strong> for optional venue tour videos.</span>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-blue-700 font-medium">
+                Ready? Click "Add Venue" above to get started! 👆
               </p>
+            </div>
+          </div>
+        )}
+
+        {showForm && (
+          <form onSubmit={handleSubmit} className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 mb-6 space-y-5 border-2 border-blue-200 shadow-lg">
+            <div className="bg-white border-2 border-blue-300 rounded-xl p-4">
+              <h3 className="text-base font-bold text-blue-900 mb-3 flex items-center gap-2">
+                <Building2 size={20} className="text-blue-600" />
+                {editingVenue ? 'Editing' : 'Adding'} Venue
+              </h3>
+              <div className="space-y-2 text-sm">
+                <p className="text-blue-800">
+                  <strong>What you're adding:</strong> This venue will appear on the <strong>Venues page</strong> with its photos, capacity, and features in a professional card layout.
+                </p>
+                <p className="text-blue-700">
+                  <strong>Photo tips:</strong> Upload high-quality landscape photos showing the venue space. The first image is used as the cover photo.
+                </p>
+                <p className="text-blue-700">
+                  <strong>Features:</strong> Separate features with commas (e.g., "WiFi, Projector, AC, Sound System").
+                </p>
+              </div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
@@ -324,13 +417,13 @@ export default function VenuesTab() {
 
       {/* Venue Capacity Overview */}
       <div className="border-t border-gray-200 pt-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl font-bold text-[#1F85A8] flex items-center gap-2">
               <Table size={20} />
               Venue Capacity Overview
             </h2>
-            <p className="text-xs text-gray-500 mt-1">Manage the capacity table shown on the public Venues page.</p>
+            <p className="text-sm text-gray-500 mt-1">Edit the capacity table shown on the Venues page.</p>
           </div>
           {api.canEdit() && (
             <button
@@ -343,12 +436,47 @@ export default function VenuesTab() {
           )}
         </div>
 
-        {showCapacityForm && (
-          <form onSubmit={handleCapacitySubmit} className="bg-gray-50 rounded-xl p-4 sm:p-6 mb-6 space-y-4 border border-gray-200">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-800">
-                <strong>{editingCapacityIndex !== null ? 'Edit' : 'Add'} capacity row:</strong> This will appear in the Venue Capacity Overview table on the public site.
+        {/* Capacity Guide */}
+        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl p-5 mb-6">
+          <div className="flex items-start gap-3 mb-3">
+            <Info size={20} className="text-indigo-600 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-bold text-indigo-900 mb-2">Understanding Capacity Overview</h3>
+              <p className="text-sm text-indigo-800 mb-3">
+                This table appears on the Venues page showing the capacity of different spaces at BICC. Edit the space names and capacity values below.
               </p>
+              <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                <div className="bg-white rounded-lg p-3 border border-indigo-100">
+                  <p className="font-semibold text-indigo-800 mb-1">Space Name</p>
+                  <p className="text-indigo-700">e.g., "Plenary Hall", "Banquet Hall A"</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 border border-indigo-100">
+                  <p className="font-semibold text-indigo-800 mb-1">Capacity</p>
+                  <p className="text-indigo-700">e.g., "1,013 seats", "500 guests"</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {showCapacityForm && (
+          <form onSubmit={handleCapacitySubmit} className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 mb-6 space-y-5 border-2 border-blue-200 shadow-lg">
+            <div className="bg-white border-2 border-blue-300 rounded-xl p-4">
+              <h3 className="text-base font-bold text-blue-900 mb-3 flex items-center gap-2">
+                <Table size={20} className="text-blue-600" />
+                {editingCapacityIndex !== null ? 'Editing' : 'Adding'} Capacity Row
+              </h3>
+              <div className="space-y-2 text-sm">
+                <p className="text-blue-800">
+                  <strong>What you're adding:</strong> This row will appear in the <strong>Venue Capacity Overview</strong> table on the public Venues page.
+                </p>
+                <p className="text-blue-700">
+                  <strong>Space Name:</strong> The name of the venue space (e.g., "Plenary Hall")
+                </p>
+                <p className="text-blue-700">
+                  <strong>Capacity:</strong> How many people it can hold (e.g., "1,013 seats")
+                </p>
+              </div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
